@@ -1,12 +1,41 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities, @next/next/no-img-element */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 
 export default function HomePage() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [participantName, setParticipantName] = useState<string>("");
+
+  const clearStoredSession = () => {
+    try {
+      const explicitKeys = [
+        'admin_token',
+        'competition_access_token',
+        'participant_login_token',
+        'participant_profile',
+        'participant_competitions',
+      ];
+      explicitKeys.forEach((key) => localStorage.removeItem(key));
+
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith('competition_') || key.startsWith('participant_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -15,6 +44,22 @@ export default function HomePage() {
     }
     setMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    try {
+      const storedProfile = localStorage.getItem('participant_profile');
+      if (!storedProfile) return;
+
+      const parsedProfile = JSON.parse(storedProfile);
+      if (parsedProfile?.name) {
+        setParticipantName(parsedProfile.name as string);
+      }
+    } catch (readError) {
+      console.warn('Failed to load participant profile', readError);
+    }
+  }, []);
+
+  const displayName = participantName || 'Participant';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,19 +102,47 @@ export default function HomePage() {
             </button>
           </nav>
 
-          {/* User Profile - Desktop */}
-          <div className="hidden md:flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-              <img 
-                src="/images/user-avatar.jpg" 
-                alt="User"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#d1d5db"/><circle cx="20" cy="16" r="7" fill="#9ca3af"/><path d="M 8 35 Q 8 28 20 28 Q 32 28 32 35" fill="#9ca3af"/></svg>');
-                }}
-              />
-            </div>
-            <span className="text-sm font-medium">Natalie Portman</span>
+          {/* User Profile - Desktop (with dropdown) */}
+          <div className="hidden md:flex items-center gap-3 relative">
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              aria-haspopup="true"
+              aria-expanded={showProfileMenu}
+              className="flex items-center gap-3 focus:outline-none"
+            >
+              <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                <img 
+                  src="/images/user-avatar.jpg" 
+                  alt="User"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#d1d5db"/><circle cx="20" cy="16" r="7" fill="#9ca3af"/><path d="M 8 35 Q 8 28 20 28 Q 32 28 32 35" fill="#9ca3af"/></svg>');
+                  }}
+                />
+              </div>
+              <span className="text-sm font-medium">{displayName}</span>
+            </button>
+
+            {showProfileMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white text-black rounded-md shadow-2xl z-50 overflow-hidden border border-gray-200">
+                {/* small pointer */}
+                <div className="absolute -top-2 right-4 w-3 h-3 bg-white rotate-45 border-t border-l border-gray-200" aria-hidden />
+                <div className="py-1">
+                  <button
+                    onClick={() => { setShowProfileMenu(false); router.push('/profile'); }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => { setShowProfileMenu(false); setShowLogoutConfirm(true); }}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 border-t"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -83,23 +156,23 @@ export default function HomePage() {
 
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#044a2f] border-t border-[#055F3C]">
-            <nav className="flex flex-col">
+          <div className="md:hidden bg-[#044a2f] border-t border-white/20 shadow-inner">
+            <nav className="flex flex-col border-y border-white/20 divide-y divide-white/20">
               <button 
                 onClick={() => { router.push('/'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 HOME
               </button>
               <button 
                 onClick={() => { router.push('/competitions'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 UPCOMING CONTESTS
               </button>
               <button 
                 onClick={() => { router.push('/about'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 ABOUT US
               </button>
@@ -108,6 +181,18 @@ export default function HomePage() {
                 className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 CONTACT
+              </button>
+              <button
+                onClick={() => { router.push('/privacy-policy'); setMobileMenuOpen(false); }}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
+                PRIVACY POLICY
+              </button>
+              <button
+                onClick={() => { setShowLogoutConfirm(true); setMobileMenuOpen(false); }}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
+                LOGOUT
               </button>
             </nav>
             {/* Mobile User Profile */}
@@ -122,11 +207,40 @@ export default function HomePage() {
                   }}
                 />
               </div>
-              <span className="text-sm font-medium">Natalie Portman</span>
+              <span className="text-sm font-medium">{displayName}</span>
             </div>
           </div>
         )}
       </header>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowLogoutConfirm(false)} />
+          <div className="bg-white rounded-lg shadow-xl z-10 max-w-sm w-full p-6">
+            <h3 className="text-lg font-semibold mb-2">Confirm Logout</h3>
+            <p className="text-sm text-gray-600 mb-4">Are you sure you want to logout? This will sign you out and clear any competition access stored locally.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2 bg-gray-100 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  clearStoredSession();
+                  setShowLogoutConfirm(false);
+                  router.push('/login');
+                }}
+                className="px-4 py-2 bg-[#055F3C] text-white rounded-md"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="relative min-h-screen">

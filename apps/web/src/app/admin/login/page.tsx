@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/api";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -10,8 +11,6 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -19,7 +18,7 @@ export default function AdminLoginPage() {
       setError(null);
 
       try {
-        const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+        const response = await fetch(buildApiUrl("auth/login"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -54,7 +53,7 @@ export default function AdminLoginPage() {
         setIsLoading(false);
       }
     },
-    [API_URL, password, router, username]
+    [password, router, username]
   );
 
   return (

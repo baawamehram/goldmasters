@@ -1,5 +1,3 @@
-import { notFound } from "next/navigation";
-
 interface CompetitionPageProps {
   params: Promise<{
     id: string;

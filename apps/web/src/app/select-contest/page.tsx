@@ -1,12 +1,14 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities, @next/next/no-img-element */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 
 export default function SelectContestPage() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [participantName, setParticipantName] = useState<string>("");
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -15,6 +17,22 @@ export default function SelectContestPage() {
     }
     setMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    try {
+      const storedProfile = localStorage.getItem('participant_profile');
+      if (!storedProfile) return;
+
+      const parsedProfile = JSON.parse(storedProfile);
+      if (parsedProfile?.name) {
+        setParticipantName(parsedProfile.name as string);
+      }
+    } catch (readError) {
+      console.warn('Failed to load participant profile', readError);
+    }
+  }, []);
+
+  const displayName = participantName || 'Participant';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,7 +87,7 @@ export default function SelectContestPage() {
                 }}
               />
             </div>
-            <span className="text-sm font-medium">Natalie Portman</span>
+            <span className="text-sm font-medium">{displayName}</span>
           </div>
 
           {/* Mobile Menu Button */}
@@ -83,23 +101,23 @@ export default function SelectContestPage() {
 
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#044a2f] border-t border-[#055F3C]">
-            <nav className="flex flex-col">
+          <div className="md:hidden bg-[#044a2f] border-t border-white/20 shadow-inner">
+            <nav className="flex flex-col border-y border-white/20 divide-y divide-white/20">
               <button 
                 onClick={() => { router.push('/'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 HOME
               </button>
               <button 
                 onClick={() => { router.push('/competitions'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 UPCOMING CONTESTS
               </button>
               <button 
                 onClick={() => scrollToSection('about')}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 ABOUT US
               </button>
@@ -122,7 +140,7 @@ export default function SelectContestPage() {
                   }}
                 />
               </div>
-              <span className="text-sm font-medium">Natalie Portman</span>
+              <span className="text-sm font-medium">{displayName}</span>
             </div>
           </div>
         )}

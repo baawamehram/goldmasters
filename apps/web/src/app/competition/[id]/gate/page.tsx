@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { buildApiUrl } from '@/lib/api';
 
 export default function CompetitionGatePage() {
   const params = useParams();
@@ -20,8 +21,7 @@ export default function CompetitionGatePage() {
     setIsLoading(true);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-      const response = await fetch(`${API_URL}/api/v1/competitions/${competitionId}/verify-password`, {
+  const response = await fetch(buildApiUrl(`competitions/${competitionId}/verify-password`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

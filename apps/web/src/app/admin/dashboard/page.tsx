@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+/* eslint-disable react/no-unescaped-entities */
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildApiUrl } from "@/lib/api";
 
 interface Competition {
   id: string;
@@ -80,9 +82,7 @@ export default function AdminDashboardPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-
-  const fetchCompetitions = async () => {
+  const fetchCompetitions = useCallback(async () => {
     try {
       setIsFetchingCompetitions(true);
       const token = localStorage.getItem('admin_token');
@@ -91,7 +91,7 @@ export default function AdminDashboardPage() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/v1/admin/competitions`, {
+      const response = await fetch(buildApiUrl('admin/competitions'), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
       setIsFetchingCompetitions(false);
       setIsLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     // Check if admin is logged in
@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
     }
 
     fetchCompetitions();
-  }, [router]);
+  }, [fetchCompetitions, router]);
 
   const handleAssignTickets = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
     try {
       const token = localStorage.getItem('admin_token');
       const response = await fetch(
-        `${API_URL}/api/v1/admin/competitions/${selectedCompetition}/assign-tickets`,
+  buildApiUrl(`admin/competitions/${selectedCompetition}/assign-tickets`),
         {
           method: 'POST',
           headers: {
@@ -203,7 +203,7 @@ export default function AdminDashboardPage() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/v1/admin/competitions`, {
+  const response = await fetch(buildApiUrl('admin/competitions'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/v1/admin/competitions/${id}/close`, {
+  const response = await fetch(buildApiUrl(`admin/competitions/${id}/close`), {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -325,7 +325,7 @@ export default function AdminDashboardPage() {
       }
 
       const response = await fetch(
-        `${API_URL}/api/v1/admin/competitions/${finalResultState.competitionId}/final-result`,
+  buildApiUrl(`admin/competitions/${finalResultState.competitionId}/final-result`),
         {
           method: 'PATCH',
           headers: {
@@ -401,7 +401,7 @@ export default function AdminDashboardPage() {
       }
 
       const response = await fetch(
-        `${API_URL}/api/v1/admin/competitions/${finalResultState.competitionId}/compute-winner`,
+  buildApiUrl(`admin/competitions/${finalResultState.competitionId}/compute-winner`),
         {
           method: 'POST',
           headers: {
@@ -461,7 +461,7 @@ export default function AdminDashboardPage() {
       }
 
       const response = await fetch(
-        `${API_URL}/api/v1/admin/competitions/${finalResultState.competitionId}/export`,
+  buildApiUrl(`admin/competitions/${finalResultState.competitionId}/export`),
         {
           method: 'GET',
           headers: {

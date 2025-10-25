@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities, @next/next/no-img-element */
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,7 +8,33 @@ import Link from "next/link";
 export default function AboutPage() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [participantName, setParticipantName] = useState<string>("");
+  const clearStoredSession = () => {
+    try {
+      const explicitKeys = [
+        'admin_token',
+        'competition_access_token',
+        'participant_login_token',
+        'participant_profile',
+        'participant_competitions',
+      ];
+      explicitKeys.forEach((key) => localStorage.removeItem(key));
+
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith('competition_') || key.startsWith('participant_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -116,6 +143,22 @@ export default function AboutPage() {
     return [teamMembers[currentSlide]];
   };
 
+  useEffect(() => {
+    try {
+      const storedProfile = localStorage.getItem('participant_profile');
+      if (!storedProfile) return;
+
+      const parsedProfile = JSON.parse(storedProfile);
+      if (parsedProfile?.name) {
+        setParticipantName(parsedProfile.name as string);
+      }
+    } catch (readError) {
+      console.warn('Failed to load participant profile', readError);
+    }
+  }, []);
+
+  const displayName = participantName || 'Participant';
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -169,7 +212,7 @@ export default function AboutPage() {
                 }}
               />
             </div>
-            <span className="text-sm font-medium">Natalie Portman</span>
+            <span className="text-sm font-medium">{displayName}</span>
           </div>
 
           {/* Mobile Menu Button */}
@@ -183,23 +226,23 @@ export default function AboutPage() {
 
         {/* Mobile Navigation Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#044a2f] border-t border-[#055F3C]">
-            <nav className="flex flex-col">
+          <div className="md:hidden bg-[#044a2f] border-t border-white/20 shadow-inner">
+            <nav className="flex flex-col border-y border-white/20 divide-y divide-white/20">
               <button 
                 onClick={() => { router.push('/'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 HOME
               </button>
               <button 
                 onClick={() => { router.push('/competitions'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 UPCOMING CONTESTS
               </button>
               <button 
                 onClick={() => { router.push('/about'); setMobileMenuOpen(false); }}
-                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 ABOUT US
               </button>
@@ -208,6 +251,18 @@ export default function AboutPage() {
                 className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 CONTACT
+              </button>
+              <button
+                onClick={() => { router.push('/privacy-policy'); setMobileMenuOpen(false); }}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
+                PRIVACY POLICY
+              </button>
+              <button
+                onClick={() => { setShowLogoutConfirm(true); setMobileMenuOpen(false); }}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
+                LOGOUT
               </button>
             </nav>
             {/* Mobile User Profile */}
@@ -222,7 +277,34 @@ export default function AboutPage() {
                   }}
                 />
               </div>
-              <span className="text-sm font-medium">Natalie Portman</span>
+              <span className="text-sm font-medium">{displayName}</span>
+            </div>
+          </div>
+        )}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowLogoutConfirm(false)} />
+            <div className="bg-white rounded-lg shadow-xl z-10 max-w-sm w-full p-6">
+              <h3 className="text-lg font-semibold mb-2">Confirm Logout</h3>
+              <p className="text-sm text-gray-600 mb-4">Are you sure you want to logout? This will sign you out and clear any competition access stored locally.</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    clearStoredSession();
+                    setShowLogoutConfirm(false);
+                    router.push('/login');
+                  }}
+                  className="px-4 py-2 bg-[#055F3C] text-white rounded-md"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         )}

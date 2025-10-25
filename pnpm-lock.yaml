@@ -87,6 +87,9 @@ importers:
 
   apps/web:
     dependencies:
+      bcryptjs:
+        specifier: ^2.4.3
+        version: 2.4.3
       canvas:
         specifier: ^3.2.0
         version: 3.2.0
@@ -99,6 +102,9 @@ importers:
       framer-motion:
         specifier: ^11.11.17
         version: 11.18.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.2
       konva:
         specifier: ^9.3.16
         version: 9.3.22
@@ -124,6 +130,12 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.16
+      '@types/bcryptjs':
+        specifier: ^2.4.2
+        version: 2.4.6
+      '@types/jsonwebtoken':
+        specifier: ^9.0.7
+        version: 9.0.10
       '@types/node':
         specifier: ^20
         version: 20.19.23

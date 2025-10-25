@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { buildApiUrl } from "@/lib/api";
+
 type CheckoutMarker = {
   id: string;
   ticketId: string;
@@ -48,8 +50,6 @@ export default function CheckoutModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   const activeMarkers = useMemo(
     () => markers.filter((marker) => !marker.locked),
@@ -102,7 +102,7 @@ export default function CheckoutModal({
     setSuccessMessage(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/v1/competitions/${competitionId}/checkout`, {
+  const response = await fetch(buildApiUrl(`competitions/${competitionId}/checkout`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,8 +1,8 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from "next/link";
 
 export default function CompetitionPage() {
   const router = useRouter();
@@ -33,225 +33,239 @@ export default function CompetitionPage() {
         </div>
       </header>
 
-      {/* Tickets Left Badge */}
-      <div className="bg-white border-b border-gray-200 px-6 py-2">
-        <div className="max-w-7xl mx-auto">
-          <span className="inline-block bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded">
-            TICKETS LEFT: 1750/2
-          </span>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Competition Card */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden max-w-xs mx-auto">
-          {/* Image Section */}
-          <div className="relative h-80">
+      <div className="max-w-6xl mx-auto px-4 py-16 space-y-24">
+        <section className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] items-start">
+          <div className="relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 text-white shadow-xl ring-1 ring-white/10 h-72 sm:h-96 md:h-full">
             <img
               src="/images/gold-coin.jpg"
               alt="Gold Coin"
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover opacity-90 transform transition-transform duration-700 ease-out hover:scale-105"
               onError={(e) => {
-                e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><defs><radialGradient id="goldGrad" cx="50%" cy="50%"><stop offset="0%" style="stop-color:#ffd700"/><stop offset="50%" style="stop-color:#ffed4e"/><stop offset="100%" style="stop-color:#d4af37"/></radialGradient></defs><rect fill="#1a1a1a" width="400" height="600"/><circle cx="200" cy="300" r="120" fill="url(#goldGrad)"/><circle cx="200" cy="300" r="120" fill="none" stroke="#b8860b" stroke-width="8"/><text x="200" y="310" font-size="48" font-weight="bold" fill="#b8860b" text-anchor="middle">₹</text></svg>');
+                e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800"><defs><radialGradient id="goldGrad" cx="50%" cy="50%"><stop offset="0%" style="stop-color:#ffd700"/><stop offset="50%" style="stop-color:#ffed4e"/><stop offset="100%" style="stop-color:#d4af37"/></radialGradient></defs><rect fill="#111827" width="800" height="800"/><circle cx="400" cy="400" r="220" fill="url(#goldGrad)"/><circle cx="400" cy="400" r="220" fill="none" stroke="#b8860b" stroke-width="18"/><text x="400" y="420" font-size="120" font-weight="bold" fill="#b8860b" text-anchor="middle">₹</text></svg>');
               }}
             />
-            {/* WIN Badge */}
-            <div className="absolute top-4 left-4 bg-white text-black text-xs font-bold px-3 py-1 rounded">
-              WIN
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" aria-hidden="true" />
+            <div className="absolute top-4 left-4 rounded-full bg-white/95 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-gray-900 shadow-lg">
+              Win
             </div>
           </div>
 
-          {/* Content Section */}
-          <div className="p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              GOLD COIN
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">WITH A CLICK</p>
+          <div className="space-y-10 text-gray-900 max-w-xl mx-auto md:mx-0 md:pl-6">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#055F3C]">Featured Contest</p>
+              <h2 className="text-4xl font-bold leading-tight md:text-5xl">Gold Coin</h2>
+              <p className="text-sm uppercase tracking-[0.2em] text-gray-500">With a click</p>
+            </div>
 
-            {/* Hosted By Section */}
-            <div className="mb-6">
-              <p className="text-xs text-gray-500 mb-2">HOSTED BY</p>
-              <div className="h-12 bg-gray-100 rounded flex items-center justify-center">
-                <span className="text-gray-400 text-xs">Host Logo</span>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Markers Per Ticket</p>
+                <p className="mt-3 text-3xl font-extrabold text-gray-900">3</p>
+                <p className="mt-2 text-sm text-gray-500">Use three markers per ticket to place your prediction.</p>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Contest Status</p>
+                <p className="mt-3 text-3xl font-extrabold text-[#055F3C]">Open Now</p>
+                <p className="mt-2 text-sm text-gray-500">Entries accepted until the contest closes.</p>
               </div>
             </div>
 
-            {/* Enter Now Button */}
-            <button
-              onClick={() => router.push('/')}
-              className="w-full bg-[#055F3C] text-white font-bold py-3 px-6 rounded hover:bg-[#044a2f] transition-colors"
-            >
-              ENTER NOW
-            </button>
-          </div>
-        </div>
+            <div className="flex flex-col items-center gap-4 md:items-start">
+              <div className="space-y-2 text-center md:text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Hosted By</p>
+                <div className="flex h-16 w-48 items-center justify-center rounded-full border border-dashed border-gray-300 bg-white/70 text-xs uppercase tracking-[0.3em] text-gray-400">
+                  Host Logo
+                </div>
+              </div>
 
-        {/* How To Play Section */}
-        <div className="mt-16 max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            {/* Title */}
-            <h2 className="text-3xl font-bold text-center mb-8">
+              <button
+                onClick={() => router.push('/')}
+                className="inline-flex items-center justify-center rounded-full bg-[#055F3C] px-12 py-4 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-lg shadow-[#055F3C]/30 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#044a2f]"
+              >
+                Enter Now
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-12" aria-labelledby="how-to-play">
+          <header className="text-center">
+            <h2 id="how-to-play" className="text-3xl font-bold text-gray-900 md:text-4xl">
               How To <span className="text-[#055F3C]">Play</span>
             </h2>
+            <p className="mt-4 text-base text-gray-600">
+              Three simple steps to lock in your spot-the-ball prediction and complete the checkout.
+            </p>
+          </header>
 
-            {/* Video Placeholder */}
-            <div className="mb-8 bg-gray-100 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
-              <div className="w-full h-full flex items-center justify-center border-4 border-black rounded-lg">
-                <video 
-                  className="w-full h-full object-cover"
-                  controls
-                  poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450'%3E%3Crect fill='%23f3f4f6' width='800' height='450'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%239ca3af'%3EVideo will be added here%3C/text%3E%3C/svg%3E"
-                >
-                  <source src="/videos/how-to-play.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
+          <div className="overflow-hidden rounded-3xl border border-gray-200" style={{ aspectRatio: '16/9' }}>
+            <video
+              className="h-full w-full object-cover"
+              controls
+              poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450'%3E%3Crect fill='%23f3f4f6' width='800' height='450'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%239ca3af'%3EVideo will be added here%3C/text%3E%3C/svg%3E"
+            >
+              <source src="/videos/how-to-play.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
 
-            {/* Steps */}
-            <div className="space-y-6">
-              {/* Step 1 */}
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#055F3C]" fill="currentColor" viewBox="0 0 20 20">
+          <div className="grid gap-10 md:grid-cols-3">
+            {[
+              {
+                title: 'Select Your Contest',
+                step: '01',
+                icon: (
+                  <svg className="h-7 w-7 text-[#055F3C]" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-semibold mb-1">01 STEP</p>
-                  <h3 className="text-lg font-bold text-gray-900">Select Your Contest</h3>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#055F3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ),
+              },
+              {
+                title: 'Predict Where The Ball Is',
+                step: '02',
+                icon: (
+                  <svg className="h-7 w-7 text-[#055F3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-semibold mb-1">02 STEP</p>
-                  <h3 className="text-lg font-bold text-gray-900">Predict Where The Ball Is</h3>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-[#055F3C]" fill="currentColor" viewBox="0 0 20 20">
+                ),
+              },
+              {
+                title: 'Winner Announced',
+                step: '03',
+                icon: (
+                  <svg className="h-7 w-7 text-[#055F3C]" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
                   </svg>
+                ),
+              },
+            ].map(({ title, step, icon }) => (
+              <div key={title} className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#055F3C]/20 bg-white">
+                  {icon}
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-semibold mb-1">03 STEP</p>
-                  <h3 className="text-lg font-bold text-gray-900">Winner Announced</h3>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">{step} Step</p>
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900">{title}</h3>
                 </div>
               </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="behind-the-wish" className="space-y-16">
+          <header className="text-center">
+            <h2 className="text-3xl font-bold text-[#055F3C] md:text-4xl">Behind The Wish</h2>
+            <p className="mt-4 text-base text-gray-600">
+              Everything we do is built to keep the contest transparent, skill-first, and rewarding for every entrant.
+            </p>
+          </header>
+
+          <div className="grid gap-12 md:grid-cols-2 md:items-start">
+            <div className="space-y-6">
+              <h3 className="text-2xl font-semibold text-[#055F3C]">Limited Odds</h3>
+              <p className="text-base text-gray-700">
+                Enter a filtered playground where the odds of success are amplified by limiting the number of entrants in every final contest.
+              </p>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="rounded-2xl border border-gray-200 p-5">
+                  <p className="text-xs uppercase tracking-[0.2em] text-gray-500">1 in</p>
+                  <p className="mt-2 text-2xl font-semibold text-gray-900">13 million*</p>
+                  <p className="mt-1 text-xs text-gray-600">chances of winning a lottery</p>
+                </div>
+                <div className="rounded-2xl border border-[#055F3C] bg-[#055F3C] p-5 text-white">
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/80">1 in</p>
+                  <p className="mt-2 text-2xl font-semibold">2000*</p>
+                  <p className="mt-1 text-xs text-white/80">chances with Wishmasters</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-center">
+              <img
+                src="/images/hand-pointing.png"
+                alt="Hand pointing"
+                className="h-auto w-72 object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320"><rect fill="#f3f4f6" width="320" height="320"/><path d="M 160 70 L 192 118 L 242 108 L 214 160 L 262 198 L 206 210 L 192 262 L 160 224 L 128 262 L 114 210 L 58 198 L 106 160 L 78 108 L 128 118 Z" fill="#d1d5db"/><text x="160" y="180" text-anchor="middle" fill="#9ca3af" font-size="16" font-weight="bold">Hand Image</text></svg>');
+                }}
+              />
             </div>
           </div>
-        </div>
 
-        {/* Behind The Wish Section */}
-        <div className="mt-16 max-w-5xl mx-auto">
-          <div className="bg-gray-50 rounded-lg p-8">
-            {/* Title */}
-            <h2 className="text-3xl md:text-4xl font-bold text-[#055F3C] text-center mb-12">
-              Behind The Wish
-            </h2>
-
-            {/* Limited Odds Section */}
-            <div className="mb-12">
-              <div className="grid md:grid-cols-2 gap-8 items-start">
-                {/* Left - Text Content */}
-                <div>
-                  <h3 className="text-2xl font-bold text-[#055F3C] mb-4">Limited Odds</h3>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-6">
-                    Enter a filtered playground where the odds of success are great due to the limited number of entrants to the final contest.
-                  </p>
-                  
-                  {/* Odds Comparison Boxes */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
-                      <p className="text-xs text-gray-500 mb-1">1 in</p>
-                      <p className="text-2xl font-bold text-gray-800 mb-1">13 million*</p>
-                      <p className="text-xs text-gray-600">chances of winning a lottery</p>
-                    </div>
-                    <div className="bg-[#055F3C] p-4 rounded-lg">
-                      <p className="text-xs text-white/80 mb-1">1 in</p>
-                      <p className="text-2xl font-bold text-white mb-1">2000*</p>
-                      <p className="text-xs text-white/80">chances of winning with Wishmasters</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right - Hand Image */}
-                <div className="flex justify-center items-center">
-                  <img
-                    src="/images/hand-pointing.png"
-                    alt="Hand pointing"
-                    className="w-64 h-auto object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect fill="#f3f4f6" width="300" height="300"/><path d="M 150 80 L 180 120 L 220 110 L 200 150 L 240 180 L 190 190 L 180 230 L 150 200 L 120 230 L 110 190 L 60 180 L 100 150 L 80 110 L 120 120 Z" fill="#d1d5db"/><text x="150" y="160" text-anchor="middle" fill="#9ca3af" font-size="16" font-weight="bold">Hand Image</text></svg>');
-                    }}
-                  />
-                </div>
-              </div>
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+            <div className="order-2 md:order-1 flex items-center justify-center">
+              <img
+                src="/images/gift-box.png"
+                alt="Gift box with green ribbon"
+                className="h-auto w-56 object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="260" viewBox="0 0 240 260"><rect fill="#f3f4f6" width="240" height="260"/><rect x="70" y="110" width="100" height="100" fill="#d1d5db" rx="6"/><rect x="70" y="86" width="100" height="32" fill="#10b981" rx="6"/><rect x="116" y="64" width="10" height="88" fill="#10b981"/><path d="M 92 86 Q 120 50 148 86" fill="none" stroke="#10b981" stroke-width="6"/><circle cx="92" cy="86" r="8" fill="#10b981"/><circle cx="148" cy="86" r="8" fill="#10b981"/></svg>');
+                }}
+              />
             </div>
-
-            {/* NO GIFT Tax Section */}
-            <div className="mb-12">
-              <div className="grid md:grid-cols-2 gap-8 items-center">
-                {/* Left - Gift Image */}
-                <div className="flex justify-center items-center order-2 md:order-1">
-                  <img
-                    src="/images/gift-box.png"
-                    alt="Gift box with green ribbon"
-                    className="w-48 h-auto object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="250" viewBox="0 0 200 250"><rect fill="#f3f4f6" width="200" height="250"/><rect x="50" y="100" width="100" height="100" fill="#d1d5db" rx="4"/><rect x="50" y="80" width="100" height="30" fill="#10b981" rx="4"/><rect x="95" y="60" width="10" height="60" fill="#10b981"/><path d="M 70 80 Q 100 50 130 80" fill="none" stroke="#10b981" stroke-width="6"/><circle cx="70" cy="80" r="8" fill="#10b981"/><circle cx="130" cy="80" r="8" fill="#10b981"/></svg>');
-                    }}
-                  />
-                </div>
-
-                {/* Right - Text Content */}
-                <div className="order-1 md:order-2">
-                  <div className="bg-white p-6 rounded-lg">
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      Bring home your dream prize and gift tax amount, Wishmasters ensures you don't spend an extra dime on your prize.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Clear Judging Process Section */}
-            <div>
-              <div className="grid md:grid-cols-2 gap-8 items-start">
-                {/* Left - Text Content */}
-                <div>
-                  <h3 className="text-2xl font-bold text-[#055F3C] mb-4">Clear Judging Process</h3>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    A law firm and independent audit of the competition oversee the live judging which is recorded and posted on Wishmasters.
-                  </p>
-                </div>
-
-                {/* Right - Tablet/Judging Image */}
-                <div className="flex justify-center items-center">
-                  <img
-                    src="/images/tablet-judging.png"
-                    alt="Tablet showing judging process"
-                    className="w-64 h-auto object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect fill="#f3f4f6" width="300" height="300"/><rect x="80" y="80" width="140" height="180" fill="#d1d5db" rx="8" stroke="#6b7280" stroke-width="3"/><rect x="90" y="90" width="120" height="140" fill="#ffffff" rx="4"/><circle cx="150" cy="250" r="8" fill="#9ca3af"/><text x="150" y="165" text-anchor="middle" fill="#6b7280" font-size="14" font-weight="bold">Judging</text></svg>');
-                    }}
-                  />
-                </div>
-              </div>
+            <div className="order-1 md:order-2 space-y-4">
+              <h3 className="text-2xl font-semibold text-[#055F3C]">No Gift Tax Surprises</h3>
+              <p className="text-base text-gray-700">
+                Bring home your dream prize and the gift tax amount. Wishmasters covers the extras so you do not spend beyond your winning bid.
+              </p>
             </div>
           </div>
-        </div>
+
+          <div className="grid gap-12 md:grid-cols-2 md:items-start">
+            <div className="space-y-4">
+              <h3 className="text-2xl font-semibold text-[#055F3C]">Clear Judging Process</h3>
+              <p className="text-base text-gray-700">
+                Every live judging session is overseen by an independent law firm and audit partner, ensuring unbiased results that are recorded and published publicly.
+              </p>
+            </div>
+            <div className="flex items-center justify-center">
+              <img
+                src="/images/tablet-judging.png"
+                alt="Tablet showing judging process"
+                className="h-auto w-72 object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320"><rect fill="#f3f4f6" width="320" height="320"/><rect x="96" y="70" width="128" height="180" fill="#d1d5db" rx="10" stroke="#6b7280" stroke-width="4"/><rect x="108" y="86" width="104" height="132" fill="#ffffff" rx="6"/><circle cx="160" cy="234" r="10" fill="#9ca3af"/><text x="160" y="154" text-anchor="middle" fill="#6b7280" font-size="16" font-weight="bold">Judging</text></svg>');
+                }}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-8" aria-labelledby="faq">
+          <h2 id="faq" className="text-3xl font-semibold text-[#1E1E1E] sm:text-4xl">
+            Frequently Asked Questions
+          </h2>
+          <div className="divide-y divide-gray-200">
+            {[
+              {
+                question: 'Is this a legitimate opportunity?',
+                answer:
+                  "Yes. Wishmasters operates within India's skill-gaming guidelines and each contest is audited by independent legal partners to keep everything transparent.",
+              },
+              {
+                question: 'How do I enter a wishmasters contest? Masumi Parmar',
+                answer:
+                  'Create an account, select an active contest, and place your markers on the spot-the-ball image before checkout closes to confirm your entry.',
+              },
+              {
+                question: 'Are my payments secure?',
+                answer:
+                  'Absolutely. All payments flow through PCI-DSS compliant gateways and every transaction is encrypted end-to-end for your safety.',
+              },
+            ].map(({ question, answer }) => (
+              <details key={question} className="group py-6">
+                <summary className="flex cursor-pointer items-center justify-between text-lg font-medium text-[#1E1E1E]">
+                  <span>{question}</span>
+                  <span className="text-2xl leading-none text-gray-400 transition-transform group-open:rotate-180">&gt;</span>
+                </summary>
+                <p className="mt-4 text-base leading-relaxed text-gray-600">
+                  {answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

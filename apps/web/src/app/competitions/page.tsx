@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,73 +7,238 @@ import Link from 'next/link';
 
 export default function CompetitionsPage() {
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [participantName, setParticipantName] = useState<string>("");
+
+  const clearStoredSession = () => {
+    try {
+      const explicitKeys = [
+        'admin_token',
+        'competition_access_token',
+        'participant_login_token',
+        'participant_profile',
+        'participant_competitions',
+      ];
+      explicitKeys.forEach((key) => localStorage.removeItem(key));
+
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith('competition_') || key.startsWith('participant_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
+
+  const handleNavigate = (path: string) => {
+    router.push(path);
+    setMobileMenuOpen(false);
+  };
+
+  useEffect(() => {
+    try {
+      const storedProfile = localStorage.getItem('participant_profile');
+      if (!storedProfile) return;
+
+      const parsedProfile = JSON.parse(storedProfile);
+      if (parsedProfile?.name) {
+        setParticipantName(parsedProfile.name as string);
+      }
+    } catch (readError) {
+      console.warn('Failed to load participant profile', readError);
+    }
+  }, []);
+
+  const displayName = participantName || 'Participant';
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header - Mobile */}
-      <header className="bg-[#055F3C] lg:hidden">
-        <div className="px-4 py-4 flex items-center justify-between">
+      {/* Header */}
+      <header className="bg-[#055F3C] text-white sticky top-0 z-50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <div className="text-white text-lg font-bold tracking-wider">WISHMASTERS</div>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/')}
+              className="text-xl font-bold tracking-wider hover:text-yellow-400 transition-colors"
+            >
+              WISHMASTERS
+            </button>
           </div>
+
+          <nav className="hidden md:flex items-center gap-8">
+            <button
+              type="button"
+              onClick={() => handleNavigate('/')}
+              className="hover:text-yellow-400 transition-colors font-medium"
+            >
+              HOME
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/competitions')}
+              className="font-medium border-b-2 border-yellow-400 pb-1 text-yellow-300"
+            >
+              UPCOMING CONTESTS
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/about')}
+              className="hover:text-yellow-400 transition-colors font-medium"
+            >
+              ABOUT US
+            </button>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/contact')}
+              className="hover:text-yellow-400 transition-colors font-medium"
+            >
+              CONTACT
+            </button>
+          </nav>
+
+          <div className="hidden md:flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+              <img
+                src="/images/user-avatar.jpg"
+                alt="User"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    'data:image/svg+xml,' +
+                    encodeURIComponent(
+                      '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#d1d5db"/><circle cx="20" cy="16" r="7" fill="#9ca3af"/><path d="M 8 35 Q 8 28 20 28 Q 32 28 32 35" fill="#9ca3af"/></svg>'
+                    );
+                }}
+              />
+            </div>
+            <span className="text-sm font-medium">{displayName}</span>
+          </div>
+
           <button
-            className="text-white"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-2xl"
+            aria-label="Toggle mobile navigation"
+            aria-expanded={mobileMenuOpen}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {menuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+            ☰
           </button>
         </div>
-      </header>
 
-      {/* Header - Desktop */}
-      <header className="hidden lg:block bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-              <Link href="/" className="text-2xl font-bold text-[#055F3C] tracking-wider">
-                WISHMASTERS
-              </Link>
-            </div>
-
-            <nav className="flex items-center gap-8">
-              <Link href="/" className="text-gray-700 hover:text-[#055F3C] transition-colors font-medium">
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#044a2f] border-t border-white/20 shadow-inner">
+            <nav className="flex flex-col border-y border-white/20 divide-y divide-white/20">
+              <button
+                type="button"
+                onClick={() => handleNavigate('/')}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
                 HOME
-              </Link>
-              <Link href="/competitions" className="text-[#055F3C] font-semibold border-b-2 border-[#055F3C]">
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/competitions')}
+                className="px-6 py-4 text-left bg-[#055F3C] text-yellow-200 transition-colors"
+              >
                 UPCOMING CONTESTS
-              </Link>
-              <Link href="/about" className="text-gray-700 hover:text-[#055F3C] transition-colors font-medium">
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/about')}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
                 ABOUT US
-              </Link>
-              <Link href="/contact" className="text-gray-700 hover:text-[#055F3C] transition-colors font-medium">
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/contact')}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
                 CONTACT
-              </Link>
-              
-              <div className="flex items-center gap-3 ml-4">
-                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <span className="text-gray-700 font-medium">Natalie Portman</span>
-              </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/privacy-policy')}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
+                PRIVACY POLICY
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutConfirm(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
+              >
+                LOGOUT
+              </button>
             </nav>
+            <div className="px-6 py-4 bg-[#033826] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                <img
+                  src="/images/user-avatar.jpg"
+                  alt="User"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      'data:image/svg+xml,' +
+                      encodeURIComponent(
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="#d1d5db"/><circle cx="20" cy="16" r="7" fill="#9ca3af"/><path d="M 8 35 Q 8 28 20 28 Q 32 28 32 35" fill="#9ca3af"/></svg>'
+                      );
+                  }}
+                />
+              </div>
+              <span className="text-sm font-medium">{displayName}</span>
+            </div>
           </div>
-        </div>
+        )}
+
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setShowLogoutConfirm(false)}
+            />
+            <div className="bg-white rounded-lg shadow-xl z-10 max-w-sm w-full p-6">
+              <h3 className="text-lg font-semibold mb-2">Confirm Logout</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Are you sure you want to logout? This will sign you out and clear any competition
+                access stored locally.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-800 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearStoredSession();
+                    setShowLogoutConfirm(false);
+                    router.push('/login');
+                  }}
+                  className="px-4 py-2 bg-[#055F3C] text-white rounded-md"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}

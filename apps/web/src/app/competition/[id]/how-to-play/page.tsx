@@ -1,12 +1,11 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function HowToPlayPage() {
-  const params = useParams();
   const router = useRouter();
-  const competitionId = params.id as string;
   const [showModal, setShowModal] = useState(true);
 
   const handleClose = () => {

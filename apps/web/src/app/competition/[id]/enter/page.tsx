@@ -1,10 +1,12 @@
 "use client";
+/* eslint-disable react/no-unescaped-entities */
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
 import CheckoutModal, { CheckoutTicket } from "@/components/CheckoutModal";
+import { buildApiUrl } from "@/lib/api";
 
 const MarkerCanvas = dynamic(() => import("@/components/MarkerCanvas"), {
   ssr: false,
@@ -76,7 +78,6 @@ export default function EnterCompetitionPage() {
   const competitionTokenKey = "competition_access_token";
   const participantTokenKey = `competition_${id}_participant_token`;
   const participantInfoKey = `competition_${id}_participant_info`;
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
   const [isChecking, setIsChecking] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
@@ -148,7 +149,7 @@ export default function EnterCompetitionPage() {
         ? { Authorization: `Bearer ${authToken}` }
         : {};
 
-      const response = await fetch(`${API_URL}/api/v1/competitions/${id}`, {
+      const response = await fetch(buildApiUrl(`competitions/${id}`), {
         headers,
       });
 
@@ -166,7 +167,7 @@ export default function EnterCompetitionPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [API_URL, competitionTokenKey, hasAccess, id, participantToken]);
+  }, [competitionTokenKey, hasAccess, id, participantToken]);
 
   useEffect(() => {
     if (!hasAccess) return;
@@ -182,7 +183,7 @@ export default function EnterCompetitionPage() {
     try {
       setIsParticipantLoading(true);
       const response = await fetch(
-        `${API_URL}/api/v1/competitions/${id}/participants/me/tickets`,
+        buildApiUrl(`competitions/${id}/participants/me/tickets`),
         {
           headers: {
             Authorization: `Bearer ${participantToken}`,
@@ -229,7 +230,7 @@ export default function EnterCompetitionPage() {
     } finally {
       setIsParticipantLoading(false);
     }
-  }, [API_URL, id, participantInfoKey, participantToken, participantTokenKey]);
+  }, [id, participantInfoKey, participantToken, participantTokenKey]);
 
   useEffect(() => {
     if (!participantToken) {
@@ -318,7 +319,7 @@ export default function EnterCompetitionPage() {
       try {
         setIsParticipantLoading(true);
         const response = await fetch(
-          `${API_URL}/api/v1/competitions/${id}/participants/authenticate`,
+          buildApiUrl(`competitions/${id}/participants/authenticate`),
           {
             method: "POST",
             headers: {
@@ -377,7 +378,6 @@ export default function EnterCompetitionPage() {
       }
     },
     [
-      API_URL,
       fetchCompetitionData,
       id,
       participantInfoKey,
@@ -438,7 +438,7 @@ export default function EnterCompetitionPage() {
     try {
       setIsSubmittingMarkers(true);
       setParticipantError(null);
-      const response = await fetch(`${API_URL}/api/v1/competitions/${id}/entries`, {
+      const response = await fetch(buildApiUrl(`competitions/${id}/entries`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -490,7 +490,6 @@ export default function EnterCompetitionPage() {
       setIsSubmittingMarkers(false);
     }
   }, [
-    API_URL,
     competition?.markersPerTicket,
     fetchCompetitionData,
     id,
