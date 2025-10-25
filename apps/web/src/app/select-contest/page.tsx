@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 
-export default function HomePage() {
+export default function SelectContestPage() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -44,7 +44,7 @@ export default function HomePage() {
               UPCOMING CONTESTS
             </button>
             <button 
-              onClick={() => router.push('/about')}
+              onClick={() => scrollToSection('about')}
               className="hover:text-yellow-400 transition-colors font-medium"
             >
               ABOUT US
@@ -98,7 +98,7 @@ export default function HomePage() {
                 UPCOMING CONTESTS
               </button>
               <button 
-                onClick={() => { router.push('/about'); setMobileMenuOpen(false); }}
+                onClick={() => scrollToSection('about')}
                 className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors border-b border-[#055F3C]/30"
               >
                 ABOUT US

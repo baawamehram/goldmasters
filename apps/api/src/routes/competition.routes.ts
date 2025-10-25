@@ -5,138 +5,23 @@ import {
   verifyParticipantAccess,
   ParticipantAccessRequest,
 } from '../middleware/competitionAccess';
+import {
+  MockMarker,
+  MockParticipant,
+  MockTicket,
+  calculateTicketsSold,
+  findParticipantById,
+  findParticipantByPhone,
+  getCompetitionById,
+  getCompetitionsWithStats,
+  sanitizePhone,
+  saveParticipant,
+} from '../data/mockDb';
 
 const router: Router = Router();
 
-type MockMarker = {
-  id: string;
-  x: number;
-  y: number;
-};
-
-type MockTicket = {
-  id: string;
-  ticketNumber: number;
-  status: 'ASSIGNED' | 'USED';
-  markersAllowed: number;
-  markersUsed: number;
-  markers: MockMarker[];
-  submittedAt?: Date | null;
-};
-
-type MockParticipant = {
-  id: string;
-  competitionId: string;
-  name: string;
-  phone: string;
-  email?: string;
-  tickets: MockTicket[];
-  lastSubmissionAt?: Date | null;
-};
-
-const BASE_COMPETITION = {
-  title: 'Wishmasters Spot the Ball - October 2025',
-  imageUrl: 'https://placehold.co/1200x800/png?text=Competition+Image',
-  maxEntries: 100,
-  ticketsSold: 45,
-  status: 'ACTIVE',
-  pricePerTicket: 500,
-  markersPerTicket: 3,
-  createdAt: new Date('2025-10-01'),
-  endsAt: new Date('2025-10-31'),
-} as const;
-
-const sanitizePhone = (phone: string): string => phone.replace(/[^0-9+]/g, '');
-
-const getMockCompetition = (id: string) => ({
-  id,
-  ...BASE_COMPETITION,
-});
-
-let mockParticipants: MockParticipant[] = [
-  {
-    id: 'participant-1',
-    competitionId: 'test-id',
-    name: 'Priya Sharma',
-    phone: sanitizePhone('+91 98765 43210'),
-    email: 'priya.sharma@example.com',
-    tickets: [
-      {
-        id: 'ticket-1',
-        ticketNumber: 101,
-        status: 'ASSIGNED',
-        markersAllowed: 3,
-        markersUsed: 0,
-        markers: [],
-      },
-      {
-        id: 'ticket-2',
-        ticketNumber: 102,
-        status: 'ASSIGNED',
-        markersAllowed: 3,
-        markersUsed: 0,
-        markers: [],
-      },
-    ],
-  },
-  {
-    id: 'participant-2',
-    competitionId: 'test-id',
-    name: 'Arjun Mehta',
-    phone: sanitizePhone('+91 91234 56789'),
-    email: 'arjun.mehta@example.com',
-    tickets: [
-      {
-        id: 'ticket-3',
-        ticketNumber: 103,
-        status: 'USED',
-        markersAllowed: 3,
-        markersUsed: 3,
-        markers: [
-          { id: 'ticket-3-marker-1', x: 0.42, y: 0.28 },
-          { id: 'ticket-3-marker-2', x: 0.55, y: 0.31 },
-          { id: 'ticket-3-marker-3', x: 0.51, y: 0.45 },
-        ],
-        submittedAt: new Date('2025-10-20T10:30:00Z'),
-      },
-    ],
-    lastSubmissionAt: new Date('2025-10-20T10:30:00Z'),
-  },
-];
-
-const findParticipantByPhone = (competitionId: string, phone: string) =>
-  mockParticipants.find(
-    (participant) =>
-      participant.competitionId === competitionId &&
-      sanitizePhone(participant.phone) === sanitizePhone(phone)
-  );
-
-const findParticipantById = (competitionId: string, participantId: string) =>
-  mockParticipants.find(
-    (participant) =>
-      participant.competitionId === competitionId && participant.id === participantId
-  );
-
-const saveParticipant = (updatedParticipant: MockParticipant) => {
-  const exists = mockParticipants.some((participant) => participant.id === updatedParticipant.id);
-
-  if (exists) {
-    mockParticipants = mockParticipants.map((participant) =>
-      participant.id === updatedParticipant.id ? updatedParticipant : participant
-    );
-  } else {
-    mockParticipants = [...mockParticipants, updatedParticipant];
-  }
-};
-
-let mockTicketCounter = 200;
-
-const calculateTicketsSold = (competitionId: string) =>
-  mockParticipants
-    .filter((participant) => participant.competitionId === competitionId)
-    .reduce((total, participant) => total + participant.tickets.length, 0);
-
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+let mockTicketCounter = 200;
 
 /**
  * @route   GET /api/v1/competitions
@@ -145,17 +30,75 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
  */
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    // TODO: Fetch from database using Prisma
+    const competitions = getCompetitionsWithStats();
     res.status(200).json({
       status: 'success',
       data: {
-        competitions: [],
+        competitions,
       },
     });
   } catch (error) {
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch competitions',
+    });
+  }
+});
+
+/**
+ * @route   GET /api/v1/competitions/active
+ * @desc    Get the first active competition for preview page
+ * @access  Protected (requires participant login token)
+ */
+router.get('/active', async (req: Request, res: Response) => {
+  try {
+    // Verify participant is logged in
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+      res.status(401).json({
+        status: 'fail',
+        message: 'Authentication required',
+      });
+      return;
+    }
+
+    try {
+      jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+      res.status(401).json({
+        status: 'fail',
+        message: 'Invalid or expired token',
+      });
+      return;
+    }
+
+    const competitions = getCompetitionsWithStats();
+    const activeCompetition = competitions.find(c => c.status === 'ACTIVE');
+
+    if (!activeCompetition) {
+      res.status(404).json({
+        status: 'fail',
+        message: 'No active competitions available',
+      });
+      return;
+    }
+
+    // Format response to match frontend expectations
+    res.status(200).json({
+      id: activeCompetition.id,
+      title: activeCompetition.title,
+      subtitle: 'WITH A CLICK',
+      imageUrl: activeCompetition.imageUrl || '/images/gold-coin.svg',
+      hosts: ['Mr. Sarthak', 'Mr. Manjot'],
+      status: activeCompetition.status,
+    });
+  } catch (error) {
+    console.error('Error fetching active competition:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch active competition',
     });
   }
 });
@@ -191,9 +134,9 @@ router.get('/:id', async (req: Request, res: Response) => {
       }
     }
 
-    const baseCompetition = getMockCompetition(id);
-    const ticketsSold = calculateTicketsSold(id) || baseCompetition.ticketsSold;
-    const remainingSlots = Math.max(0, baseCompetition.maxEntries - ticketsSold);
+  const baseCompetition = getCompetitionById(id);
+  const ticketsSold = calculateTicketsSold(id);
+  const remainingSlots = Math.max(0, baseCompetition.maxEntries - ticketsSold);
 
     const responseData: any = {
       competition: {
@@ -542,8 +485,8 @@ router.post(
         return;
       }
 
-      const sanitizedPhone = sanitizePhone(phone);
-      const baseCompetition = getMockCompetition(id);
+  const sanitizedPhone = sanitizePhone(phone);
+  const baseCompetition = getCompetitionById(id);
       const markersPerTicket = baseCompetition.markersPerTicket;
 
       const markerGroups = new Map<

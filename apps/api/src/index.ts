@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import competitionRoutes from './routes/competition.routes';
 import participantRoutes from './routes/participant.routes';
 import adminRoutes from './routes/admin.routes';
+import authRoutes from './routes/auth.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { notFoundHandler } from './middleware/notFoundHandler';
 
@@ -54,6 +55,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use(`/api/${API_VERSION}/competitions`, competitionRoutes);
 app.use(`/api/${API_VERSION}/participants`, participantRoutes);
 app.use(`/api/${API_VERSION}/admin`, adminRoutes);
+app.use(`/api/${API_VERSION}/auth`, authRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

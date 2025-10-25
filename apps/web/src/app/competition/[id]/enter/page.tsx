@@ -2,9 +2,18 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import CheckoutModal, { CheckoutTicket } from "@/components/CheckoutModal";
-import MarkerCanvas from "@/components/MarkerCanvas";
+
+const MarkerCanvas = dynamic(() => import("@/components/MarkerCanvas"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="text-gray-500">Loading canvas...</div>
+    </div>
+  ),
+});
 
 interface Competition {
   id: string;

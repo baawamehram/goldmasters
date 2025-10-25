@@ -1,7 +1,113 @@
 import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
+import {
+  findParticipantsByPhone,
+  getCompetitionsByIds,
+  sanitizePhone,
+} from '../data/mockDb';
 
 const router: Router = Router();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+/**
+ * @route   POST /api/v1/participants/login
+ * @desc    Authenticate participant by phone and return accessible competitions
+ * @access  Public
+ */
+router.post(
+  '/login',
+  [
+    body('phone').notEmpty().withMessage('Phone number is required'),
+    body('isAdult')
+      .isBoolean()
+      .withMessage('Age confirmation must be provided')
+      .custom((value) => value === true)
+      .withMessage('You must confirm that you are 18 years or older'),
+  ],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        status: 'fail',
+        errors: errors.array(),
+      });
+      return;
+    }
+
+    try {
+      const { phone } = req.body as { phone: string };
+      const participants = findParticipantsByPhone(phone);
+
+      if (participants.length === 0) {
+        res.status(404).json({
+          status: 'fail',
+          message: 'No participant found with the provided phone number.',
+        });
+        return;
+      }
+
+      const uniqueNames = Array.from(
+        new Set(participants.map((participant) => participant.name.trim().toLowerCase()))
+      );
+
+      if (uniqueNames.length > 1) {
+        res.status(409).json({
+          status: 'fail',
+          message:
+            'Multiple participant profiles are linked to this phone number. Please contact support.',
+        });
+        return;
+      }
+
+      const primaryParticipant = participants[0];
+      const competitionIds = Array.from(
+        new Set(participants.map((participant) => participant.competitionId))
+      );
+
+      const competitions = getCompetitionsByIds(competitionIds).map((competition) => ({
+        id: competition.id,
+        title: competition.title,
+        status: competition.status,
+        imageUrl: competition.imageUrl,
+        pricePerTicket: competition.pricePerTicket,
+        markersPerTicket: competition.markersPerTicket,
+        endsAt: competition.endsAt.toISOString(),
+      }));
+
+      const loginToken = jwt.sign(
+        {
+          type: 'participant_login',
+          phone: sanitizePhone(primaryParticipant.phone),
+          participantIds: participants.map((participant) => participant.id),
+        },
+        JWT_SECRET,
+        { expiresIn: '12h' }
+      );
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          token: loginToken,
+          participant: {
+            id: primaryParticipant.id,
+            name: primaryParticipant.name,
+            phone: primaryParticipant.phone,
+            ticketsPurchased: primaryParticipant.tickets.length,
+          },
+          competitions,
+        },
+      });
+    } catch (error) {
+      console.error('Participant login error:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to authenticate participant',
+      });
+    }
+  }
+);
 
 /**
  * @route   POST /api/v1/participants/register
