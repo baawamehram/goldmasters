@@ -97,6 +97,8 @@ export default function EnterCompetitionPage() {
   const [isSubmittingMarkers, setIsSubmittingMarkers] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [currentPhase, setCurrentPhase] = useState<number>(1);
+  const [phaseImageUrl, setPhaseImageUrl] = useState<string>('');
 
   useEffect(() => {
     // Check if user has valid competition access token
@@ -108,6 +110,24 @@ export default function EnterCompetitionPage() {
         // Redirect to gate page if no access token
         router.push(`/competition/${id}/gate`);
         return;
+      }
+      
+      // Get user data to determine their phase
+      const userData = localStorage.getItem('competition_user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          const userPhase = user.currentPhase || 1; // Default to phase 1
+          setCurrentPhase(userPhase);
+          
+          // Load phase image from localStorage
+          const phaseImage = localStorage.getItem(`admin_phase${userPhase}_image_url`);
+          if (phaseImage) {
+            setPhaseImageUrl(phaseImage);
+          }
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
       }
       
       setHasAccess(true);
@@ -591,8 +611,17 @@ export default function EnterCompetitionPage() {
         <div className="bg-card rounded-2xl shadow-modal p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-heading">{competition.title}</h1>
-              <p className="text-sm text-muted-foreground mt-2">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl sm:text-3xl font-bold font-heading">{competition.title}</h1>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                  currentPhase === 1 ? 'bg-green-100 text-green-800' :
+                  currentPhase === 2 ? 'bg-blue-100 text-blue-800' :
+                  'bg-purple-100 text-purple-800'
+                }`}>
+                  Phase {currentPhase}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
                 Use your assigned tickets to place markers on the image. Submissions cannot be edited once locked.
               </p>
             </div>
@@ -795,7 +824,7 @@ export default function EnterCompetitionPage() {
               ) : (
                 <>
                   <MarkerCanvas
-                    imageUrl={competition.imageUrl}
+                    imageUrl={phaseImageUrl || competition.imageUrl}
                     tickets={tickets}
                     markersPerTicket={competition.markersPerTicket}
                     onMarkersChange={handleMarkersChange}

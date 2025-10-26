@@ -11,7 +11,7 @@ export default function CompetitionGatePage() {
   const router = useRouter();
   const competitionId = params.id as string;
   
-  const [password, setPassword] = useState('');
+  const [accessCode, setAccessCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,12 +21,13 @@ export default function CompetitionGatePage() {
     setIsLoading(true);
 
     try {
-  const response = await fetch(buildApiUrl(`competitions/${competitionId}/verify-password`), {
+      // Verify the access code
+      const response = await fetch(buildApiUrl('competitions/verify-code'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ code: accessCode }),
       });
 
       const data = await response.json();
@@ -34,11 +35,7 @@ export default function CompetitionGatePage() {
       if (!response.ok) {
         // Handle different error responses
         if (response.status === 401) {
-          setError('Incorrect password. Please try again.');
-        } else if (response.status === 403) {
-          setError('This competition is not currently active.');
-        } else if (response.status === 404) {
-          setError('Competition not found.');
+          setError('Invalid access code. Please check the code and try again.');
         } else {
           setError(data.message || 'An error occurred. Please try again.');
         }
@@ -46,9 +43,10 @@ export default function CompetitionGatePage() {
         return;
       }
 
-      // Store the competition access token
-      if (data.data?.competitionAccessToken) {
-        localStorage.setItem('competition_access_token', data.data.competitionAccessToken);
+      // Store the user data and allow access
+      if (data.data?.user) {
+        localStorage.setItem('competition_user', JSON.stringify(data.data.user));
+        localStorage.setItem('competition_access_token', 'verified'); // Token for access check
         localStorage.setItem(`competition_${competitionId}_access`, 'true');
         
         // Redirect to competition entry page
@@ -58,57 +56,68 @@ export default function CompetitionGatePage() {
         setIsLoading(false);
       }
     } catch (err) {
-      console.error('Password verification error:', err);
+      console.error('Access code verification error:', err);
       setError('Network error. Please check your connection and try again.');
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="container-custom py-12 min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Competition Access</CardTitle>
-          <CardDescription>
+    <main className="container-custom py-12 min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-primary/5 via-white to-brand-accent/5">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-3xl font-bold">Competition Access</CardTitle>
+          <CardDescription className="text-base">
             This competition is password-protected. Enter the password to continue.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-3">
+              <label htmlFor="accessCode" className="text-sm font-semibold block">
                 Password
               </label>
               <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="accessCode"
+                type="text"
+                value={accessCode}
+                onChange={(e) => {
+                  // Only allow numbers and limit to 6 digits
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setAccessCode(value);
+                }}
                 placeholder="Enter competition password"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-3 text-lg font-mono tracking-widest text-center border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#055F3C] focus:border-[#055F3C] transition-all"
+                maxLength={6}
                 required
                 disabled={isLoading}
               />
+              <p className="text-xs text-gray-500 text-center">
+                Enter the 6-digit code provided by the administrator
+              </p>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-                {error}
+              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <span>{error}</span>
               </div>
             )}
 
             <Button 
               type="submit" 
-              className="w-full"
-              disabled={isLoading}
+              className="w-full py-6 text-lg font-semibold"
+              disabled={isLoading || accessCode.length !== 6}
             >
               {isLoading ? 'Verifying...' : 'Access Competition'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p>Don&apos;t have the password?</p>
-            <p className="mt-1">Contact the competition administrator.</p>
+          <div className="mt-8 text-center text-sm text-gray-600 border-t pt-6">
+            <p className="font-semibold">Don&apos;t have the password?</p>
+            <p className="mt-2">Contact the competition administrator.</p>
           </div>
         </CardContent>
       </Card>

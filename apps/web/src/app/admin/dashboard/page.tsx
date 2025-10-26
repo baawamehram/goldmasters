@@ -81,6 +81,10 @@ export default function AdminDashboardPage() {
   } | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [maxTicketsPerParticipant, setMaxTicketsPerParticipant] = useState(5);
+  const [maxCompetitionTickets, setMaxCompetitionTickets] = useState(100);
+  const [ticketPrice, setTicketPrice] = useState(500);
+  const [ticketsSold, setTicketsSold] = useState(3); // This would come from actual data
 
   const fetchCompetitions = useCallback(async () => {
     try {
@@ -119,8 +123,24 @@ export default function AdminDashboardPage() {
     // Check if admin is logged in
     const token = localStorage.getItem('admin_token');
     if (!token) {
-      router.push('/admin');
+      router.replace('/login');
       return;
+    }
+
+    // Load max tickets setting
+    const savedMaxTickets = localStorage.getItem('admin_max_tickets_per_participant');
+    if (savedMaxTickets) {
+      setMaxTicketsPerParticipant(parseInt(savedMaxTickets, 10));
+    }
+    
+    const savedMaxCompetitionTickets = localStorage.getItem('admin_max_competition_tickets');
+    if (savedMaxCompetitionTickets) {
+      setMaxCompetitionTickets(parseInt(savedMaxCompetitionTickets, 10));
+    }
+    
+    const savedTicketPrice = localStorage.getItem('admin_ticket_price');
+    if (savedTicketPrice) {
+      setTicketPrice(parseInt(savedTicketPrice, 10));
     }
 
     fetchCompetitions();
@@ -132,6 +152,12 @@ export default function AdminDashboardPage() {
     setIsAssigning(true);
 
     try {
+      // Validate ticket count against max setting
+      const requestedTickets = parseInt(ticketCount.toString());
+      if (requestedTickets > maxTicketsPerParticipant) {
+        throw new Error(`Cannot assign more than ${maxTicketsPerParticipant} tickets per participant. Please update settings if needed.`);
+      }
+
       const token = localStorage.getItem('admin_token');
       const response = await fetch(
   buildApiUrl(`admin/competitions/${selectedCompetition}/assign-tickets`),
@@ -188,7 +214,7 @@ export default function AdminDashboardPage() {
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
-    router.push('/admin');
+    router.push('/login');
   };
 
   const handleCreateCompetition = async (event: React.FormEvent) => {
@@ -568,6 +594,15 @@ export default function AdminDashboardPage() {
             <p className="text-muted-foreground mt-1">Manage competitions and tickets</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => router.push('/admin/phases')}>
+              Phases
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/admin/entries')}>
+              View Entries
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/admin/settings')}>
+              Settings
+            </Button>
             <Button variant="outline" onClick={() => setIsCreateOpen((prev) => !prev)}>
               {isCreateOpen ? 'Cancel' : 'New Competition'}
             </Button>
@@ -595,10 +630,16 @@ export default function AdminDashboardPage() {
                 ) : (
                   competitions.map((competition) => {
                     const isActive = competition.status === 'ACTIVE';
+                    // Use dynamic values from settings or fallback to competition data
+                    const displayMaxTickets = maxCompetitionTickets || competition.maxEntries;
+                    const displayTicketsSold = ticketsSold;
+                    const displayRemaining = displayMaxTickets - displayTicketsSold;
+                    const displayPrice = ticketPrice || competition.pricePerTicket;
+                    
                     return (
                       <div
                         key={competition.id}
-                        className="p-4 border rounded-lg hover:bg-muted/50 transition-colors space-y-3"
+                        className="p-4 border-2 rounded-lg hover:bg-muted/50 transition-colors space-y-3"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
@@ -631,21 +672,51 @@ export default function AdminDashboardPage() {
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
                             <span className="text-muted-foreground">Tickets Sold:</span>
-                            <span className="ml-2 font-medium">{competition.ticketsSold}/{competition.maxEntries}</span>
+                            <span className="ml-2 font-medium">{displayTicketsSold}/{displayMaxTickets}</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Remaining:</span>
-                            <span className="ml-2 font-medium">{competition.remainingSlots}</span>
+                            <span className="ml-2 font-medium">{displayRemaining}</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Price per ticket:</span>
-                            <span className="ml-2 font-medium">₹{competition.pricePerTicket}</span>
+                            <span className="ml-2 font-medium">₹{displayPrice}</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Markers per ticket:</span>
                             <span className="ml-2 font-medium">{competition.markersPerTicket}</span>
                           </div>
                         </div>
+                        
+                        {/* Admin Access Code Display */}
+                        <div className="border-t pt-3 mt-3">
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-semibold text-green-800 mb-1">🧪 Admin Testing Code:</p>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-xl font-bold text-green-700 tracking-wider">
+                                    999999
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText('999999');
+                                      alert('Admin code copied!');
+                                    }}
+                                    className="text-green-600 hover:text-green-800 p-1"
+                                    title="Copy admin code"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-xs text-green-600 mt-1">Universal access for testing</p>
+                          </div>
+                        </div>
+                        
                         <div className="text-xs text-muted-foreground">
                           {typeof competition.finalJudgeX === 'number' && typeof competition.finalJudgeY === 'number'
                             ? `Final judged coordinate: (${competition.finalJudgeX.toFixed(3)}, ${competition.finalJudgeY.toFixed(3)})`
@@ -715,10 +786,13 @@ export default function AdminDashboardPage() {
                     value={ticketCount}
                     onChange={(e) => setTicketCount(parseInt(e.target.value) || 1)}
                     min="1"
-                    max="100"
+                    max={maxTicketsPerParticipant}
                     className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
                     required
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Maximum {maxTicketsPerParticipant} tickets per participant (configure in Settings)
+                  </p>
                 </div>
 
                 {message && (

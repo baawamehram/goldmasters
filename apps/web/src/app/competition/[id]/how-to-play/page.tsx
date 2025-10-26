@@ -61,12 +61,80 @@ export default function HowToPlayPage() {
             </div>
 
             {/* Modal Content */}
-            <div className="p-6">
-              <div className="bg-gray-100 rounded-lg p-12 text-center">
-                <p className="text-gray-600 text-sm">
-                  TEST to be provided by manjot<br />
-                  on how to play
-                </p>
+            <div className="p-6 space-y-6">
+              {/* How to Play Instructions */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-8 text-center space-y-4">
+                <div className="w-16 h-16 bg-[#055F3C] rounded-full flex items-center justify-center mx-auto">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-gray-800">How to Play Spot the Ball</h3>
+                <div className="text-left space-y-3 text-sm text-gray-700">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#055F3C] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                    <p>You will receive tickets from the admin with a specific number of markers to place on the competition image.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#055F3C] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                    <p>Drag and drop your markers onto the image where you think the ball should be located.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#055F3C] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                    <p>Each ticket requires a specific number of markers. Make sure to place all required markers before submitting.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#055F3C] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">4</div>
+                    <p>Once submitted, your markers are locked and cannot be changed. Choose your positions carefully!</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#055F3C] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">5</div>
+                    <p>Winners are determined by the markers closest to the official judge's position.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Play Button */}
+              <div className="text-center">
+                <button
+                  onClick={() => {
+                    const competitionId = window.location.pathname.split('/')[2];
+                    router.push(`/competition/${competitionId}/enter`);
+                  }}
+                  className="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#055F3C] to-[#077a4f] text-white font-bold text-lg rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                >
+                  {/* Animated background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#077a4f] to-[#055F3C] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  {/* Play icon */}
+                  <div className="relative z-10 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-all">
+                    <svg className="w-5 h-5 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                  
+                  {/* Text */}
+                  <span className="relative z-10">Start Playing Now</span>
+                  
+                  {/* Arrow */}
+                  <svg className="relative z-10 w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+                <p className="text-xs text-gray-500 mt-3">You will be redirected to the game interface</p>
+              </div>
+
+              {/* Additional Info */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-blue-800">
+                    <p className="font-semibold mb-1">Important:</p>
+                    <p>Make sure you have received your tickets from the competition administrator before starting the game.</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

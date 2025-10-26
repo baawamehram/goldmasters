@@ -25,6 +25,11 @@ interface LoginResponse {
 
 const PHONE_REGEX = /^[0-9]{10}$/;
 
+// Admin credentials
+const ADMIN_PHONE = "9464742314";
+const ADMIN_NAME = "manan";
+const ADMIN_PASSWORD = "goldenbull";
+
 const createLocalId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -39,6 +44,11 @@ export default function ParticipantLoginPage() {
   const [isAdult, setIsAdult] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Admin login state
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminError, setAdminError] = useState<string | null>(null);
 
   useEffect(() => {
     const existingToken = localStorage.getItem("participant_login_token");
@@ -65,6 +75,16 @@ export default function ParticipantLoginPage() {
     const trimmedNumber = phoneNumber.replace(/\s+/g, "");
     if (!PHONE_REGEX.test(trimmedNumber)) {
       setError("Enter a valid phone number.");
+      return;
+    }
+
+    // Check if admin credentials
+    const isAdminPhone = trimmedNumber === ADMIN_PHONE;
+    const isAdminName = fullName.trim().toLowerCase() === ADMIN_NAME.toLowerCase();
+
+    if (isAdminPhone && isAdminName) {
+      // Show admin password page
+      setShowAdminPassword(true);
       return;
     }
 
@@ -139,6 +159,56 @@ export default function ParticipantLoginPage() {
     }
   };
 
+  const handleAdminPasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAdminError(null);
+
+    if (adminPassword !== ADMIN_PASSWORD) {
+      setAdminError("Incorrect password. Please try again.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Call admin login API
+      const response = await fetch(buildApiUrl("auth/login"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: "wish-admin",
+          password: adminPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Admin login failed");
+      }
+
+      // Store admin token
+      localStorage.setItem("admin_token", data?.data?.token);
+      localStorage.setItem("admin_user", JSON.stringify(data?.data?.admin));
+
+      // Redirect to admin dashboard
+      router.push("/admin/dashboard");
+    } catch (error) {
+      console.error("Admin login error:", error);
+      setAdminError(error instanceof Error ? error.message : "Login failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBackFromPassword = () => {
+    setShowAdminPassword(false);
+    setAdminPassword("");
+    setAdminError(null);
+  };
+
   return (
     <main className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50 overflow-hidden">
       {/* Decorative Background Pattern */}
@@ -168,14 +238,16 @@ export default function ParticipantLoginPage() {
 
           {/* Login Card */}
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Hi, Welcome!</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Hello again, you&apos;ve been missed!
-              </p>
-            </div>
+            {!showAdminPassword ? (
+              <>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Hi, Welcome!</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Hello again, you&apos;ve been missed!
+                  </p>
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-xs font-semibold tracking-wide text-gray-700 uppercase">
                   Full Name
@@ -185,7 +257,7 @@ export default function ParticipantLoginPage() {
                   type="text"
                   value={fullName}
                   onChange={(event) => setFullName(event.target.value)}
-                  placeholder="e.g. Priya Sharma"
+                  placeholder="Enter your full name"
                   className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#055F3C] focus:ring-2 focus:ring-[#055F3C]/20 transition-all"
                   autoComplete="name"
                   disabled={isSubmitting}
@@ -197,24 +269,19 @@ export default function ParticipantLoginPage() {
                 <label htmlFor="phone" className="block text-xs font-semibold tracking-wide text-gray-700 uppercase">
                   Phone
                 </label>
-                <div className="flex gap-2">
-                  <div className="flex items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-800 min-w-[60px]">
-                    +91
-                  </div>
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(event) => setPhoneNumber(event.target.value.replace(/[^0-9]/g, ""))}
-                    placeholder="9876 543 210"
-                    className="flex-1 rounded-lg border-2 border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#055F3C] focus:ring-2 focus:ring-[#055F3C]/20 transition-all"
-                    autoComplete="tel"
-                    inputMode="numeric"
-                    disabled={isSubmitting}
-                    aria-describedby="phone-help"
-                    required
-                  />
-                </div>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(event) => setPhoneNumber(event.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="Enter 10-digit mobile number"
+                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#055F3C] focus:ring-2 focus:ring-[#055F3C]/20 transition-all"
+                  autoComplete="tel"
+                  inputMode="numeric"
+                  disabled={isSubmitting}
+                  aria-describedby="phone-help"
+                  required
+                />
                 <p id="phone-help" className="text-xs text-gray-500">
                   Enter the phone number linked to your invitation.
                 </p>
@@ -246,6 +313,73 @@ export default function ParticipantLoginPage() {
                 {isSubmitting ? "Processing…" : "NEXT"}
               </button>
             </form>
+          </>
+        ) : (
+          <>
+            {/* Admin Password Page */}
+            <div>
+              <button
+                onClick={handleBackFromPassword}
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+              <h1 className="text-2xl font-bold text-gray-900">Admin Access</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Enter your admin password to continue
+              </p>
+            </div>
+
+            <form onSubmit={handleAdminPasswordSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label htmlFor="admin-password" className="block text-xs font-semibold tracking-wide text-gray-700 uppercase">
+                  Admin Password
+                </label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#055F3C] focus:ring-2 focus:ring-[#055F3C]/20 transition-all"
+                  autoComplete="current-password"
+                  autoFocus
+                  disabled={isSubmitting}
+                  required
+                />
+              </div>
+
+              {adminError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {adminError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full rounded-full bg-gradient-to-r from-[#055F3C] to-[#0a8f5a] py-3.5 text-base font-bold text-white shadow-lg hover:shadow-xl hover:from-[#044d30] hover:to-[#077a4a] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {isSubmitting ? "Verifying…" : "LOGIN AS ADMIN"}
+              </button>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="text-sm text-blue-800">
+                    <p className="font-semibold mb-1">Admin Panel Access</p>
+                    <p>You are logging in as an administrator. This will give you access to manage competitions, assign tickets, and view all participants.</p>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </>
+        )}
           </div>
         </div>
       </div>

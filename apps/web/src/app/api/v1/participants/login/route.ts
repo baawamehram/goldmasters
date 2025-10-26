@@ -3,6 +3,7 @@ import {
   findParticipantsByPhone,
   getCompetitionsByIds,
   sanitizePhone,
+  createOrUpdateUserEntry,
 } from '@/server/data/mockDb';
 import { fieldError, validationFailure, fail, success, error, ValidationError } from '@/server/http';
 import { signToken } from '@/server/auth/jwt';
@@ -10,9 +11,13 @@ import { signToken } from '@/server/auth/jwt';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { phone, isAdult } = body as { phone?: string; isAdult?: unknown };
+    const { name, phone, isAdult } = body as { name?: string; phone?: string; isAdult?: unknown };
 
   const errors: ValidationError[] = [];
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      errors.push(fieldError('name', 'Full name is required', name));
+    }
 
     if (!phone || typeof phone !== 'string' || !phone.trim()) {
       errors.push(fieldError('phone', 'Phone number is required', phone));
@@ -28,10 +33,32 @@ export async function POST(req: NextRequest) {
       return validationFailure(errors, 400);
     }
 
+    // Auto-create or update user entry
+    const userEntry = createOrUpdateUserEntry(name!.trim(), phone!.trim());
+
     const participants = findParticipantsByPhone(phone!);
 
+    // If no participant found, return the user entry data anyway (for new users)
     if (participants.length === 0) {
-      return fail('No participant found with the provided phone number.', 404);
+      const loginToken = signToken(
+        {
+          type: 'participant_login',
+          phone: sanitizePhone(phone!),
+          participantIds: [],
+        },
+        { expiresIn: '12h' }
+      );
+
+      return success({
+        token: loginToken,
+        participant: {
+          id: userEntry.id,
+          name: userEntry.name,
+          phone: userEntry.phone,
+          ticketsPurchased: 0,
+        },
+        competitions: [],
+      });
     }
 
     const uniqueNames = Array.from(

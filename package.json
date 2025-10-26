@@ -4,9 +4,10 @@
   "private": true,
   "description": "Wishmasters Spot-the-Ball Competition Platform",
   "scripts": {
-    "dev": "pnpm run --parallel dev",
+    "dev": "pnpm --filter web dev",
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api dev",
+    "dev:all": "pnpm run --parallel dev",
     "build": "pnpm run --recursive build",
     "build:web": "pnpm --filter web build",
     "build:api": "pnpm --filter api build",

@@ -1,4 +1,24 @@
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+
+// File path for server-side persistence (only used on server)
+const DATA_DIR = path.join(process.cwd(), '.data');
+const PARTICIPANTS_FILE = path.join(DATA_DIR, 'participants.json');
+const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
+
+// Ensure data directory exists (server-side only)
+const ensureDataDir = () => {
+  if (typeof window === 'undefined') {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+    } catch (error) {
+      console.error('Error creating data directory:', error);
+    }
+  }
+};
 
 export type MockMarker = {
   id: string;
@@ -83,56 +103,123 @@ let mockCompetitions: MockCompetition[] = [
   },
 ];
 
-let mockParticipants: MockParticipant[] = [
-  {
-    id: 'participant-1',
-    competitionId: 'test-id',
-    name: 'Priya Sharma',
-    phone: sanitizePhone('+91 98765 43210'),
-    email: 'priya.sharma@example.com',
-    tickets: [
-      {
-        id: 'ticket-1',
-        ticketNumber: 101,
-        status: 'ASSIGNED',
-        markersAllowed: 3,
-        markersUsed: 0,
-        markers: [],
-      },
-      {
-        id: 'ticket-2',
-        ticketNumber: 102,
-        status: 'ASSIGNED',
-        markersAllowed: 3,
-        markersUsed: 0,
-        markers: [],
-      },
-    ],
-  },
-  {
-    id: 'participant-2',
-    competitionId: 'test-id',
-    name: 'Arjun Mehta',
-    phone: sanitizePhone('+91 91234 56789'),
-    email: 'arjun.mehta@example.com',
-    tickets: [
-      {
-        id: 'ticket-3',
-        ticketNumber: 103,
-        status: 'USED',
-        markersAllowed: 3,
-        markersUsed: 3,
-        markers: [
-          { id: 'ticket-3-marker-1', x: 0.42, y: 0.28 },
-          { id: 'ticket-3-marker-2', x: 0.55, y: 0.31 },
-          { id: 'ticket-3-marker-3', x: 0.51, y: 0.45 },
-        ],
-        submittedAt: new Date('2025-10-20T10:30:00Z'),
-      },
-    ],
-    lastSubmissionAt: new Date('2025-10-20T10:30:00Z'),
-  },
-];
+// Load participants from localStorage (browser) or file (server)
+const loadParticipantsFromStorage = (): MockParticipant[] => {
+  // Browser: use localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('mock_participants_db');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Convert date strings back to Date objects
+        return parsed.map((participant: any) => ({
+          ...participant,
+          lastSubmissionAt: participant.lastSubmissionAt ? new Date(participant.lastSubmissionAt) : null,
+          tickets: participant.tickets.map((ticket: any) => ({
+            ...ticket,
+            submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
+          })),
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading participants from localStorage:', error);
+    }
+  }
+  // Server: use file system
+  else {
+    try {
+      ensureDataDir();
+      if (fs.existsSync(PARTICIPANTS_FILE)) {
+        const data = fs.readFileSync(PARTICIPANTS_FILE, 'utf-8');
+        const parsed = JSON.parse(data);
+        return parsed.map((participant: any) => ({
+          ...participant,
+          lastSubmissionAt: participant.lastSubmissionAt ? new Date(participant.lastSubmissionAt) : null,
+          tickets: participant.tickets.map((ticket: any) => ({
+            ...ticket,
+            submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
+          })),
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading participants from file:', error);
+    }
+  }
+  // Return default sample participants if nothing in storage
+  return [
+    {
+      id: 'participant-1',
+      competitionId: 'test-id',
+      name: 'Priya Sharma',
+      phone: sanitizePhone('+91 98765 43210'),
+      email: 'priya.sharma@example.com',
+      tickets: [
+        {
+          id: 'ticket-1',
+          ticketNumber: 101,
+          status: 'ASSIGNED',
+          markersAllowed: 3,
+          markersUsed: 0,
+          markers: [],
+        },
+        {
+          id: 'ticket-2',
+          ticketNumber: 102,
+          status: 'ASSIGNED',
+          markersAllowed: 3,
+          markersUsed: 0,
+          markers: [],
+        },
+      ],
+    },
+    {
+      id: 'participant-2',
+      competitionId: 'test-id',
+      name: 'Arjun Mehta',
+      phone: sanitizePhone('+91 91234 56789'),
+      email: 'arjun.mehta@example.com',
+      tickets: [
+        {
+          id: 'ticket-3',
+          ticketNumber: 103,
+          status: 'USED',
+          markersAllowed: 3,
+          markersUsed: 3,
+          markers: [
+            { id: 'ticket-3-marker-1', x: 0.42, y: 0.28 },
+            { id: 'ticket-3-marker-2', x: 0.55, y: 0.31 },
+            { id: 'ticket-3-marker-3', x: 0.51, y: 0.45 },
+          ],
+          submittedAt: new Date('2025-10-20T10:30:00Z'),
+        },
+      ],
+      lastSubmissionAt: new Date('2025-10-20T10:30:00Z'),
+    },
+  ];
+};
+
+// Save participants to localStorage (browser) or file (server)
+const saveParticipantsToStorage = () => {
+  // Browser: use localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('mock_participants_db', JSON.stringify(mockParticipants));
+    } catch (error) {
+      console.error('Error saving participants to localStorage:', error);
+    }
+  }
+  // Server: use file system
+  else {
+    try {
+      ensureDataDir();
+      fs.writeFileSync(PARTICIPANTS_FILE, JSON.stringify(mockParticipants, null, 2), 'utf-8');
+    } catch (error) {
+      console.error('Error saving participants to file:', error);
+    }
+  }
+};
+
+let mockParticipants: MockParticipant[] = loadParticipantsFromStorage();
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
 
@@ -331,3 +418,337 @@ export const saveCompetitionResult = (result: MockCompetitionResult): void => {
 
 export const getCompetitionResult = (competitionId: string): MockCompetitionResult | null =>
   mockCompetitionResults.find((entry) => entry.competitionId === competitionId) ?? null;
+
+// ============================================
+// USER ENTRY TRACKING (Auto-create on login)
+// ============================================
+
+export type UserEntry = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  createdAt: Date;
+  assignedTickets: number; // Count of tickets assigned across all competitions
+  isLoggedIn: boolean; // Current login status
+  lastLoginAt: Date | null; // Last login timestamp
+  lastLogoutAt: Date | null; // Last logout timestamp
+  accessCode: string; // Unique 6-digit code for competition access
+  currentPhase: number | null; // Which phase user is assigned to (1, 2, or 3)
+};
+
+// Default sample users
+const getDefaultUserEntries = (): UserEntry[] => {
+  return [
+    {
+      id: 'user-1',
+      name: 'Rajesh Kumar',
+      phone: '9876543210',
+      email: 'rajesh@example.com',
+      accessCode: '123456',
+      currentPhase: 1,
+      isLoggedIn: true,
+      lastLoginAt: new Date('2025-10-26T10:30:00'),
+      lastLogoutAt: null,
+      assignedTickets: 0,
+      createdAt: new Date('2025-10-25T09:00:00'),
+    },
+    {
+      id: 'user-2',
+      name: 'Priya Sharma',
+      phone: '9876543211',
+      email: 'priya@example.com',
+      accessCode: '234567',
+      currentPhase: 1,
+      isLoggedIn: false,
+      lastLoginAt: new Date('2025-10-26T08:15:00'),
+      lastLogoutAt: new Date('2025-10-26T09:45:00'),
+      assignedTickets: 0,
+      createdAt: new Date('2025-10-25T10:30:00'),
+    },
+    {
+      id: 'user-3',
+      name: 'Amit Patel',
+      phone: '9876543212',
+      email: 'amit@example.com',
+      accessCode: '345678',
+      currentPhase: 2,
+      isLoggedIn: true,
+      lastLoginAt: new Date('2025-10-26T11:00:00'),
+      lastLogoutAt: null,
+      assignedTickets: 0,
+      createdAt: new Date('2025-10-25T11:15:00'),
+    },
+    {
+      id: 'user-4',
+      name: 'Sneha Reddy',
+      phone: '9876543213',
+      email: 'sneha@example.com',
+      accessCode: '456789',
+      currentPhase: null,
+      isLoggedIn: false,
+      lastLoginAt: new Date('2025-10-25T14:20:00'),
+      lastLogoutAt: new Date('2025-10-25T16:30:00'),
+      assignedTickets: 0,
+      createdAt: new Date('2025-10-25T14:00:00'),
+    },
+    {
+      id: 'user-5',
+      name: 'Vikram Singh',
+      phone: '9876543214',
+      email: 'vikram@example.com',
+      accessCode: '567890',
+      currentPhase: 3,
+      isLoggedIn: true,
+      lastLoginAt: new Date('2025-10-26T09:30:00'),
+      lastLogoutAt: null,
+      assignedTickets: 0,
+      createdAt: new Date('2025-10-24T16:45:00'),
+    },
+  ];
+};
+
+// Load user entries from localStorage (browser) or file (server)
+const loadUserEntriesFromStorage = (): UserEntry[] => {
+  // Browser: use localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('user_entries_db');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.map((entry: any) => ({
+          ...entry,
+          createdAt: new Date(entry.createdAt),
+          lastLoginAt: entry.lastLoginAt ? new Date(entry.lastLoginAt) : null,
+          lastLogoutAt: entry.lastLogoutAt ? new Date(entry.lastLogoutAt) : null,
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user entries from localStorage:', error);
+    }
+  }
+  // Server: use file system
+  else {
+    try {
+      ensureDataDir();
+      if (fs.existsSync(USER_ENTRIES_FILE)) {
+        const data = fs.readFileSync(USER_ENTRIES_FILE, 'utf-8');
+        const parsed = JSON.parse(data);
+        return parsed.map((entry: any) => ({
+          ...entry,
+          createdAt: new Date(entry.createdAt),
+          lastLoginAt: entry.lastLoginAt ? new Date(entry.lastLoginAt) : null,
+          lastLogoutAt: entry.lastLogoutAt ? new Date(entry.lastLogoutAt) : null,
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user entries from file:', error);
+    }
+  }
+  return getDefaultUserEntries();
+};
+
+// Save user entries to localStorage (browser) or file (server)
+const saveUserEntriesToStorage = () => {
+  // Browser: use localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('user_entries_db', JSON.stringify(userEntries));
+    } catch (error) {
+      console.error('Error saving user entries to localStorage:', error);
+    }
+  }
+  // Server: use file system
+  else {
+    try {
+      ensureDataDir();
+      fs.writeFileSync(USER_ENTRIES_FILE, JSON.stringify(userEntries, null, 2), 'utf-8');
+    } catch (error) {
+      console.error('Error saving user entries to file:', error);
+    }
+  }
+};
+
+// Initialize user entries array
+let userEntries: UserEntry[] = loadUserEntriesFromStorage();
+
+// Generate unique 6-digit access code
+const generateAccessCode = (): string => {
+  // Generate random 6-digit number
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Ensure uniqueness
+  const exists = userEntries.some(entry => entry.accessCode === code);
+  if (exists) {
+    return generateAccessCode(); // Recursively generate new code if duplicate
+  }
+  
+  return code;
+};
+
+export const createOrUpdateUserEntry = (name: string, phone: string): UserEntry => {
+  const sanitized = sanitizePhone(phone);
+  
+  // Check if user already exists
+  const existing = userEntries.find((entry) => entry.phone === sanitized);
+  
+  if (existing) {
+    // Update name if changed
+    if (existing.name !== name) {
+      existing.name = name;
+    }
+    // Update login status
+    existing.isLoggedIn = true;
+    existing.lastLoginAt = new Date();
+    saveUserEntriesToStorage();
+    return existing;
+  }
+  
+  // Create new entry
+  const newEntry: UserEntry = {
+    id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    name,
+    phone: sanitized,
+    email: null,
+    createdAt: new Date(),
+    assignedTickets: 0,
+    isLoggedIn: true, // User is logging in now
+    lastLoginAt: new Date(),
+    lastLogoutAt: null,
+    accessCode: generateAccessCode(), // Auto-generate unique 6-digit code
+    currentPhase: null, // No phase assigned yet
+  };
+  
+  userEntries.push(newEntry);
+  saveUserEntriesToStorage();
+  return newEntry;
+};
+
+export const getAllUserEntries = (): UserEntry[] => {
+  // Calculate ticket counts for each user
+  return userEntries.map((entry) => {
+    const participants = mockParticipants.filter((p) => sanitizePhone(p.phone) === entry.phone);
+    const ticketCount = participants.reduce((total, p) => total + p.tickets.length, 0);
+    
+    return {
+      ...entry,
+      assignedTickets: ticketCount,
+    };
+  });
+};
+
+export const getUserEntryByPhone = (phone: string): UserEntry | null => {
+  const sanitized = sanitizePhone(phone);
+  return userEntries.find((entry) => entry.phone === sanitized) ?? null;
+};
+
+export const getUserEntryById = (id: string): UserEntry | null => {
+  return userEntries.find((entry) => entry.id === id) ?? null;
+};
+
+export const logoutUserEntry = (phone: string): UserEntry | null => {
+  const sanitized = sanitizePhone(phone);
+  const entry = userEntries.find((e) => e.phone === sanitized);
+  
+  if (entry) {
+    entry.isLoggedIn = false;
+    entry.lastLogoutAt = new Date();
+    saveUserEntriesToStorage();
+  }
+  
+  return entry ?? null;
+};
+
+export const verifyAccessCode = (code: string): UserEntry | null => {
+  return userEntries.find((entry) => entry.accessCode === code) ?? null;
+};
+
+export const assignUserToPhase = (userId: string, phase: number): UserEntry | null => {
+  const entry = userEntries.find((e) => e.id === userId);
+  
+  if (entry) {
+    entry.currentPhase = phase;
+    saveUserEntriesToStorage();
+  }
+  
+  return entry ?? null;
+};
+
+export const getUsersByPhase = (phase: number): UserEntry[] => {
+  return userEntries.filter((entry) => entry.currentPhase === phase);
+};
+
+export const updateUserTickets = (userId: string, ticketCount: number): UserEntry | null => {
+  const user = userEntries.find((entry) => entry.id === userId);
+  if (!user) {
+    return null;
+  }
+
+  // Get or create participant for this user in the default competition
+  const defaultCompetitionId = 'test-id';
+  let participant = mockParticipants.find(
+    (p) => sanitizePhone(p.phone) === user.phone && p.competitionId === defaultCompetitionId
+  );
+
+  if (!participant) {
+    // Create new participant entry
+    const newParticipant: MockParticipant = {
+      id: `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      competitionId: defaultCompetitionId,
+      name: user.name,
+      phone: user.phone,
+      email: user.email || undefined,
+      tickets: [],
+      lastSubmissionAt: null,
+    };
+    mockParticipants.push(newParticipant);
+    participant = newParticipant;
+  }
+
+  // Calculate current ticket count
+  const currentTicketCount = participant.tickets.length;
+  
+  // Adjust tickets to match the desired count
+  if (ticketCount > currentTicketCount) {
+    // Add more tickets
+    const ticketsToAdd = ticketCount - currentTicketCount;
+    for (let i = 0; i < ticketsToAdd; i++) {
+      const newTicket: MockTicket = {
+        id: `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        ticketNumber: 1000 + mockParticipants.reduce((total, p) => total + p.tickets.length, 0) + i,
+        status: 'ASSIGNED',
+        markersAllowed: 3, // Each ticket allows 3 markers
+        markersUsed: 0,
+        markers: [],
+        submittedAt: null,
+      };
+      participant.tickets.push(newTicket);
+    }
+  } else if (ticketCount < currentTicketCount) {
+    // Remove excess tickets (only remove unused ones)
+    const ticketsToRemove = currentTicketCount - ticketCount;
+    const unusedTickets = participant.tickets.filter(t => t.markersUsed === 0);
+    
+    if (unusedTickets.length >= ticketsToRemove) {
+      // Remove unused tickets
+      for (let i = 0; i < ticketsToRemove; i++) {
+        const ticketIndex = participant.tickets.findIndex(t => t.markersUsed === 0);
+        if (ticketIndex !== -1) {
+          participant.tickets.splice(ticketIndex, 1);
+        }
+      }
+    } else {
+      // If not enough unused tickets, just remove what we can
+      participant.tickets = participant.tickets.filter(t => t.markersUsed > 0);
+    }
+  }
+
+  // Update user's assigned tickets count
+  user.assignedTickets = participant.tickets.length;
+  
+  // Save both participants and user entries to storage
+  saveParticipantsToStorage();
+  saveUserEntriesToStorage();
+  
+  return user;
+};

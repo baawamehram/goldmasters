@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { UserSessionTracker } from '@/components/UserSessionTracker';
 
 export default function CompetitionPage() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function CompetitionPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <UserSessionTracker />
       {/* Header */}
       <header className="bg-[#055F3C] text-white py-4 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
