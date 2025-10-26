@@ -3,19 +3,10 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 
 import CheckoutModal, { CheckoutTicket } from "@/components/CheckoutModal";
+import MarkerCanvas from "@/components/MarkerCanvas";
 import { buildApiUrl } from "@/lib/api";
-
-const MarkerCanvas = dynamic(() => import("@/components/MarkerCanvas"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[600px] bg-gray-100 rounded-lg flex items-center justify-center">
-      <div className="text-gray-500">Loading canvas...</div>
-    </div>
-  ),
-});
 
 interface Competition {
   id: string;
@@ -99,6 +90,7 @@ export default function EnterCompetitionPage() {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [currentPhase, setCurrentPhase] = useState<number>(1);
   const [phaseImageUrl, setPhaseImageUrl] = useState<string>('');
+  const [phaseStatus, setPhaseStatus] = useState<string>('ACTIVE');
 
   useEffect(() => {
     // Check if user has valid competition access token
@@ -112,22 +104,40 @@ export default function EnterCompetitionPage() {
         return;
       }
       
-      // Get user data to determine their phase
-      const userData = localStorage.getItem('competition_user');
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
-          const userPhase = user.currentPhase || 1; // Default to phase 1
-          setCurrentPhase(userPhase);
-          
-          // Load phase image from localStorage
-          const phaseImage = localStorage.getItem(`admin_phase${userPhase}_image_url`);
-          if (phaseImage) {
-            setPhaseImageUrl(phaseImage);
-          }
-        } catch (e) {
-          console.error('Error parsing user data:', e);
-        }
+      // Determine active phase
+      const phase1Status = localStorage.getItem('admin_phase1_status') || 'NOT_STARTED';
+      const phase2Status = localStorage.getItem('admin_phase2_status') || 'NOT_STARTED';
+      const phase3Status = localStorage.getItem('admin_phase3_status') || 'NOT_STARTED';
+      
+      let activePhase = 1;
+      let activePhaseStatus = phase1Status;
+      
+      // Find the currently active phase
+      if (phase3Status === 'ACTIVE') {
+        activePhase = 3;
+        activePhaseStatus = phase3Status;
+      } else if (phase2Status === 'ACTIVE') {
+        activePhase = 2;
+        activePhaseStatus = phase2Status;
+      } else if (phase1Status === 'ACTIVE') {
+        activePhase = 1;
+        activePhaseStatus = phase1Status;
+      } else {
+        // If no phase is active, default to phase 1
+        activePhase = 1;
+        activePhaseStatus = phase1Status;
+      }
+      
+      setCurrentPhase(activePhase);
+      setPhaseStatus(activePhaseStatus);
+      
+      // Load phase image from localStorage
+      const phaseImage = localStorage.getItem(`admin_phase${activePhase}_image_url`);
+      if (phaseImage) {
+        setPhaseImageUrl(phaseImage);
+      } else {
+        // If no phase image is set, use competition image as fallback
+        setPhaseImageUrl('');
       }
       
       setHasAccess(true);
@@ -604,295 +614,117 @@ export default function EnterCompetitionPage() {
     );
   }
 
+  // Main marker placement view - fullscreen only
   return (
     <>
-      <main className="min-h-screen bg-gradient-to-br from-brand-primary/5 via-white to-brand-accent/5 py-8 px-4">
-        <div className="container-custom max-w-6xl space-y-6">
-        <div className="bg-card rounded-2xl shadow-modal p-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl sm:text-3xl font-bold font-heading">{competition.title}</h1>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                  currentPhase === 1 ? 'bg-green-100 text-green-800' :
-                  currentPhase === 2 ? 'bg-blue-100 text-blue-800' :
-                  'bg-purple-100 text-purple-800'
-                }`}>
-                  Phase {currentPhase}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Use your assigned tickets to place markers on the image. Submissions cannot be edited once locked.
-              </p>
-            </div>
-            {participant && (
-              <div className="text-xs sm:text-sm text-muted-foreground bg-muted px-3 py-2 rounded-lg">
-                Signed in as <span className="font-medium text-foreground">{participant.name}</span>
-                <span className="mx-1">•</span>
-                {participant.phone}
-              </div>
-            )}
+      <main className="h-screen w-screen bg-[#00563F] flex flex-col overflow-hidden fixed inset-0">
+        {/* Header with logo */}
+        <div className="bg-[#00563F] text-white p-4 flex items-center justify-between flex-shrink-0">
+          <div className="font-bold text-lg tracking-wider">WISHMASTERS</div>
+          <div className="text-xs opacity-75">
+            Phase {currentPhase} - {phaseStatus}
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Tickets Sold</p>
-              <p className="text-lg font-bold">{competition.ticketsSold}/{competition.maxEntries}</p>
-            </div>
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Remaining Slots</p>
-              <p className="text-lg font-bold">{competition.remainingSlots}</p>
-            </div>
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Price per Ticket</p>
-              <p className="text-lg font-bold">₹{competition.pricePerTicket}</p>
-            </div>
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Markers/Ticket</p>
-              <p className="text-lg font-bold">{competition.markersPerTicket}</p>
-            </div>
-          </div>
+        {/* Main Canvas Area - Fullscreen Phase Image */}
+        <div className="flex-1 relative bg-[#0E1C1F] overflow-hidden">
 
-          {participantStats ? (
-            <div className="mt-6 p-4 bg-brand-primary/10 border-l-4 border-brand-primary/70 rounded-lg">
-              <h3 className="font-semibold mb-2 text-brand-primary">Your Entry Summary</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Tickets assigned</p>
-                  <p className="font-bold text-lg">{participantStats.ticketsPurchased}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Markers submitted</p>
-                  <p className="font-bold text-lg">{participantStats.entriesUsed}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Markers remaining</p>
-                  <p className="font-bold text-lg text-brand-primary">
-                    {participantStats.entriesRemaining}
-                  </p>
-                </div>
-              </div>
+          {/* Ticket Counter - shown if tickets are available */}
+          {tickets.length > 0 && (
+            <div className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg text-xs font-semibold shadow-lg">
+              {markers.filter(m => !m.locked).length} / {tickets.reduce((sum, t) => sum + (t.markersAllowed ?? competition.markersPerTicket), 0)}
+            </div>
+          )}
+
+          {/* Phase Image Canvas - Always show if available */}
+          {phaseImageUrl ? (
+            <div className="absolute inset-0 flex justify-center items-start px-6 pb-6">
+              <MarkerCanvas
+                imageUrl={phaseImageUrl}
+                tickets={tickets}
+                markersPerTicket={competition.markersPerTicket}
+                onMarkersChange={handleMarkersChange}
+                showPanels={false}
+              />
             </div>
           ) : (
-            <div className="mt-6 p-4 bg-muted rounded-lg text-sm text-muted-foreground">
-              Verify your participant details below to load ticket assignments and marker quotas.
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="bg-white rounded-xl shadow-lg p-6 text-center max-w-sm">
+                <div className="text-4xl mb-3">🖼️</div>
+                <h3 className="text-lg font-semibold mb-2">No Phase Image</h3>
+                <p className="text-sm text-gray-600">
+                  The admin hasn't uploaded an image for Phase {currentPhase} yet.
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        {participantError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-2xl px-4 py-3">
-            {participantError}
-          </div>
-        )}
-
-        {submissionMessage && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-2xl px-4 py-3">
-            {submissionMessage}
-          </div>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-3 items-start">
-          <div className="space-y-4">
-            <div className="bg-card rounded-2xl shadow-modal p-6">
-              <h2 className="text-lg font-semibold mb-4">Participant Access</h2>
-              {participant ? (
-                <div className="space-y-3 text-sm">
-                  <p className="text-muted-foreground">
-                    You're verified as <span className="font-medium text-foreground">{participant.name}</span>.
-                    Your ticket data stays cached on this device.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleParticipantLogout}
-                    className="w-full px-4 py-2 rounded-lg border border-brand-primary text-brand-primary hover:bg-brand-primary/5 transition-all"
-                    disabled={isParticipantLoading || isSubmittingMarkers}
-                  >
-                    Switch participant
-                  </button>
-                  <p className="text-xs text-muted-foreground">
-                    Participant sessions remain active for 24 hours. Switch users if this isn't you.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleParticipantAuth} className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="participant-name" className="text-xs font-medium text-muted-foreground uppercase">
-                      Participant name
-                    </label>
-                    <input
-                      id="participant-name"
-                      type="text"
-                      required
-                      value={participantName}
-                      onChange={(event) => setParticipantName(event.target.value)}
-                      placeholder="e.g. Priya Sharma"
-                      className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/70"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="participant-phone" className="text-xs font-medium text-muted-foreground uppercase">
-                      Phone number
-                    </label>
-                    <input
-                      id="participant-phone"
-                      type="tel"
-                      required
-                      value={participantPhone}
-                      onChange={(event) => setParticipantPhone(event.target.value)}
-                      placeholder="10-digit mobile"
-                      className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/70"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={isParticipantLoading}
-                    className="w-full px-4 py-2 rounded-lg bg-brand-primary text-white hover:bg-brand-primary/90 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isParticipantLoading ? "Verifying..." : "Verify & load tickets"}
-                  </button>
-                  <p className="text-xs text-muted-foreground">
-                    We'll match your details with the organiser's ticket list. Reach out to support if you're unable to sign in.
-                  </p>
-                </form>
-              )}
+        {/* Bottom Control Bar */}
+        <div className="bg-[#00563F] p-4 flex-shrink-0">
+          {submissionMessage && (
+            <div className="mb-3 bg-emerald-500 text-white text-xs rounded-lg px-3 py-2 text-center">
+              {submissionMessage}
             </div>
+          )}
+          
+          <div className="flex items-center justify-between gap-3 mb-3">
+            {/* Settings Icon */}
+            <button 
+              onClick={() => {
+                const info = `Competition: ${competition.title}\nPhase: ${currentPhase} (${phaseStatus})\nMarkers per ticket: ${competition.markersPerTicket}`;
+                alert(info);
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
 
-            <div className="bg-card rounded-2xl shadow-modal p-6">
-              <h2 className="text-lg font-semibold mb-4">Assigned Tickets</h2>
-              {isParticipantLoading ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="h-3 w-3 rounded-full border-2 border-t-transparent border-brand-primary animate-spin" />
-                  <span>Loading tickets...</span>
-                </div>
-              ) : tickets.length ? (
-                <ul className="space-y-3 text-sm">
-                  {tickets.map((ticket) => {
-                    const isLocked = ticket.status !== "ASSIGNED";
-                    const markersAllowed = ticket.markersAllowed ?? competition.markersPerTicket;
-                    const markersUsed = ticket.markersUsed ?? ticket.markers?.length ?? 0;
+            {/* Grid Icon */}
+            <button 
+              onClick={() => {
+                alert(`Competition: ${competition.title}\nPhase: ${currentPhase}\nYour Tickets: ${tickets.length}\nMarkers per ticket: ${competition.markersPerTicket}`);
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </button>
 
-                    return (
-                      <li key={ticket.id} className="p-4 rounded-xl bg-muted">
-                        <div className="flex items-center justify-between text-sm font-medium">
-                          <span>Ticket #{ticket.ticketNumber}</span>
-                          <span className={isLocked ? "text-red-500" : "text-green-600"}>
-                            {isLocked ? "Submitted" : "Pending"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Markers: {markersUsed} / {markersAllowed}
-                        </p>
-                        {ticket.submittedAt && (
-                          <p className="text-[11px] text-muted-foreground mt-1">
-                            Submitted {new Date(ticket.submittedAt).toLocaleString()}
-                          </p>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {participant
-                    ? "No tickets assigned yet. Contact the competition admin if this seems incorrect."
-                    : "Verify your participant details to load assigned tickets."
-                  }
-                </p>
-              )}
-            </div>
+            {/* Share Icon */}
+            <button 
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: competition.title,
+                    text: `Join ${competition.title} competition!`,
+                    url: window.location.href,
+                  });
+                } else {
+                  alert('Share this link:\n' + window.location.href);
+                }
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+            </button>
           </div>
 
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-card rounded-2xl shadow-modal p-6 space-y-6">
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <h2 className="text-xl font-bold font-heading">Place Your Markers</h2>
-                {participantStats && (
-                  <div className="text-xs text-muted-foreground">
-                    Entries remaining: <span className="font-semibold text-brand-primary">{participantStats.entriesRemaining}</span>
-                  </div>
-                )}
-              </div>
-
-              {tickets.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-muted-foreground/40 bg-muted/50 p-6 text-sm text-muted-foreground">
-                  {participant
-                    ? "No tickets are available to place markers. Please reach out to the organiser."
-                    : "Verify your participant access to start placing markers."
-                  }
-                </div>
-              ) : (
-                <>
-                  <MarkerCanvas
-                    imageUrl={phaseImageUrl || competition.imageUrl}
-                    tickets={tickets}
-                    markersPerTicket={competition.markersPerTicket}
-                    onMarkersChange={handleMarkersChange}
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 bg-muted rounded-lg">
-                      <h3 className="text-sm font-semibold mb-2">Markers Overview</h3>
-                      {markers.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">
-                          Drag the colored markers onto the competition image to place your guesses.
-                        </p>
-                      ) : (
-                        <ul className="space-y-2 text-xs">
-                          {markers.map((marker) => (
-                            <li
-                              key={marker.id}
-                              className="flex items-center justify-between bg-background rounded-md px-3 py-2"
-                            >
-                              <span className="font-medium">{marker.label}</span>
-                              <span className="text-muted-foreground">
-                                ({marker.x.toFixed(3)}, {marker.y.toFixed(3)})
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    <div className="p-4 bg-muted rounded-lg space-y-3">
-                      <h3 className="text-sm font-semibold">Submit Entry</h3>
-                      {hasActiveTickets ? (
-                        <p className="text-xs text-muted-foreground">
-                          Make sure every ticket has the required number of markers before submitting. Once submitted, markers cannot be adjusted.
-                        </p>
-                      ) : (
-                        <p className="text-xs text-green-600 font-medium">
-                          All assigned tickets are already locked in. You're good to go!
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={handleSubmitMarkers}
-                        disabled={!canSubmitMarkers || isSubmittingMarkers}
-                        className="w-full btn-touch px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-all disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {isSubmittingMarkers ? "Submitting..." : "Submit markers"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleOpenCheckout}
-                        disabled={isSubmittingMarkers || checkoutReadyMarkers.length === 0}
-                        className="w-full btn-touch px-4 py-2 rounded-lg border border-brand-primary text-brand-primary hover:bg-brand-primary/5 transition-all disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        Checkout with organiser password
-                      </button>
-                      {!canSubmitMarkers && hasActiveTickets && (
-                        <p className="text-[11px] text-yellow-800 bg-yellow-100/80 border border-yellow-200 rounded-md px-3 py-2">
-                          Add the required marker count for each active ticket before submitting.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+          {/* PLACE Button */}
+          <button
+            type="button"
+            onClick={handleSubmitMarkers}
+            disabled={!canSubmitMarkers || isSubmittingMarkers || phaseStatus !== 'ACTIVE'}
+            className="w-full py-4 bg-white text-[#00563F] font-bold text-lg rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          >
+            {isSubmittingMarkers ? "SUBMITTING..." : "PLACE"}
+          </button>
         </div>
       </main>
 
