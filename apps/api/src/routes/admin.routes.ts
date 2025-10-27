@@ -15,9 +15,55 @@ import {
   getCompetitionResult,
   MockCompetitionWinner,
   MockCompetitionResult,
+  findParticipantById,
 } from '../data/mockDb';
 
 const router: Router = Router();
+
+/**
+ * @route   GET /api/v1/admin/participants
+ * @desc    Get all participants across all competitions
+ * @access  Protected (Admin only)
+ */
+router.get(
+  '/participants',
+  authenticateToken,
+  requireAdmin,
+  async (_req: Request, res: Response) => {
+    try {
+      // Get all competitions
+      const competitions = getCompetitionsWithStats();
+      
+      // Aggregate all participants
+      const allParticipants = competitions.flatMap(comp => 
+        getParticipantsByCompetition(comp.id).map(participant => ({
+          id: participant.id,
+          name: participant.name,
+          phone: participant.phone,
+          email: participant.email || null,
+          createdAt: participant.lastSubmissionAt?.toISOString() || new Date().toISOString(),
+          assignedTickets: participant.tickets.length,
+          isLoggedIn: false, // Mock: assume offline
+          lastLoginAt: participant.lastSubmissionAt?.toISOString() || null,
+          lastLogoutAt: null,
+          accessCode: participant.id.slice(-4).toUpperCase(), // Mock access code
+          currentPhase: null, // Mock phase
+        }))
+      );
+
+      res.status(200).json({
+        status: 'success',
+        data: allParticipants,
+      });
+    } catch (error) {
+      console.error('Error fetching participants:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to fetch participants',
+      });
+    }
+  }
+);
 
 /**
  * @route   GET /api/v1/admin/competitions
@@ -468,6 +514,81 @@ router.post(
       res.status(500).json({
         status: 'error',
         message: 'Failed to compute winners',
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/v1/admin/competitions/:id/participants/:participantId/submissions
+ * @desc    Get participant submissions for admin view
+ * @access  Protected (Admin only)
+ */
+router.get(
+  '/competitions/:id/participants/:participantId/submissions',
+  authenticateToken,
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const { id, participantId } = req.params;
+
+      const participant = findParticipantById(id, participantId);
+      if (!participant) {
+        res.status(404).json({
+          status: 'fail',
+          message: 'Participant not found',
+        });
+        return;
+      }
+
+      const competition = findCompetitionById(id);
+      if (!competition) {
+        res.status(404).json({
+          status: 'fail',
+          message: 'Competition not found',
+        });
+        return;
+      }
+
+      const submittedTickets = participant.tickets
+        .filter((ticket) => ticket.status === 'USED')
+        .map((ticket) => ({
+          id: ticket.id,
+          ticketNumber: ticket.ticketNumber,
+          status: ticket.status,
+          markersAllowed: ticket.markersAllowed,
+          markersUsed: ticket.markersUsed,
+          markers: ticket.markers,
+          submittedAt: ticket.submittedAt?.toISOString(),
+        }));
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          participant: {
+            id: participant.id,
+            name: participant.name,
+            phone: participant.phone,
+            ticketsPurchased: participant.tickets.length,
+          },
+          competition: {
+            id: competition.id,
+            title: competition.title,
+            imageUrl: competition.imageUrl,
+            markersPerTicket: competition.markersPerTicket,
+            finalJudgeX: competition.finalJudgeX,
+            finalJudgeY: competition.finalJudgeY,
+          },
+          submissions: submittedTickets,
+          submissionCount: submittedTickets.length,
+          totalMarkersSubmitted: submittedTickets.reduce((sum, t) => sum + t.markersUsed, 0),
+        },
+      });
+    } catch (error) {
+      console.error('Error retrieving participant submissions:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to retrieve submissions',
       });
     }
   }

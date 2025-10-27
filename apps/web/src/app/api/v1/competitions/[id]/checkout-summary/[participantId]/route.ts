@@ -19,7 +19,6 @@ export async function GET(
       );
     }
 
-    // Forward to Express API
     const response = await fetch(
       `http://localhost:4000/api/v1/competitions/${id}/checkout-summary/${participantId}`,
       {
@@ -30,9 +29,14 @@ export async function GET(
       }
     );
 
-    const data = await response.json();
+    const responseText = await response.text();
 
-    return NextResponse.json(data, { status: response.status });
+    return new NextResponse(responseText, {
+      status: response.status,
+      headers: {
+        'Content-Type': response.headers.get('content-type') ?? 'application/json',
+      },
+    });
   } catch (error) {
     console.error('Error proxying checkout-summary GET:', error);
     return NextResponse.json(

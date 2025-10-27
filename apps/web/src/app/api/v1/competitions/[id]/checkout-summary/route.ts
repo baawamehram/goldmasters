@@ -19,24 +19,28 @@ export async function POST(
       );
     }
 
-    const body = await req.json();
+    const rawBody = await req.text();
 
-    // Forward to Express API
     const response = await fetch(
       `http://localhost:4000/api/v1/competitions/${id}/checkout-summary`,
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': authHeader,
+          'Content-Type': req.headers.get('content-type') ?? 'application/json',
         },
-        body: JSON.stringify(body),
+        body: rawBody,
       }
     );
 
-    const data = await response.json();
+    const responseText = await response.text();
 
-    return NextResponse.json(data, { status: response.status });
+    return new NextResponse(responseText, {
+      status: response.status,
+      headers: {
+        'Content-Type': response.headers.get('content-type') ?? 'application/json',
+      },
+    });
   } catch (error) {
     console.error('Error proxying checkout-summary:', error);
     return NextResponse.json(

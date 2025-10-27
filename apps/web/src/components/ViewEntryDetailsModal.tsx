@@ -97,7 +97,7 @@ export default function ViewEntryDetailsModal({
 
         // Use admin-specific endpoint
         const response = await fetch(
-          buildApiUrl(`competitions/admin/${competitionId}/participants/${participantId}/submissions`),
+          buildApiUrl(`admin/competitions/${competitionId}/participants/${participantId}/submissions`),
           {
             headers: {
               "Authorization": `Bearer ${token}`,

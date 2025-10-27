@@ -60,6 +60,32 @@ export type MockCompetitionResult = {
   computedAt: Date;
 };
 
+export type CheckoutSummary = {
+  competitionId: string;
+  participantId: string;
+  competition: {
+    id: string;
+    title: string;
+    imageUrl: string;
+    pricePerTicket: number;
+    markersPerTicket: number;
+    status: string;
+  };
+  participant: {
+    id: string;
+    name: string;
+    phone: string;
+    ticketsPurchased: number;
+  };
+  tickets: Array<{
+    ticketNumber: number;
+    markerCount: number;
+    markers: Array<{ id: string; x: number; y: number; label: string }>;
+  }>;
+  totalMarkers: number;
+  checkoutTime: string;
+};
+
 const DEFAULT_INVITE_PASSWORD = 'competition123';
 const DEFAULT_INVITE_PASSWORD_HASH = bcrypt.hashSync(DEFAULT_INVITE_PASSWORD, 10);
 
@@ -135,6 +161,7 @@ let mockParticipants: MockParticipant[] = [
 ];
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
+const checkoutSummaries = new Map<string, CheckoutSummary>();
 
 export const getCompetitions = (): MockCompetition[] => mockCompetitions;
 
@@ -331,3 +358,20 @@ export const saveCompetitionResult = (result: MockCompetitionResult): void => {
 
 export const getCompetitionResult = (competitionId: string): MockCompetitionResult | null =>
   mockCompetitionResults.find((entry) => entry.competitionId === competitionId) ?? null;
+
+export const saveCheckoutSummary = (
+  competitionId: string,
+  participantId: string,
+  summary: CheckoutSummary
+): void => {
+  const key = `${competitionId}:${participantId}`;
+  checkoutSummaries.set(key, summary);
+};
+
+export const getCheckoutSummary = (
+  competitionId: string,
+  participantId: string
+): CheckoutSummary | null => {
+  const key = `${competitionId}:${participantId}`;
+  return checkoutSummaries.get(key) ?? null;
+};

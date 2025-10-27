@@ -165,12 +165,30 @@ export default function CompetitionCheckoutPage() {
     }
 
     try {
+      let participantData: ParticipantSummary | null = null;
+      
+      // First try competition-specific participant info
       const storedParticipant = localStorage.getItem(participantInfoKey);
       if (storedParticipant) {
         const parsed = JSON.parse(storedParticipant) as ParticipantSummary;
         if (parsed && typeof parsed === "object") {
-          setParticipant(parsed);
+          participantData = parsed;
         }
+      }
+      
+      // Fallback to global participant profile
+      if (!participantData) {
+        const profileStr = localStorage.getItem("participant_profile");
+        if (profileStr) {
+          const profile = JSON.parse(profileStr) as ParticipantSummary;
+          if (profile && typeof profile === "object") {
+            participantData = profile;
+          }
+        }
+      }
+      
+      if (participantData) {
+        setParticipant(participantData);
       }
     } catch (storageError) {
       console.warn("Failed to read participant info:", storageError);

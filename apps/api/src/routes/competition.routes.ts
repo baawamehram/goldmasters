@@ -5,8 +5,10 @@ import {
   verifyParticipantAccess,
   ParticipantAccessRequest,
 } from '../middleware/competitionAccess';
+import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth';
 import {
   MockMarker,
+  CheckoutSummary,
   MockParticipant,
   MockTicket,
   calculateTicketsSold,
@@ -14,8 +16,11 @@ import {
   findParticipantByPhone,
   getCompetitionById,
   getCompetitionsWithStats,
+  getCheckoutSummary,
+  getParticipants,
   getParticipantsByCompetition,
   sanitizePhone,
+  saveCheckoutSummary,
   saveParticipant,
 } from '../data/mockDb';
 
@@ -944,44 +949,122 @@ router.post(
       const participantId = req.participantAccess?.participantId;
 
       if (!participantId) {
-        res.status(401).json({
-          status: 'fail',
-          message: 'Participant session invalid',
-        });
+        res.status(401).json({ message: 'Participant session invalid' });
         return;
       }
 
-      const checkoutData = req.body;
-
-      // Store checkout summary in participant record
-      const participant = findParticipantById(id, participantId);
+      let participant = findParticipantById(id, participantId);
       if (!participant) {
-        res.status(404).json({
-          status: 'fail',
-          message: 'Participant not found',
-        });
+        // Fallback: check if participant exists in any competition and clone
+        const allParticipants = getParticipants();
+        let existingParticipant = allParticipants.find(p => p.id === participantId);
+        
+        if (existingParticipant) {
+          // Clone participant to current competition
+          const clonedParticipant: MockParticipant = {
+            ...existingParticipant,
+            competitionId: id,
+            tickets: existingParticipant.tickets.map(ticket => ({
+              ...ticket,
+              markers: [], // Reset markers for new competition
+              markersUsed: 0,
+              status: 'ASSIGNED' as const,
+              submittedAt: null,
+            })),
+            lastSubmissionAt: null,
+          };
+          saveParticipant(clonedParticipant);
+          participant = clonedParticipant;
+        } else {
+          // Last resort: Create a minimal participant entry for new users with local IDs
+          const payload = req.body ?? {};
+          const participantPayload = payload.participant ?? {};
+          
+          const newParticipant: MockParticipant = {
+            id: participantId,
+            competitionId: id,
+            name: participantPayload.name || 'Unknown',
+            phone: participantPayload.phone || '',
+            email: undefined,
+            tickets: Array.from({ length: participantPayload.ticketsPurchased || 1 }).map((_, i) => ({
+              id: `ticket-${participantId}-${i}`,
+              ticketNumber: 100 + i,
+              status: 'ASSIGNED' as const,
+              markersAllowed: 3,
+              markersUsed: 0,
+              markers: [],
+              submittedAt: null,
+            })),
+            lastSubmissionAt: null,
+          };
+          
+          saveParticipant(newParticipant);
+          participant = newParticipant;
+        }
+      }
+
+      const payload = req.body ?? {};
+      const ticketsInput = payload.tickets;
+
+      if (!Array.isArray(ticketsInput) || ticketsInput.length === 0) {
+        res.status(400).json({ message: 'Invalid checkout payload: tickets are required' });
         return;
       }
 
-      // Store checkout data (can be extended to database in production)
-      const checkoutKey = `checkout_${participantId}_${id}`;
-      // In production, this would be saved to database
-      console.log(`Saved checkout for ${checkoutKey}:`, checkoutData);
+      const competition = getCompetitionById(id);
 
-      res.status(200).json({
-        status: 'success',
-        message: 'Checkout summary saved successfully',
-        data: {
-          checkoutId: checkoutKey,
-          savedAt: new Date().toISOString(),
-        },
+      const tickets = ticketsInput.map((ticket: any) => {
+        const markersArray = Array.isArray(ticket?.markers) ? ticket.markers : [];
+
+        return {
+          ticketNumber: Number(ticket?.ticketNumber ?? 0),
+          markerCount: Number.isFinite(Number(ticket?.markerCount))
+            ? Number(ticket.markerCount)
+            : markersArray.length,
+          markers: markersArray.map((marker: any) => ({
+            id: String(marker?.id ?? ''),
+            x: Number(marker?.x ?? 0),
+            y: Number(marker?.y ?? 0),
+            label: String(marker?.label ?? ''),
+          })),
+        };
       });
+
+      const totalMarkers = typeof payload.totalMarkers === 'number'
+        ? payload.totalMarkers
+        : tickets.reduce((sum, ticket) => sum + ticket.markerCount, 0);
+
+      const summary: CheckoutSummary = {
+        competitionId: id,
+        participantId,
+        competition: {
+          id: competition.id,
+          title: competition.title,
+          imageUrl: competition.imageUrl,
+          pricePerTicket: competition.pricePerTicket,
+          markersPerTicket: competition.markersPerTicket,
+          status: competition.status,
+        },
+        participant: {
+          id: participant.id,
+          name: participant.name,
+          phone: participant.phone,
+          ticketsPurchased: participant.tickets.length,
+        },
+        tickets,
+        totalMarkers,
+        checkoutTime:
+          typeof payload.checkoutTime === 'string' && payload.checkoutTime.trim()
+            ? payload.checkoutTime
+            : new Date().toISOString(),
+      };
+
+      saveCheckoutSummary(id, participantId, summary);
+
+      res.status(201).json({ message: 'Checkout saved', summary });
     } catch (error) {
       console.error('Error saving checkout summary:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Failed to save checkout summary',
-      });
+      res.status(500).json({ message: 'Failed to save checkout summary' });
     }
   }
 );
@@ -993,42 +1076,22 @@ router.post(
  */
 router.get(
   '/:id/checkout-summary/:participantId',
-  async (req: Request, res: Response) => {
+  authenticateToken,
+  requireAdmin,
+  async (req: AuthRequest, res: Response) => {
     try {
-      // Verify admin token
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
+      const { id, participantId } = req.params;
+      const summary = getCheckoutSummary(id, participantId);
 
-      if (!token) {
-        res.status(401).json({
-          status: 'fail',
-          message: 'Authentication required',
-        });
+      if (!summary) {
+        res.status(404).json({ message: 'Checkout summary not found' });
         return;
       }
 
-      try {
-        jwt.verify(token, JWT_SECRET);
-      } catch (error) {
-        res.status(401).json({
-          status: 'fail',
-          message: 'Invalid or expired token',
-        });
-        return;
-      }
-
-      // Try to retrieve checkout data from localStorage or database
-      // For now, return not found as checkout data needs to be stored
-      res.status(404).json({
-        status: 'fail',
-        message: 'Checkout data not found',
-      });
+      res.status(200).json({ summary });
     } catch (error) {
       console.error('Error retrieving checkout summary:', error);
-      res.status(500).json({
-        status: 'error',
-        message: 'Failed to retrieve checkout summary',
-      });
+      res.status(500).json({ message: 'Failed to retrieve checkout summary' });
     }
   }
 );
