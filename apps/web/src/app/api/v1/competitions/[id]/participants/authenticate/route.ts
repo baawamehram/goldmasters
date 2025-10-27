@@ -1,13 +1,18 @@
 import { NextRequest } from 'next/server';
 import { fieldError, success, fail, validationFailure, error } from '@/server/http';
-import { findParticipantByPhone } from '@/server/data/mockDb';
+import { 
+  findParticipantByPhone, 
+  saveParticipant, 
+  MockParticipant,
+  getParticipants 
+} from '@/server/data/mockDb';
 import { signToken } from '@/server/auth/jwt';
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
+  const { id: competitionId } = await context.params;
 
   try {
     const body = await req.json();
@@ -30,10 +35,43 @@ export async function POST(
   const nameValue = name!.trim();
   const phoneValue = phone!.trim();
 
-  const participant = findParticipantByPhone(id, phoneValue);
-    if (!participant) {
-      return fail('Participant not found. Please contact support.', 404);
+  // First, try to find participant in the requested competition
+  let participant = findParticipantByPhone(competitionId, phoneValue);
+  
+  // If not found in this competition, check the default competition
+  if (!participant) {
+    const defaultCompetitionId = 'test-id';
+    const defaultParticipant = findParticipantByPhone(defaultCompetitionId, phoneValue);
+    
+    if (defaultParticipant && defaultParticipant.tickets.length > 0) {
+      // User has tickets in default competition, create participant for this competition
+      console.log('[authenticate] Creating participant from default competition:', {
+        sourceCompetition: defaultCompetitionId,
+        targetCompetition: competitionId,
+        ticketCount: defaultParticipant.tickets.length
+      });
+      
+      const newParticipant: MockParticipant = {
+        id: `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        competitionId: competitionId,
+        name: defaultParticipant.name,
+        phone: defaultParticipant.phone,
+        email: defaultParticipant.email,
+        tickets: defaultParticipant.tickets.map(ticket => ({
+          ...ticket,
+          id: `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        })),
+        lastSubmissionAt: null,
+      };
+      
+      saveParticipant(newParticipant);
+      participant = newParticipant;
     }
+  }
+  
+  if (!participant) {
+    return fail('Participant not found. Please contact support.', 404);
+  }
 
   const normalizedInputName = nameValue.toLowerCase();
     const storedName = participant.name.trim().toLowerCase();
@@ -46,7 +84,7 @@ export async function POST(
 
     const participantAccessToken = signToken(
       {
-        competitionId: id,
+        competitionId: competitionId,
         participantId: participant.id,
         type: 'participant_access',
       },
@@ -62,6 +100,12 @@ export async function POST(
       markers: ticket.markers,
       submittedAt: ticket.submittedAt,
     }));
+
+    console.log('[authenticate] Authentication successful:', {
+      competitionId,
+      participantId: participant.id,
+      ticketCount: participant.tickets.length
+    });
 
     return success({
       participant: {

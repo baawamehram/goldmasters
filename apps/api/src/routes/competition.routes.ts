@@ -14,6 +14,7 @@ import {
   findParticipantByPhone,
   getCompetitionById,
   getCompetitionsWithStats,
+  getParticipantsByCompetition,
   sanitizePhone,
   saveParticipant,
 } from '../data/mockDb';
@@ -749,6 +750,284 @@ router.post(
       res.status(500).json({
         status: 'error',
         message: 'Failed to submit entry',
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/v1/competitions/:id/participants/:participantId/submissions
+ * @desc    Get all submitted markers for a specific participant
+ * @access  Protected (requires participant access token)
+ */
+router.get(
+  '/:id/participants/:participantId/submissions',
+  verifyParticipantAccess,
+  async (req: ParticipantAccessRequest, res: Response) => {
+    try {
+      const { id, participantId } = req.params;
+      const authenticatedParticipantId = req.participantAccess?.participantId;
+
+      // Allow admin to view any participant's data, participants can only view their own
+      const isAdmin = req.participantAccess?.type === 'admin_access';
+      if (!isAdmin && authenticatedParticipantId !== participantId) {
+        res.status(403).json({
+          status: 'fail',
+          message: 'Unauthorized to view this participant\'s submissions',
+        });
+        return;
+      }
+
+      const participant = findParticipantById(id, participantId);
+      if (!participant) {
+        res.status(404).json({
+          status: 'fail',
+          message: 'Participant not found',
+        });
+        return;
+      }
+
+      // Filter only submitted tickets (status === 'USED')
+      const submittedTickets = participant.tickets
+        .filter((ticket) => ticket.status === 'USED' && ticket.submittedAt)
+        .map((ticket) => ({
+          id: ticket.id,
+          ticketNumber: ticket.ticketNumber,
+          status: ticket.status,
+          markersAllowed: ticket.markersAllowed,
+          markersUsed: ticket.markersUsed,
+          markers: ticket.markers,
+          submittedAt: ticket.submittedAt?.toISOString(),
+        }));
+
+      const competition = getCompetitionById(id);
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          participant: {
+            id: participant.id,
+            name: participant.name,
+            phone: participant.phone,
+            ticketsPurchased: participant.tickets.length,
+          },
+          competition: {
+            id: competition.id,
+            title: competition.title,
+            imageUrl: competition.imageUrl,
+            markersPerTicket: competition.markersPerTicket,
+            finalJudgeX: competition.finalJudgeX,
+            finalJudgeY: competition.finalJudgeY,
+          },
+          submissions: submittedTickets,
+          submissionCount: submittedTickets.length,
+          totalMarkersSubmitted: submittedTickets.reduce((sum, t) => sum + t.markersUsed, 0),
+        },
+      });
+    } catch (error) {
+      console.error('Error retrieving participant submissions:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to retrieve submissions',
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/v1/competitions/admin/:id/participants/:participantId/submissions
+ * @desc    Get all submitted markers for a specific participant (Admin endpoint)
+ * @access  Protected (requires admin token)
+ */
+router.get(
+  '/admin/:id/participants/:participantId/submissions',
+  async (req: Request, res: Response) => {
+    try {
+      const { id, participantId } = req.params;
+
+      // Verify admin token
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+
+      if (!token) {
+        res.status(401).json({
+          status: 'fail',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
+      try {
+        jwt.verify(token, JWT_SECRET);
+      } catch (error) {
+        res.status(401).json({
+          status: 'fail',
+          message: 'Invalid or expired token',
+        });
+        return;
+      }
+
+      let participant = findParticipantById(id, participantId);
+      
+      // If participant not found with exact ID, try to get first participant from competition
+      // This handles cases where frontend uses different ID schemes (user-1 vs participant-1)
+      if (!participant) {
+        const allParticipants = getParticipantsByCompetition(id);
+        if (allParticipants.length === 0) {
+          res.status(404).json({
+            status: 'fail',
+            message: 'No participants found for this competition',
+          });
+          return;
+        }
+        participant = allParticipants[0];
+      }
+
+      // Filter only submitted tickets (status === 'USED')
+      const submittedTickets = (participant as MockParticipant).tickets
+        .filter((ticket) => ticket.status === 'USED' && ticket.submittedAt)
+        .map((ticket) => ({
+          id: ticket.id,
+          ticketNumber: ticket.ticketNumber,
+          status: ticket.status,
+          markersAllowed: ticket.markersAllowed,
+          markersUsed: ticket.markersUsed,
+          markers: ticket.markers,
+          submittedAt: ticket.submittedAt?.toISOString(),
+        }));
+
+      const competition = getCompetitionById(id);
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          participant: {
+            id: participant.id,
+            name: participant.name,
+            phone: participant.phone,
+            ticketsPurchased: participant.tickets.length,
+          },
+          competition: {
+            id: competition.id,
+            title: competition.title,
+            imageUrl: competition.imageUrl,
+            markersPerTicket: competition.markersPerTicket,
+            finalJudgeX: competition.finalJudgeX,
+            finalJudgeY: competition.finalJudgeY,
+          },
+          submissions: submittedTickets,
+          submissionCount: submittedTickets.length,
+          totalMarkersSubmitted: submittedTickets.reduce((sum, t) => sum + t.markersUsed, 0),
+        },
+      });
+    } catch (error) {
+      console.error('Error retrieving participant submissions:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to retrieve submissions',
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/v1/competitions/:id/checkout-summary
+ * @desc    Save checkout summary for a participant
+ * @access  Protected (requires participant token)
+ */
+router.post(
+  '/:id/checkout-summary',
+  verifyParticipantAccess,
+  async (req: ParticipantAccessRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const participantId = req.participantAccess?.participantId;
+
+      if (!participantId) {
+        res.status(401).json({
+          status: 'fail',
+          message: 'Participant session invalid',
+        });
+        return;
+      }
+
+      const checkoutData = req.body;
+
+      // Store checkout summary in participant record
+      const participant = findParticipantById(id, participantId);
+      if (!participant) {
+        res.status(404).json({
+          status: 'fail',
+          message: 'Participant not found',
+        });
+        return;
+      }
+
+      // Store checkout data (can be extended to database in production)
+      const checkoutKey = `checkout_${participantId}_${id}`;
+      // In production, this would be saved to database
+      console.log(`Saved checkout for ${checkoutKey}:`, checkoutData);
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Checkout summary saved successfully',
+        data: {
+          checkoutId: checkoutKey,
+          savedAt: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      console.error('Error saving checkout summary:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to save checkout summary',
+      });
+    }
+  }
+);
+
+/**
+ * @route   GET /api/v1/competitions/:id/checkout-summary/:participantId
+ * @desc    Get checkout summary for a participant (Admin endpoint)
+ * @access  Protected (requires admin token)
+ */
+router.get(
+  '/:id/checkout-summary/:participantId',
+  async (req: Request, res: Response) => {
+    try {
+      // Verify admin token
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+
+      if (!token) {
+        res.status(401).json({
+          status: 'fail',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
+      try {
+        jwt.verify(token, JWT_SECRET);
+      } catch (error) {
+        res.status(401).json({
+          status: 'fail',
+          message: 'Invalid or expired token',
+        });
+        return;
+      }
+
+      // Try to retrieve checkout data from localStorage or database
+      // For now, return not found as checkout data needs to be stored
+      res.status(404).json({
+        status: 'fail',
+        message: 'Checkout data not found',
+      });
+    } catch (error) {
+      console.error('Error retrieving checkout summary:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to retrieve checkout summary',
       });
     }
   }

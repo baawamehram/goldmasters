@@ -2,12 +2,17 @@
 /* eslint-disable react/no-unescaped-entities */
 
 import {
+  ForwardedRef,
+  forwardRef,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from 'react';
+
+type MarkerState = 'placed' | 'active' | 'pending';
 
 interface Marker {
   id: string;
@@ -18,7 +23,11 @@ interface Marker {
   color: string;
   label: string;
   locked: boolean;
+  isVisible: boolean;
+  state: MarkerState;
 }
+
+export default forwardRef(MarkerCanvasClient);
 
 interface TicketMarker {
   id?: string;
@@ -33,6 +42,11 @@ interface Ticket {
   markersAllowed?: number;
   markersUsed?: number;
   markers?: TicketMarker[];
+}
+
+export interface MarkerCanvasHandle {
+  placeCurrentMarker: () => { placed: boolean; hasMore: boolean };
+  getActiveMarker: () => Marker | null;
 }
 
 interface MarkerCanvasClientProps {
@@ -59,13 +73,16 @@ const MARKER_COLORS = [
   '#85C1E2', // Light Blue
 ];
 
-export default function MarkerCanvasClient({
+function MarkerCanvasClient(
+  {
   imageUrl,
   tickets,
   markersPerTicket = 3,
   onMarkersChange,
   showPanels = true,
-}: MarkerCanvasClientProps) {
+  }: MarkerCanvasClientProps,
+  ref: ForwardedRef<MarkerCanvasHandle>
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageAreaRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Marker[]>([]);
@@ -102,36 +119,53 @@ export default function MarkerCanvasClient({
     }
 
     const builtMarkers: Marker[] = [];
+    let hasActiveMarker = false;
 
     tickets.forEach((ticket, ticketIndex) => {
       const color = MARKER_COLORS[ticketIndex % MARKER_COLORS.length];
       const allowed = ticket.markersAllowed ?? markersPerTicket;
       const existingMarkers = ticket.markers ?? [];
+      const ticketNumber = ticket.ticketNumber ?? ticketIndex + 1;
+      const isAssigned = ticket.status === 'ASSIGNED';
 
-      for (let i = 0; i < allowed; i++) {
-        const existing = existingMarkers[i];
-        const defaultX = clampNormalized(0.35 + ticketIndex * 0.12 + i * 0.06);
-        const defaultY = clampNormalized(0.35 + i * 0.12);
-
-        const position = existing
-          ? {
-              x: clampNormalized(existing.x),
-              y: clampNormalized(existing.y),
-            }
-          : { x: defaultX, y: defaultY };
-
-        const ticketNumber = ticket.ticketNumber ?? ticketIndex + 1;
-
+      existingMarkers.forEach((existing, existingIndex) => {
         builtMarkers.push({
-          id: existing?.id ?? `${ticket.id}-marker-${i + 1}`,
-          x: position.x,
-          y: position.y,
+          id: existing.id ?? `${ticket.id}-marker-${existingIndex + 1}`,
+          x: clampNormalized(existing.x),
+          y: clampNormalized(existing.y),
           ticketId: ticket.id,
           ticketNumber,
           color,
-          label: `T${ticketNumber}M${i + 1}`,
-          locked: ticket.status !== 'ASSIGNED',
+          label: `T${ticketNumber}M${existingIndex + 1}`,
+          locked: true,
+          isVisible: true,
+          state: 'placed' as const,
         });
+      });
+
+      const remaining = Math.max(allowed - existingMarkers.length, 0);
+      for (let i = 0; i < remaining; i++) {
+        const markerIndex = existingMarkers.length + i;
+        const defaultX = clampNormalized(0.5 + ticketIndex * 0.08 - i * 0.04);
+        const defaultY = clampNormalized(0.5 + i * 0.06);
+
+        const isActive = !hasActiveMarker && isAssigned;
+        builtMarkers.push({
+          id: `${ticket.id}-marker-${markerIndex + 1}`,
+          x: defaultX,
+          y: defaultY,
+          ticketId: ticket.id,
+          ticketNumber,
+          color,
+          label: `T${ticketNumber}M${markerIndex + 1}`,
+          locked: !isActive,
+          isVisible: !isAssigned ? true : isActive,
+          state: (isAssigned ? (isActive ? 'active' : 'pending') : 'placed') as MarkerState,
+        });
+
+        if (isActive) {
+          hasActiveMarker = true;
+        }
       }
     });
 
@@ -140,14 +174,29 @@ export default function MarkerCanvasClient({
 
   useEffect(() => {
     const initialMarkers = buildMarkersFromTickets();
-    markersRef.current = initialMarkers;
-    setMarkers(initialMarkers);
-    onMarkersChange(initialMarkers);
-  }, [buildMarkersFromTickets, onMarkersChange]);
+
+    // Ensure only one active marker is unlocked/visible for placement.
+    let nextMarkers = initialMarkers;
+    const activeIndex = initialMarkers.findIndex((marker) => marker.state === 'active');
+    if (activeIndex === -1) {
+      const pendingIndex = initialMarkers.findIndex((marker) => marker.state === 'pending');
+      if (pendingIndex !== -1) {
+        nextMarkers = initialMarkers.map((marker, index) =>
+          index === pendingIndex
+            ? { ...marker, locked: false, isVisible: true, state: 'active' as const }
+            : marker
+        );
+      }
+    }
+
+    markersRef.current = nextMarkers;
+    setMarkers(nextMarkers);
+  }, [buildMarkersFromTickets]);
 
   useEffect(() => {
     markersRef.current = markers;
-  }, [markers]);
+    onMarkersChange(markers);
+  }, [markers, onMarkersChange]);
 
   // Load image to confirm availability
   useEffect(() => {
@@ -231,7 +280,7 @@ export default function MarkerCanvasClient({
       }
 
       const marker = markersRef.current.find((item) => item.id === markerId);
-      if (!marker || marker.locked) {
+      if (!marker || marker.locked || marker.state !== 'active') {
         return;
       }
 
@@ -245,11 +294,10 @@ export default function MarkerCanvasClient({
             : item
         );
         markersRef.current = next;
-        onMarkersChange(next);
         return next;
       });
     },
-    [clampNormalized, onMarkersChange]
+    [clampNormalized]
   );
 
   useEffect(() => {
@@ -277,7 +325,7 @@ export default function MarkerCanvasClient({
 
   const handlePointerDown = (markerId: string) => {
     const marker = markersRef.current.find((item) => item.id === markerId);
-    if (!marker || marker.locked) {
+    if (!marker || marker.locked || marker.state !== 'active') {
       return;
     }
     setDraggingId(markerId);
@@ -293,6 +341,50 @@ export default function MarkerCanvasClient({
       return value * rect.height;
     },
     []
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      placeCurrentMarker: () => {
+        let placed = false;
+        let hasMore = false;
+
+        setMarkers((prev) => {
+          const activeIndex = prev.findIndex((marker) => marker.state === 'active');
+          if (activeIndex === -1) {
+            return prev;
+          }
+
+          const updated = prev.map((marker, index) => {
+            if (index === activeIndex) {
+              placed = true;
+              return { ...marker, locked: true, state: 'placed' as const, isVisible: true };
+            }
+            return marker;
+          });
+
+          const nextPendingIndex = updated.findIndex((marker) => marker.state === 'pending');
+          if (nextPendingIndex !== -1) {
+            hasMore = true;
+            updated[nextPendingIndex] = {
+              ...updated[nextPendingIndex],
+              locked: false,
+              state: 'active' as const,
+              isVisible: true,
+            };
+          }
+
+          markersRef.current = updated;
+          return updated;
+        });
+
+        return { placed, hasMore };
+      },
+      getActiveMarker: () => {
+        return markersRef.current.find((marker) => marker.state === 'active') ?? null;
+      },
+    })
   );
 
   const wrapperClass = showPanels
@@ -331,33 +423,51 @@ export default function MarkerCanvasClient({
           )}
 
           {/* Marker layer */}
-          {markers.map((marker) => {
+          {markers.filter((marker) => marker.isVisible).map((marker) => {
             const left = toPixels(marker.x, 'x');
             const top = toPixels(marker.y, 'y');
+            const isActive = marker.state === 'active';
+            const displayColor = isActive ? marker.color : `${marker.color}CC`;
+            const coordX = Math.round(marker.x * 1000) / 10;
+            const coordY = Math.round(marker.y * 1000) / 10;
             return (
-              <button
+              <div
                 key={marker.id}
-                type="button"
-                className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
+                className="absolute"
                 style={{
                   left,
                   top,
-                  width: 32,
-                  height: 32,
-                  backgroundColor: marker.color,
-                  opacity: marker.locked ? 0.65 : 1,
                   touchAction: 'none',
                 }}
-                onPointerDown={(event) => {
-                  event.preventDefault();
-                  handlePointerDown(marker.id);
-                }}
-                onClick={(event) => event.preventDefault()}
               >
-                <span className="block text-[10px] font-semibold leading-[10px] text-white">
-                  {marker.label}
-                </span>
-              </button>
+                <button
+                  type="button"
+                  className="relative flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+                  style={{ cursor: isActive ? 'grab' : 'default' }}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    handlePointerDown(marker.id);
+                  }}
+                  onClick={(event) => event.preventDefault()}
+                >
+                  <span
+                    className="absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2"
+                    style={{ backgroundColor: displayColor, opacity: marker.locked && !isActive ? 0.7 : 1 }}
+                  ></span>
+                  <span
+                    className="absolute left-0 top-1/2 h-[2px] w-full -translate-y-1/2"
+                    style={{ backgroundColor: displayColor, opacity: marker.locked && !isActive ? 0.7 : 1 }}
+                  ></span>
+                  <span className="absolute -top-5 text-[10px] font-semibold text-white drop-shadow-sm">
+                    {marker.label}
+                  </span>
+                </button>
+                <div
+                  className="absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded bg-black/70 px-2 py-[2px] text-[10px] font-medium text-white"
+                >
+                  X {coordX.toFixed(1)} • Y {coordY.toFixed(1)}
+                </div>
+              </div>
             );
           })}
 

@@ -684,13 +684,24 @@ export const updateUserTickets = (userId: string, ticketCount: number): UserEntr
     return null;
   }
 
-  // Get or create participant for this user in the default competition
+  // Get or create participant for this user in the default competition ONLY
   const defaultCompetitionId = 'test-id';
-  let participant = mockParticipants.find(
-    (p) => sanitizePhone(p.phone) === user.phone && p.competitionId === defaultCompetitionId
+  
+  // CLEANUP: Remove any participants for this user in OTHER competitions
+  // We only want one competition per user
+  const userPhone = sanitizePhone(user.phone);
+  mockParticipants = mockParticipants.filter(
+    (p) => !(sanitizePhone(p.phone) === userPhone && p.competitionId !== defaultCompetitionId)
   );
-
-  if (!participant) {
+  
+  // Find or merge all participants in the default competition for this user
+  const participantsInDefault = mockParticipants.filter(
+    (p) => sanitizePhone(p.phone) === userPhone && p.competitionId === defaultCompetitionId
+  );
+  
+  let participant: MockParticipant;
+  
+  if (participantsInDefault.length === 0) {
     // Create new participant entry
     const newParticipant: MockParticipant = {
       id: `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -703,9 +714,31 @@ export const updateUserTickets = (userId: string, ticketCount: number): UserEntr
     };
     mockParticipants.push(newParticipant);
     participant = newParticipant;
+  } else if (participantsInDefault.length === 1) {
+    // Use the existing participant
+    participant = participantsInDefault[0];
+  } else {
+    // Multiple participants found - merge them into one
+    participant = participantsInDefault[0];
+    
+    // Merge tickets from duplicates
+    for (let i = 1; i < participantsInDefault.length; i++) {
+      const duplicate = participantsInDefault[i];
+      participant.tickets = [...participant.tickets, ...duplicate.tickets];
+      
+      // Update last submission time if newer
+      if (duplicate.lastSubmissionAt && 
+          (!participant.lastSubmissionAt || duplicate.lastSubmissionAt > participant.lastSubmissionAt)) {
+        participant.lastSubmissionAt = duplicate.lastSubmissionAt;
+      }
+    }
+    
+    // Remove duplicates from the array
+    const duplicateIds = participantsInDefault.slice(1).map(p => p.id);
+    mockParticipants = mockParticipants.filter(p => !duplicateIds.includes(p.id));
   }
 
-  // Calculate current ticket count
+  // Calculate current ticket count for this specific participant
   const currentTicketCount = participant.tickets.length;
   
   // Adjust tickets to match the desired count
@@ -743,7 +776,8 @@ export const updateUserTickets = (userId: string, ticketCount: number): UserEntr
     }
   }
 
-  // Update user's assigned tickets count
+  // Update user's assigned tickets count to match ONLY the default competition
+  // Not the sum of all competitions
   user.assignedTickets = participant.tickets.length;
   
   // Save both participants and user entries to storage

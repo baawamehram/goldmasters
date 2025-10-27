@@ -143,5 +143,6 @@ export const verifyParticipantAccess = (
       status: 'fail',
       message: 'Invalid or expired participant token',
     });
+    return;
   }
 };

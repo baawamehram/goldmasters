@@ -1,11 +1,10 @@
 "use client";
 /* eslint-disable react/no-unescaped-entities */
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import CheckoutModal, { CheckoutTicket } from "@/components/CheckoutModal";
-import MarkerCanvas from "@/components/MarkerCanvas";
+import MarkerCanvas, { MarkerCanvasHandle } from "@/components/MarkerCanvas";
 import { buildApiUrl } from "@/lib/api";
 
 interface Competition {
@@ -53,6 +52,8 @@ interface MarkerPayload {
   label: string;
   color: string;
   locked: boolean;
+  isVisible?: boolean;
+  state?: "placed" | "active" | "pending";
 }
 
 interface ParticipantStats {
@@ -69,6 +70,7 @@ export default function EnterCompetitionPage() {
   const competitionTokenKey = "competition_access_token";
   const participantTokenKey = `competition_${id}_participant_token`;
   const participantInfoKey = `competition_${id}_participant_info`;
+  const checkoutMarkersKey = `competition_${id}_checkout_markers`;
 
   const [isChecking, setIsChecking] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
@@ -85,12 +87,44 @@ export default function EnterCompetitionPage() {
   const [participantPhone, setParticipantPhone] = useState("");
 
   const [markers, setMarkers] = useState<MarkerPayload[]>([]);
-  const [isSubmittingMarkers, setIsSubmittingMarkers] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
-  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [currentPhase, setCurrentPhase] = useState<number>(1);
   const [phaseImageUrl, setPhaseImageUrl] = useState<string>('');
   const [phaseStatus, setPhaseStatus] = useState<string>('ACTIVE');
+
+  const markerCanvasRef = useRef<MarkerCanvasHandle | null>(null);
+
+  const persistParticipantSession = useCallback(
+    (participantData: ParticipantSummary, participantAccessToken: string, ticketData: Ticket[]) => {
+      setParticipant({
+        id: participantData.id,
+        name: participantData.name,
+        phone: participantData.phone,
+        ticketsPurchased: participantData.ticketsPurchased,
+      });
+      setParticipantToken(participantAccessToken);
+      setTickets(
+        ticketData.map((ticket) => ({
+          ...ticket,
+          markers: ticket.markers ?? [],
+          submittedAt: ticket.submittedAt ?? null,
+        }))
+      );
+      localStorage.setItem(participantTokenKey, participantAccessToken);
+      localStorage.setItem(
+        participantInfoKey,
+        JSON.stringify({
+          id: participantData.id,
+          name: participantData.name,
+          phone: participantData.phone,
+          ticketsPurchased: participantData.ticketsPurchased,
+        })
+      );
+      localStorage.removeItem(checkoutMarkersKey);
+      setParticipantError(null);
+    },
+    [checkoutMarkersKey, participantInfoKey, participantTokenKey]
+  );
 
   useEffect(() => {
     // Check if user has valid competition access token
@@ -154,7 +188,60 @@ export default function EnterCompetitionPage() {
     const storedInfo = localStorage.getItem(participantInfoKey);
 
     if (storedToken) {
-      setParticipantToken(storedToken);
+      if (participantToken !== storedToken) {
+        console.log('[Enter Page] Restoring stored participant token');
+        setParticipantToken(storedToken);
+      }
+    } else if (!participantToken) {
+      console.log('[Enter Page] No participant token, attempting auto-authentication');
+      const competitionUser = localStorage.getItem('competition_user');
+
+      if (competitionUser) {
+        try {
+          const user = JSON.parse(competitionUser);
+          console.log('[Enter Page] Auto-authenticating user:', user.name);
+
+          const authenticate = async () => {
+            try {
+              const response = await fetch(buildApiUrl(`competitions/${id}/participants/authenticate`), {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  name: user.name,
+                  phone: user.phone,
+                }),
+              });
+
+              const data = await response.json();
+              console.log('[Enter Page] Authentication response:', data);
+
+              if (
+                response.ok &&
+                data.status === 'success' &&
+                data.data?.participant &&
+                data.data?.participantAccessToken
+              ) {
+                const participantData = data.data.participant as ParticipantSummary;
+                const participantAccessToken = data.data.participantAccessToken as string;
+                const ticketData = (data.data.tickets as Ticket[]) || [];
+
+                console.log('[Enter Page] Auto-authentication successful, tickets:', ticketData.length);
+                persistParticipantSession(participantData, participantAccessToken, ticketData);
+              } else {
+                console.error('[Enter Page] Auto-authentication failed:', data.message || 'Unknown error');
+              }
+            } catch (err) {
+              console.error('[Enter Page] Auto-authentication error:', err);
+            }
+          };
+
+          void authenticate();
+        } catch (e) {
+          console.error('[Enter Page] Failed to parse competition_user:', e);
+        }
+      }
     }
 
     if (storedInfo) {
@@ -162,10 +249,10 @@ export default function EnterCompetitionPage() {
         const parsed: ParticipantSummary = JSON.parse(storedInfo);
         setParticipant(parsed);
       } catch (parseError) {
-        console.warn("Failed to parse participant info", parseError);
+        console.warn('Failed to parse participant info', parseError);
       }
     }
-  }, [hasAccess, participantInfoKey, participantTokenKey]);
+  }, [hasAccess, id, participantInfoKey, participantToken, participantTokenKey, persistParticipantSession]);
 
   const fetchCompetitionData = useCallback(async () => {
     if (!hasAccess) return;
@@ -205,7 +292,8 @@ export default function EnterCompetitionPage() {
   }, [fetchCompetitionData, hasAccess]);
 
   const fetchParticipantTickets = useCallback(async () => {
-    if (!participantToken) {
+    const activeToken = participantToken;
+    if (!activeToken) {
       setTickets([]);
       return;
     }
@@ -216,7 +304,7 @@ export default function EnterCompetitionPage() {
         buildApiUrl(`competitions/${id}/participants/me/tickets`),
         {
           headers: {
-            Authorization: `Bearer ${participantToken}`,
+            Authorization: `Bearer ${activeToken}`,
           },
         }
       );
@@ -224,43 +312,34 @@ export default function EnterCompetitionPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (
+          response.status === 404 &&
+          typeof data.message === "string" &&
+          data.message.toLowerCase().includes("participant record not found")
+        ) {
+          console.warn("Participant token is no longer valid, clearing local session");
+          setParticipant(null);
+          setParticipantToken(null);
+          setTickets([]);
+          localStorage.removeItem(participantTokenKey);
+          localStorage.removeItem(participantInfoKey);
+          setParticipantError("We couldn't find your participant record. Please verify your details again.");
+          return;
+        }
+
         throw new Error(data.message || "Failed to fetch participant tickets");
       }
 
       const participantData = data.data.participant as ParticipantSummary;
       const ticketData = (data.data.tickets as Ticket[]) || [];
-
-      setParticipant({
-        id: participantData.id,
-        name: participantData.name,
-        phone: participantData.phone,
-        ticketsPurchased: participantData.ticketsPurchased,
-      });
-      setTickets(
-        ticketData.map((ticket) => ({
-          ...ticket,
-          markers: ticket.markers ?? [],
-          submittedAt: ticket.submittedAt ?? null,
-        }))
-      );
-      localStorage.setItem(participantTokenKey, participantToken);
-      localStorage.setItem(
-        participantInfoKey,
-        JSON.stringify({
-          id: participantData.id,
-          name: participantData.name,
-          phone: participantData.phone,
-          ticketsPurchased: participantData.ticketsPurchased,
-        })
-      );
-      setParticipantError(null);
+      persistParticipantSession(participantData, activeToken, ticketData);
     } catch (err) {
       console.error("Error fetching tickets:", err);
       setParticipantError(err instanceof Error ? err.message : "Failed to load tickets");
     } finally {
       setIsParticipantLoading(false);
     }
-  }, [id, participantInfoKey, participantToken, participantTokenKey]);
+  }, [id, participantInfoKey, participantToken, participantTokenKey, persistParticipantSession]);
 
   useEffect(() => {
     if (!participantToken) {
@@ -297,39 +376,40 @@ export default function EnterCompetitionPage() {
     };
   }, [competition, participant, tickets]);
 
-  const hasActiveTickets = useMemo(
-    () => tickets.some((ticket) => ticket.status === "ASSIGNED"),
-    [tickets]
-  );
-
-  const canSubmitMarkers = useMemo(() => {
-    if (!participantToken) {
-      return false;
+  const placementSummary = useMemo(() => {
+    if (!markers.length) {
+      return {
+        activeMarker: null as MarkerPayload | null,
+        placedCount: 0,
+        pendingCount: 0,
+        totalCount: 0,
+      };
     }
 
-    const activeTickets = tickets.filter((ticket) => ticket.status === "ASSIGNED");
-    if (!activeTickets.length) {
-      return false;
-    }
+    let activeMarker: MarkerPayload | null = null;
+    let placedCount = 0;
+    let pendingCount = 0;
 
-    return activeTickets.every((ticket) => {
-      const required = ticket.markersAllowed ?? competition?.markersPerTicket ?? 0;
-      if (required === 0) {
-        return false;
+    markers.forEach((marker) => {
+      const inferredState = marker.state ?? (marker.locked ? "placed" : "active");
+      if (inferredState === "placed") {
+        placedCount += 1;
+      } else if (inferredState === "pending") {
+        pendingCount += 1;
+      } else if (inferredState === "active" && !activeMarker) {
+        activeMarker = marker;
+      } else if (inferredState === "active" && activeMarker) {
+        pendingCount += 1;
       }
-
-      const ticketMarkers = markers.filter(
-        (marker) => marker.ticketId === ticket.id && !marker.locked
-      );
-
-      return ticketMarkers.length === required;
     });
-  }, [competition?.markersPerTicket, markers, participantToken, tickets]);
 
-  const checkoutReadyMarkers = useMemo(
-    () => markers.filter((marker) => !marker.locked),
-    [markers]
-  );
+    const totalCount = placedCount + pendingCount + (activeMarker ? 1 : 0);
+
+    return { activeMarker, placedCount, pendingCount, totalCount };
+  }, [markers]);
+
+  const allMarkersPlaced = placementSummary.totalCount > 0 && !placementSummary.activeMarker && placementSummary.pendingCount === 0;
+  const canPlaceMarker = Boolean(placementSummary.activeMarker) && phaseStatus === "ACTIVE";
 
   const handleMarkersChange = useCallback((updatedMarkers: MarkerPayload[]) => {
     setMarkers(updatedMarkers);
@@ -372,30 +452,7 @@ export default function EnterCompetitionPage() {
         const participantAccessToken = data.data.participantAccessToken as string;
         const ticketData = (data.data.tickets as Ticket[]) || [];
 
-        setParticipant({
-          id: participantData.id,
-          name: participantData.name,
-          phone: participantData.phone,
-          ticketsPurchased: participantData.ticketsPurchased,
-        });
-        setParticipantToken(participantAccessToken);
-        setTickets(
-          ticketData.map((ticket) => ({
-            ...ticket,
-            markers: ticket.markers ?? [],
-            submittedAt: ticket.submittedAt ?? null,
-          }))
-        );
-        localStorage.setItem(participantTokenKey, participantAccessToken);
-        localStorage.setItem(
-          participantInfoKey,
-          JSON.stringify({
-            id: participantData.id,
-            name: participantData.name,
-            phone: participantData.phone,
-            ticketsPurchased: participantData.ticketsPurchased,
-          })
-        );
+        persistParticipantSession(participantData, participantAccessToken, ticketData);
         setParticipantName("");
         setParticipantPhone("");
         setSubmissionMessage("Participant verified. You can now place your markers.");
@@ -407,14 +464,7 @@ export default function EnterCompetitionPage() {
         setIsParticipantLoading(false);
       }
     },
-    [
-      fetchCompetitionData,
-      id,
-      participantInfoKey,
-      participantName,
-      participantPhone,
-      participantTokenKey,
-    ]
+    [fetchCompetitionData, id, participantName, participantPhone, persistParticipantSession]
   );
 
   const handleParticipantLogout = useCallback(() => {
@@ -426,147 +476,70 @@ export default function EnterCompetitionPage() {
     setParticipantError(null);
     localStorage.removeItem(participantTokenKey);
     localStorage.removeItem(participantInfoKey);
-  }, [participantInfoKey, participantTokenKey]);
+    localStorage.removeItem(checkoutMarkersKey);
+  }, [checkoutMarkersKey, participantInfoKey, participantTokenKey]);
+  const handlePlaceMarker = useCallback(() => {
+    setParticipantError(null);
 
-  const handleSubmitMarkers = useCallback(async () => {
+    const canvasHandle = markerCanvasRef.current;
+    if (!canvasHandle) {
+      setParticipantError("Canvas is still loading. Please try again in a moment.");
+      return;
+    }
+
+    const activeMarker = canvasHandle.getActiveMarker();
+    if (!activeMarker) {
+      setParticipantError("No marker available to place right now.");
+      return;
+    }
+
+    const { placed, hasMore } = canvasHandle.placeCurrentMarker();
+    if (!placed) {
+      setParticipantError("We couldn't lock that marker. Adjust it and try again.");
+      return;
+    }
+
+    setSubmissionMessage(
+      hasMore
+        ? `${activeMarker.label} locked. The next marker is ready.`
+        : "Brilliant! All markers are placed. Proceed to checkout to confirm."
+    );
+  }, []);
+
+  const handleCheckout = useCallback(() => {
+    setParticipantError(null);
+
     if (!participantToken) {
-      setParticipantError("Verify participant details before submitting markers.");
+      setParticipantError("Verify your participant details before checking out.");
       return;
     }
 
-    const activeTickets = tickets.filter((ticket) => ticket.status === "ASSIGNED");
-    if (!activeTickets.length) {
-      setSubmissionMessage("All tickets have already been submitted.");
+    if (!allMarkersPlaced) {
+      setParticipantError("Place all of your markers before proceeding to checkout.");
       return;
     }
 
-    const ticketPayload: { ticketId: string; markers: { x: number; y: number }[] }[] = [];
+    const placedMarkers = markers.filter((marker) => {
+      const inferredState = marker.state ?? (marker.locked ? "placed" : "active");
+      return inferredState === "placed";
+    });
 
-    for (const ticket of activeTickets) {
-      const markersForTicket = markers
-        .filter((marker) => marker.ticketId === ticket.id && !marker.locked)
-        .map((marker) => ({
+    localStorage.setItem(
+      checkoutMarkersKey,
+      JSON.stringify(
+        placedMarkers.map((marker) => ({
+          id: marker.id,
+          ticketId: marker.ticketId,
+          ticketNumber: marker.ticketNumber,
           x: Number(marker.x.toFixed(4)),
           y: Number(marker.y.toFixed(4)),
-        }));
-
-      const requiredMarkers = ticket.markersAllowed ?? competition?.markersPerTicket ?? 0;
-
-      if (markersForTicket.length !== requiredMarkers) {
-        setParticipantError(
-          `Ticket ${ticket.ticketNumber} requires exactly ${requiredMarkers} markers.`
-        );
-        return;
-      }
-
-      ticketPayload.push({
-        ticketId: ticket.id,
-        markers: markersForTicket,
-      });
-    }
-
-    try {
-      setIsSubmittingMarkers(true);
-      setParticipantError(null);
-      const response = await fetch(buildApiUrl(`competitions/${id}/entries`), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${participantToken}`,
-        },
-        body: JSON.stringify({ tickets: ticketPayload }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to submit markers");
-      }
-
-      const updatedTickets = (data.data.tickets as Ticket[]) || [];
-      setTickets(
-        updatedTickets.map((ticket) => ({
-          ...ticket,
-          markers: ticket.markers ?? [],
-          submittedAt: ticket.submittedAt ?? null,
+          label: marker.label,
         }))
-      );
+      )
+    );
 
-      if (data.data.participant) {
-        const updatedParticipant = data.data.participant as ParticipantSummary;
-        setParticipant({
-          id: updatedParticipant.id,
-          name: updatedParticipant.name,
-          phone: updatedParticipant.phone,
-          ticketsPurchased: updatedParticipant.ticketsPurchased,
-        });
-        localStorage.setItem(
-          participantInfoKey,
-          JSON.stringify({
-            id: updatedParticipant.id,
-            name: updatedParticipant.name,
-            phone: updatedParticipant.phone,
-            ticketsPurchased: updatedParticipant.ticketsPurchased,
-          })
-        );
-      }
-
-      setSubmissionMessage("Markers submitted successfully! Your tickets are now locked.");
-      await fetchCompetitionData();
-    } catch (err) {
-      console.error("Marker submission error:", err);
-      setParticipantError(err instanceof Error ? err.message : "Could not submit markers");
-    } finally {
-      setIsSubmittingMarkers(false);
-    }
-  }, [
-    competition?.markersPerTicket,
-    fetchCompetitionData,
-    id,
-    markers,
-    participantInfoKey,
-    participantToken,
-    tickets,
-  ]);
-
-  const handleOpenCheckout = useCallback(() => {
-    if (checkoutReadyMarkers.length === 0) {
-      setParticipantError("Place fresh markers before opening checkout.");
-      return;
-    }
-
-    setParticipantError(null);
-    setIsCheckoutModalOpen(true);
-  }, [checkoutReadyMarkers]);
-
-  const handleCheckoutSuccess = useCallback(
-    async (result: { participantId?: string; tickets?: CheckoutTicket[] }) => {
-      setIsCheckoutModalOpen(false);
-      setParticipantError(null);
-      setSubmissionMessage(
-        result.participantId
-          ? `Checkout complete. Your participant ID is ${result.participantId}. Keep it handy for any queries.`
-          : "Checkout complete. Your markers have been recorded."
-      );
-      if (result.tickets) {
-        setTickets(
-          result.tickets.map((ticket) => ({
-            ...ticket,
-            markers: (ticket.markers ?? []).map((marker) => ({
-              id: marker.id,
-              x: marker.x,
-              y: marker.y,
-            })),
-            markersAllowed: ticket.markersAllowed ?? competition?.markersPerTicket ?? 0,
-            markersUsed: ticket.markersUsed ?? ticket.markers?.length ?? 0,
-            submittedAt: ticket.submittedAt ?? null,
-          }))
-        );
-      }
-      await fetchCompetitionData();
-    },
-    [competition?.markersPerTicket, fetchCompetitionData]
-  );
+    router.push(`/competition/${id}/checkout`);
+  }, [allMarkersPlaced, checkoutMarkersKey, id, markers, participantToken, router]);
 
   if (isChecking) {
     return (
@@ -630,9 +603,9 @@ export default function EnterCompetitionPage() {
         <div className="flex-1 relative bg-[#0E1C1F] overflow-hidden">
 
           {/* Ticket Counter - shown if tickets are available */}
-          {tickets.length > 0 && (
+          {placementSummary.totalCount > 0 && (
             <div className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg text-xs font-semibold shadow-lg">
-              {markers.filter(m => !m.locked).length} / {tickets.reduce((sum, t) => sum + (t.markersAllowed ?? competition.markersPerTicket), 0)}
+              {placementSummary.placedCount} / {placementSummary.totalCount}
             </div>
           )}
 
@@ -640,6 +613,7 @@ export default function EnterCompetitionPage() {
           {phaseImageUrl ? (
             <div className="absolute inset-0 flex justify-center items-start px-6 pb-6">
               <MarkerCanvas
+                ref={markerCanvasRef}
                 imageUrl={phaseImageUrl}
                 tickets={tickets}
                 markersPerTicket={competition.markersPerTicket}
@@ -716,25 +690,28 @@ export default function EnterCompetitionPage() {
             </button>
           </div>
 
-          {/* PLACE Button */}
+          {placementSummary.totalCount > 0 && (
+            <div className="text-xs text-white/80 text-center mb-2">
+              {allMarkersPlaced
+                ? `All ${placementSummary.totalCount} markers locked.`
+                : `Marker ${placementSummary.placedCount + 1} of ${placementSummary.totalCount}`}
+            </div>
+          )}
+
           <button
             type="button"
-            onClick={handleSubmitMarkers}
-            disabled={!canSubmitMarkers || isSubmittingMarkers || phaseStatus !== 'ACTIVE'}
+            onClick={allMarkersPlaced ? handleCheckout : handlePlaceMarker}
+            disabled={allMarkersPlaced ? false : !canPlaceMarker}
             className="w-full py-4 bg-white text-[#00563F] font-bold text-lg rounded-lg hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
-            {isSubmittingMarkers ? "SUBMITTING..." : "PLACE"}
+            {allMarkersPlaced
+              ? "CHECKOUT"
+              : placementSummary.activeMarker
+              ? `PLACE ${placementSummary.activeMarker.label}`
+              : "PLACE"}
           </button>
         </div>
       </main>
-
-      <CheckoutModal
-        isOpen={isCheckoutModalOpen}
-        competitionId={id}
-        markers={markers}
-        onClose={() => setIsCheckoutModalOpen(false)}
-        onSuccess={handleCheckoutSuccess}
-      />
     </>
   );
 }

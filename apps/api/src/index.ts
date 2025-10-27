@@ -23,12 +23,7 @@ app.use(helmet());
 app.use(compression());
 
 // CORS configuration
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -64,11 +59,41 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV}`);
   console.log(`🔗 API Base URL: http://localhost:${PORT}/api/${API_VERSION}`);
   console.log(`💚 Health check: http://localhost:${PORT}/health`);
+});
+
+// Handle server errors
+server.on('error', (error: Error) => {
+  console.error('❌ Server error:', error);
+});
+
+// Prevent process from exiting on unhandled errors
+process.on('uncaughtException', (error: Error) => {
+  console.error('❌ Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('❌ Unhandled Rejection:', reason);
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
 });
 
 export default app;
