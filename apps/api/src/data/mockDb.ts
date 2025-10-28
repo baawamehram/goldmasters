@@ -1,4 +1,21 @@
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+
+// File path for server-side persistence
+const DATA_DIR = path.join(process.cwd(), '.data');
+const CHECKOUT_SUMMARIES_FILE = path.join(DATA_DIR, 'checkout-summaries.json');
+
+// Ensure data directory exists
+const ensureDataDir = () => {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch (error) {
+    console.error('Error creating data directory:', error);
+  }
+};
 
 export type MockMarker = {
   id: string;
@@ -176,7 +193,34 @@ let mockParticipants: MockParticipant[] = [
 ];
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
-const checkoutSummaries = new Map<string, CheckoutSummary>();
+
+// Load checkout summaries from file
+const loadCheckoutSummaries = (): Map<string, CheckoutSummary> => {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(CHECKOUT_SUMMARIES_FILE)) {
+      const data = fs.readFileSync(CHECKOUT_SUMMARIES_FILE, 'utf-8');
+      const parsed = JSON.parse(data) as Array<[string, any]>;
+      return new Map(parsed);
+    }
+  } catch (error) {
+    console.error('Error loading checkout summaries from file:', error);
+  }
+  return new Map();
+};
+
+// Save checkout summaries to file
+const saveCheckoutSummariesToFile = (summaries: Map<string, CheckoutSummary>) => {
+  try {
+    ensureDataDir();
+    const data = Array.from(summaries.entries());
+    fs.writeFileSync(CHECKOUT_SUMMARIES_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('Error saving checkout summaries to file:', error);
+  }
+};
+
+const checkoutSummaries = loadCheckoutSummaries();
 let userEntries: UserEntry[] = [];
 
 // Generate unique 6-digit access code
@@ -451,6 +495,9 @@ export const saveCheckoutSummary = (
     const userKey = `${competitionId}:user:${summary.userId}`;
     checkoutSummaries.set(userKey, summary);
   }
+  
+  // Persist to file
+  saveCheckoutSummariesToFile(checkoutSummaries);
 };
 
 export const getCheckoutSummary = (
