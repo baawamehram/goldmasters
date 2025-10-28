@@ -120,6 +120,12 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
+    // Detect if id is a userId (starts with 'user-' or 'participant-')
+    const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+    const actualCompetitionId = isUserId ? 'test-id' : id;
+
+    console.log('[GET competition] Request:', { urlId: id, isUserId, actualCompetitionId });
+
     // Check for optional access token (competition or participant)
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -129,7 +135,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as any;
 
-        const tokenMatchesCompetition = decoded.competitionId === id;
+        const tokenMatchesCompetition = decoded.competitionId === actualCompetitionId;
         if (!tokenMatchesCompetition) {
           throw new Error('Token competition mismatch');
         }
@@ -142,8 +148,8 @@ router.get('/:id', async (req: Request, res: Response) => {
       }
     }
 
-  const baseCompetition = getCompetitionById(id);
-  const ticketsSold = calculateTicketsSold(id);
+  const baseCompetition = getCompetitionById(actualCompetitionId);
+  const ticketsSold = calculateTicketsSold(actualCompetitionId);
   const remainingSlots = Math.max(0, baseCompetition.maxEntries - ticketsSold);
 
     const responseData: any = {
@@ -162,7 +168,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     };
 
     if (participantId) {
-      const participant = findParticipantById(id, participantId);
+      const participant = findParticipantById(actualCompetitionId, participantId);
       if (participant) {
         const ticketsPurchased = participant.tickets.length;
         const entriesUsed = participant.tickets.reduce(
@@ -223,8 +229,21 @@ router.post(
       const { id } = req.params;
       const { name, phone } = req.body;
 
-      const participant = findParticipantByPhone(id, phone);
+      // Detect if id is a userId (starts with 'user-' or 'participant-')
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+
+      console.log('[POST authenticate] Request:', { 
+        urlId: id, 
+        isUserId, 
+        actualCompetitionId,
+        name,
+        phone: phone.substring(0, 5) + '...' 
+      });
+
+      const participant = findParticipantByPhone(actualCompetitionId, phone);
       if (!participant) {
+        console.log('[POST authenticate] Participant not found:', { actualCompetitionId, phone });
         res.status(404).json({
           status: 'fail',
           message: 'Participant not found. Please contact support.',
@@ -235,6 +254,7 @@ router.post(
       const normalizedInputName = (name as string).trim().toLowerCase();
       const storedName = participant.name.trim().toLowerCase();
       if (normalizedInputName !== storedName) {
+        console.log('[POST authenticate] Name mismatch:', { input: normalizedInputName, stored: storedName });
         res.status(401).json({
           status: 'fail',
           message: 'Participant details do not match. Please try again or contact support.',
@@ -244,7 +264,7 @@ router.post(
 
       const participantAccessToken = jwt.sign(
         {
-          competitionId: id,
+          competitionId: actualCompetitionId,
           participantId: participant.id,
           type: 'participant_access',
         },
@@ -262,6 +282,7 @@ router.post(
         submittedAt: ticket.submittedAt,
       }));
 
+      console.log('[POST authenticate] Success:', { participantId: participant.id, ticketCount: ticketsPayload.length });
       res.status(200).json({
         status: 'success',
         data: {
@@ -298,6 +319,12 @@ router.get(
       const { id } = req.params;
       const participantId = req.participantAccess?.participantId;
 
+      // Detect if id is a userId (starts with 'user-' or 'participant-')
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+
+      console.log('[GET me/tickets] Request:', { urlId: id, isUserId, actualCompetitionId, participantId });
+
       if (!participantId) {
         res.status(401).json({
           status: 'fail',
@@ -306,8 +333,9 @@ router.get(
         return;
       }
 
-      const participant = findParticipantById(id, participantId);
+      const participant = findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
+        console.log('[GET me/tickets] Participant not found:', { actualCompetitionId, participantId });
         res.status(404).json({
           status: 'fail',
           message: 'Participant record not found',
@@ -315,6 +343,7 @@ router.get(
         return;
       }
 
+      console.log('[GET me/tickets] Success:', { participantId, ticketCount: participant.tickets.length });
       res.status(200).json({
         status: 'success',
         data: {
@@ -715,6 +744,12 @@ router.post(
       const participantId = req.participantAccess?.participantId;
       const { tickets } = req.body as { tickets: { ticketId: string; markers: { x: number; y: number }[] }[] };
 
+      // Detect if id is a userId (starts with 'user-' or 'participant-')
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+
+      console.log('[POST entries] Request:', { urlId: id, isUserId, actualCompetitionId, participantId });
+
       if (!participantId) {
         res.status(401).json({
           status: 'fail',
@@ -723,8 +758,9 @@ router.post(
         return;
       }
 
-      const participant = findParticipantById(id, participantId);
+      const participant = findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
+        console.log('[POST entries] Participant not found:', { actualCompetitionId, participantId });
         res.status(404).json({
           status: 'fail',
           message: 'Participant not found',
@@ -833,6 +869,12 @@ router.get(
       const { id, participantId } = req.params;
       const authenticatedParticipantId = req.participantAccess?.participantId;
 
+      // Detect if id is a userId (starts with 'user-' or 'participant-')
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+
+      console.log('[GET submissions] Request:', { urlId: id, isUserId, actualCompetitionId, participantId });
+
       // Allow admin to view any participant's data, participants can only view their own
       const isAdmin = req.participantAccess?.type === 'admin_access';
       if (!isAdmin && authenticatedParticipantId !== participantId) {
@@ -843,8 +885,9 @@ router.get(
         return;
       }
 
-      const participant = findParticipantById(id, participantId);
+      const participant = findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
+        console.log('[GET submissions] Participant not found:', { actualCompetitionId, participantId });
         res.status(404).json({
           status: 'fail',
           message: 'Participant not found',
@@ -910,6 +953,12 @@ router.get(
     try {
       const { id, participantId } = req.params;
 
+      // Detect if id is a userId (starts with 'user-' or 'participant-')
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+
+      console.log('[GET admin submissions] Request:', { urlId: id, isUserId, actualCompetitionId, participantId });
+
       // Verify admin token
       const authHeader = req.headers['authorization'];
       const token = authHeader && authHeader.split(' ')[1];
@@ -932,13 +981,14 @@ router.get(
         return;
       }
 
-      let participant = findParticipantById(id, participantId);
+      let participant = findParticipantById(actualCompetitionId, participantId);
       
       // If participant not found with exact ID, try to get first participant from competition
       // This handles cases where frontend uses different ID schemes (user-1 vs participant-1)
       if (!participant) {
-        const allParticipants = getParticipantsByCompetition(id);
+        const allParticipants = getParticipantsByCompetition(actualCompetitionId);
         if (allParticipants.length === 0) {
+          console.log('[GET admin submissions] No participants found:', { actualCompetitionId });
           res.status(404).json({
             status: 'fail',
             message: 'No participants found for this competition',

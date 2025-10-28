@@ -1,0 +1,182 @@
+[
+  {
+    "id": "participant-1",
+    "competitionId": "test-id",
+    "name": "Priya Sharma",
+    "phone": "+919876543210",
+    "email": "priya.sharma@example.com",
+    "tickets": [
+      {
+        "id": "ticket-1",
+        "ticketNumber": 101,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-2",
+        "ticketNumber": 102,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
+  },
+  {
+    "id": "participant-2",
+    "competitionId": "test-id",
+    "name": "Arjun Mehta",
+    "phone": "+919123456789",
+    "email": "arjun.mehta@example.com",
+    "tickets": [
+      {
+        "id": "ticket-3",
+        "ticketNumber": 103,
+        "status": "USED",
+        "markersAllowed": 3,
+        "markersUsed": 3,
+        "markers": [
+          {
+            "id": "ticket-3-marker-1",
+            "x": 0.42,
+            "y": 0.28
+          },
+          {
+            "id": "ticket-3-marker-2",
+            "x": 0.55,
+            "y": 0.31
+          },
+          {
+            "id": "ticket-3-marker-3",
+            "x": 0.51,
+            "y": 0.45
+          }
+        ],
+        "submittedAt": "2025-10-20T10:30:00.000Z"
+      }
+    ],
+    "lastSubmissionAt": "2025-10-20T10:30:00.000Z"
+  },
+  {
+    "id": "participant-1761645897135-aij64imlf",
+    "competitionId": "test-id",
+    "name": "offer",
+    "phone": "+916767676767",
+    "tickets": [
+      {
+        "id": "ticket-1761645897135-ddlzot8op",
+        "ticketNumber": 1003,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761645897135-uqc5xe5ms",
+        "ticketNumber": 1005,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761645897135-mfx16ctm5",
+        "ticketNumber": 1007,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
+  },
+  {
+    "id": "user-1761645782820-ekdclhfev",
+    "competitionId": "user-1761645782820-ekdclhfev",
+    "name": "offer",
+    "phone": "+916767676767",
+    "tickets": [
+      {
+        "id": "ticket-user-1761645782820-ekdclhfev-0",
+        "ticketNumber": 1003,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-user-1761645782820-ekdclhfev-1",
+        "ticketNumber": 1005,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-user-1761645782820-ekdclhfev-2",
+        "ticketNumber": 1007,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
+  },
+  {
+    "id": "participant-1761646798448-auu5ly9lr",
+    "competitionId": "test-id",
+    "name": "forty",
+    "phone": "+914040404040",
+    "tickets": [
+      {
+        "id": "ticket-1761646798448-pvy36slz2",
+        "ticketNumber": 1009,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761646798448-sblj0t39i",
+        "ticketNumber": 1011,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761646798448-xpnvyxtq6",
+        "ticketNumber": 1013,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761646798448-vkb14k1zl",
+        "ticketNumber": 1015,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
+  }
+]

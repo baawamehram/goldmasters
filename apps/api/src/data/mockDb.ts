@@ -3,8 +3,10 @@ import fs from 'fs';
 import path from 'path';
 
 // File path for server-side persistence
-const DATA_DIR = path.join(process.cwd(), '.data');
+// Use workspace root .data directory (two levels up from apps/api)
+const DATA_DIR = path.join(process.cwd(), '..', '..', '.data');
 const CHECKOUT_SUMMARIES_FILE = path.join(DATA_DIR, 'checkout-summaries.json');
+const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
 
 // Ensure data directory exists
 const ensureDataDir = () => {
@@ -220,8 +222,38 @@ const saveCheckoutSummariesToFile = (summaries: Map<string, CheckoutSummary>) =>
   }
 };
 
+// Load user entries from file on startup
+const loadUserEntries = (): UserEntry[] => {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(USER_ENTRIES_FILE)) {
+      const data = fs.readFileSync(USER_ENTRIES_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      return parsed.map((entry: any) => ({
+        ...entry,
+        createdAt: new Date(entry.createdAt),
+        lastLoginAt: entry.lastLoginAt ? new Date(entry.lastLoginAt) : null,
+        lastLogoutAt: entry.lastLogoutAt ? new Date(entry.lastLogoutAt) : null,
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading user entries from file:', error);
+  }
+  return [];
+};
+
+// Save user entries to file
+const saveUserEntriesToFile = (entries: UserEntry[]) => {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(USER_ENTRIES_FILE, JSON.stringify(entries, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('Error saving user entries to file:', error);
+  }
+};
+
 const checkoutSummaries = loadCheckoutSummaries();
-let userEntries: UserEntry[] = [];
+let userEntries: UserEntry[] = loadUserEntries();
 
 // Generate unique 6-digit access code
 const generateAccessCode = (): string => {
@@ -247,6 +279,7 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
     // Update login status
     existing.isLoggedIn = true;
     existing.lastLoginAt = new Date();
+    saveUserEntriesToFile(userEntries); // Persist to file
     return existing;
   }
   
@@ -259,6 +292,7 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
       existingById.name = name;
       existingById.isLoggedIn = true;
       existingById.lastLoginAt = new Date();
+      saveUserEntriesToFile(userEntries); // Persist to file
       return existingById;
     }
   }
@@ -279,6 +313,7 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
   };
   
   userEntries.push(newEntry);
+  saveUserEntriesToFile(userEntries); // Persist to file
   return newEntry;
 };
 

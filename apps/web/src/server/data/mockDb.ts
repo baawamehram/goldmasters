@@ -3,7 +3,8 @@ import fs from 'fs';
 import path from 'path';
 
 // File path for server-side persistence (only used on server)
-const DATA_DIR = path.join(process.cwd(), '.data');
+// Use workspace root .data directory (one level up from apps/web, then up from apps)
+const DATA_DIR = path.join(process.cwd(), '..', '..', '.data');
 const PARTICIPANTS_FILE = path.join(DATA_DIR, 'participants.json');
 const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
 
@@ -589,6 +590,9 @@ const generateAccessCode = (): string => {
 export const createOrUpdateUserEntry = (name: string, phone: string, existingId?: string): UserEntry => {
   const sanitized = sanitizePhone(phone);
   
+  // Reload from storage to get latest data
+  userEntries = loadUserEntriesFromStorage();
+  
   // Check if user already exists by phone
   const existing = userEntries.find((entry) => entry.phone === sanitized);
   
@@ -641,7 +645,10 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
 export const getAllUserEntries = (): UserEntry[] => {
   const defaultCompetitionId = 'test-id';
   
-  return userEntries.map((entry) => {
+  // Reload from storage to get latest data (including users added by other processes)
+  const latestEntries = loadUserEntriesFromStorage();
+  
+  return latestEntries.map((entry) => {
     // Only count tickets from the default competition to match admin assignment logic
     // This prevents checkout/gameplay tickets in other competitions from affecting the count
     const participants = mockParticipants.filter(
