@@ -283,6 +283,9 @@ export default function PhaseManagementPage() {
             <Button variant="outline" onClick={() => router.push('/admin/settings')}>
               Settings
             </Button>
+            <Button variant="outline" onClick={() => router.push('/admin/results')}>
+              Results
+            </Button>
             <Button variant="outline" onClick={() => router.push('/admin/dashboard')}>
               Dashboard
             </Button>

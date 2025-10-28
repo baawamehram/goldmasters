@@ -3,10 +3,10 @@ import { success, error } from '@/server/http';
 
 export async function GET(
   _req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     console.log('Fetching entries for participant:', id);
 
     return success({ entries: [] });

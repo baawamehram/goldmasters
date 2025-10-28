@@ -1,10 +1,16 @@
 "use client";
 
 /* eslint-disable react/no-unescaped-entities */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { buildApiUrl } from "@/lib/api";
 import ViewEntryDetailsModal from "@/components/ViewEntryDetailsModal";
 
@@ -22,27 +28,6 @@ interface Competition {
   endsAt: string;
   finalJudgeX?: number | null;
   finalJudgeY?: number | null;
-}
-
-interface CompetitionWinner {
-  ticketId: string;
-  ticketNumber: number;
-  participantId: string;
-  participantName: string;
-  participantPhone: string;
-  distance: number;
-  marker: {
-    id: string;
-    x: number;
-    y: number;
-  } | null;
-}
-
-interface CompetitionResultMeta {
-  competitionId: string;
-  finalJudgeX: number;
-  finalJudgeY: number;
-  computedAt: string;
 }
 
 export default function AdminDashboardPage() {
@@ -64,21 +49,6 @@ export default function AdminDashboardPage() {
     markersPerTicket: 3,
     endsAt: "",
   });
-  const [finalResultState, setFinalResultState] = useState({
-    competitionId: "",
-    finalJudgeX: "",
-    finalJudgeY: "",
-  });
-  const [finalResultError, setFinalResultError] = useState<string | null>(null);
-  const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
-  const [computeError, setComputeError] = useState<string | null>(null);
-  const [isComputing, setIsComputing] = useState(false);
-  const [winnerResult, setWinnerResult] = useState<{
-    result: CompetitionResultMeta;
-    winners: CompetitionWinner[];
-  } | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const [maxCompetitionTickets, setMaxCompetitionTickets] = useState(100);
   const [ticketPrice, setTicketPrice] = useState(500);
   const [ticketsSold, setTicketsSold] = useState(3); // This would come from actual data
@@ -88,13 +58,13 @@ export default function AdminDashboardPage() {
   const fetchCompetitions = useCallback(async () => {
     try {
       setIsFetchingCompetitions(true);
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        router.push('/admin');
+        router.push("/admin");
         return;
       }
 
-      const response = await fetch(buildApiUrl('admin/competitions'), {
+      const response = await fetch(buildApiUrl("admin/competitions"), {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -102,12 +72,12 @@ export default function AdminDashboardPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to load competitions');
+        throw new Error(data.message || "Failed to load competitions");
       }
 
       setCompetitions(data.data.competitions ?? []);
     } catch (error) {
-      console.error('Competition fetch error:', error);
+      console.error("Competition fetch error:", error);
     } finally {
       setIsFetchingCompetitions(false);
       setIsLoading(false);
@@ -115,42 +85,40 @@ export default function AdminDashboardPage() {
   }, [router]);
 
   useEffect(() => {
-    // Check if admin is logged in
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem("admin_token");
     if (!token) {
-      router.replace('/login');
+      router.replace("/login");
       return;
     }
 
-    const savedMaxCompetitionTickets = localStorage.getItem('admin_max_competition_tickets');
+    const savedMaxCompetitionTickets = localStorage.getItem("admin_max_competition_tickets");
     if (savedMaxCompetitionTickets) {
       setMaxCompetitionTickets(parseInt(savedMaxCompetitionTickets, 10));
     }
-    
-    const savedTicketPrice = localStorage.getItem('admin_ticket_price');
+
+    const savedTicketPrice = localStorage.getItem("admin_ticket_price");
     if (savedTicketPrice) {
       setTicketPrice(parseInt(savedTicketPrice, 10));
     }
 
-    // Load saved competition selection
-    const savedCompetitionId = localStorage.getItem('admin_selected_competition');
+    const savedCompetitionId = localStorage.getItem("admin_selected_competition");
     if (savedCompetitionId) {
       setSelectedCompetition(savedCompetitionId);
     }
 
-    // Check for highlight parameter
-    const highlight = searchParams.get('highlight');
-    if (highlight && highlight.startsWith('user-')) {
-      const userId = highlight.replace('user-', '');
+    const highlight = searchParams.get("highlight");
+    if (highlight && highlight.startsWith("user-")) {
+      const userId = highlight.replace("user-", "");
       setHighlightedParticipantId(userId);
       setShowViewDetailsModal(true);
     }
 
     fetchCompetitions();
   }, [fetchCompetitions, router, searchParams]);
+
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    router.push('/login');
+    localStorage.removeItem("admin_token");
+    router.push("/login");
   };
 
   const handleCreateCompetition = async (event: React.FormEvent) => {
@@ -159,16 +127,16 @@ export default function AdminDashboardPage() {
     setIsCreating(true);
 
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        router.push('/admin');
+        router.push("/admin");
         return;
       }
 
-  const response = await fetch(buildApiUrl('admin/competitions'), {
-        method: 'POST',
+      const response = await fetch(buildApiUrl("admin/competitions"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -180,7 +148,7 @@ export default function AdminDashboardPage() {
       const data = await response.json();
       if (!response.ok) {
         throw new Error(
-          data.message || data.errors?.[0]?.msg || 'Failed to create competition'
+          data.message || data.errors?.[0]?.msg || "Failed to create competition"
         );
       }
 
@@ -195,12 +163,12 @@ export default function AdminDashboardPage() {
         endsAt: "",
       });
 
-      console.log('Competition created successfully.');
+      console.log("Competition created successfully.");
 
       await fetchCompetitions();
     } catch (error) {
-      console.error('Create competition error:', error);
-      setCreateError(error instanceof Error ? error.message : 'Could not create competition.');
+      console.error("Create competition error:", error);
+      setCreateError(error instanceof Error ? error.message : "Could not create competition.");
     } finally {
       setIsCreating(false);
     }
@@ -208,14 +176,14 @@ export default function AdminDashboardPage() {
 
   const handleCloseCompetition = async (id: string) => {
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem("admin_token");
       if (!token) {
-        router.push('/admin');
+        router.push("/admin");
         return;
       }
 
-  const response = await fetch(buildApiUrl(`admin/competitions/${id}/close`), {
-        method: 'PATCH',
+      const response = await fetch(buildApiUrl(`admin/competitions/${id}/close`), {
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -223,7 +191,7 @@ export default function AdminDashboardPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to close competition');
+        throw new Error(data.message || "Failed to close competition");
       }
 
       setCompetitions((prev) =>
@@ -231,265 +199,12 @@ export default function AdminDashboardPage() {
           competition.id === id ? data.data.competition : competition
         )
       );
-  console.log('Competition closed successfully.');
+
+      console.log("Competition closed successfully.");
     } catch (error) {
-      console.error('Close competition error:', error);
-      console.error('Could not close competition.', error);
+      console.error("Close competition error:", error);
     }
   };
-
-  const handleSubmitFinalResult = async (event: React.FormEvent) => {
-    event.preventDefault();
-  setFinalResultError(null);
-  setComputeError(null);
-    setExportError(null);
-    setWinnerResult(null);
-
-    if (!finalResultState.competitionId) {
-      setFinalResultError('Select a competition to update.');
-      return;
-    }
-
-    if (finalResultState.finalJudgeX === '' || finalResultState.finalJudgeY === '') {
-      setFinalResultError('Provide both X and Y coordinates.');
-      return;
-    }
-
-    const finalJudgeXValue = Number(finalResultState.finalJudgeX);
-    const finalJudgeYValue = Number(finalResultState.finalJudgeY);
-
-    if (
-      Number.isNaN(finalJudgeXValue) ||
-      Number.isNaN(finalJudgeYValue) ||
-      finalJudgeXValue < 0 ||
-      finalJudgeXValue > 1 ||
-      finalJudgeYValue < 0 ||
-      finalJudgeYValue > 1
-    ) {
-      setFinalResultError('Coordinates must be numeric values between 0 and 1.');
-      return;
-    }
-
-    setIsSubmittingFinal(true);
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        router.push('/admin');
-        return;
-      }
-
-      const response = await fetch(
-  buildApiUrl(`admin/competitions/${finalResultState.competitionId}/final-result`),
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            finalJudgeX: finalJudgeXValue,
-            finalJudgeY: finalJudgeYValue,
-          }),
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(
-          data.message || data.errors?.[0]?.msg || 'Failed to save final judged coordinates.'
-        );
-      }
-
-      const updatedCompetition = data.data?.competition as Competition | undefined;
-      if (updatedCompetition) {
-        setCompetitions((prev) =>
-          prev.map((competition) =>
-            competition.id === updatedCompetition.id ? updatedCompetition : competition
-          )
-        );
-
-        setFinalResultState({
-          competitionId: updatedCompetition.id,
-          finalJudgeX:
-            typeof updatedCompetition.finalJudgeX === 'number'
-              ? updatedCompetition.finalJudgeX.toString()
-              : '',
-          finalJudgeY:
-            typeof updatedCompetition.finalJudgeY === 'number'
-              ? updatedCompetition.finalJudgeY.toString()
-              : '',
-        });
-      }
-
-      console.log('Final judged coordinates saved.');
-    } catch (error) {
-      console.error('Final result submission error:', error);
-      setFinalResultError(
-        error instanceof Error ? error.message : 'Failed to store final judged coordinates.'
-      );
-    } finally {
-      setIsSubmittingFinal(false);
-    }
-  };
-
-  const handleComputeWinners = async () => {
-  setComputeError(null);
-  setExportError(null);
-
-    if (!finalResultState.competitionId) {
-      setComputeError('Select a competition to compute winners.');
-      return;
-    }
-
-    setIsComputing(true);
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        router.push('/admin');
-        return;
-      }
-
-      const response = await fetch(
-  buildApiUrl(`admin/competitions/${finalResultState.competitionId}/compute-winner`),
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to compute winners.');
-      }
-
-      const resultPayload = data.data?.result as CompetitionResultMeta | undefined;
-      const winnersPayload = data.data?.winners as CompetitionWinner[] | undefined;
-
-      if (resultPayload) {
-        setWinnerResult({
-          result: resultPayload,
-          winners: winnersPayload ?? [],
-        });
-
-        console.log('Winners computed successfully.');
-      } else {
-        throw new Error('Unexpected response received from compute endpoint.');
-      }
-    } catch (error) {
-      console.error('Compute winners error:', error);
-      setComputeError(
-        error instanceof Error ? error.message : 'Failed to compute winners.'
-      );
-      setWinnerResult(null);
-    } finally {
-      setIsComputing(false);
-    }
-  };
-
-  const handleExportResults = async () => {
-  setExportError(null);
-
-    if (!finalResultState.competitionId) {
-      setExportError('Select a competition to export results.');
-      return;
-    }
-
-    setIsExporting(true);
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        router.push('/admin');
-        return;
-      }
-
-      const response = await fetch(
-  buildApiUrl(`admin/competitions/${finalResultState.competitionId}/export`),
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = 'Failed to export results.';
-        if (errorText) {
-          try {
-            const parsed = JSON.parse(errorText);
-            errorMessage =
-              parsed?.message || parsed?.error || errorMessage;
-          } catch {
-            errorMessage = errorText;
-          }
-        }
-        throw new Error(errorMessage);
-      }
-
-      const blob = await response.blob();
-
-      if (typeof window === 'undefined') {
-        console.log('Results export completed.');
-        return;
-      }
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `competition-${finalResultState.competitionId}-results.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      console.log('Results export started (CSV download).');
-    } catch (error) {
-      console.error('Export results error:', error);
-      setExportError(
-        error instanceof Error ? error.message : 'Failed to export results.'
-      );
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const activeCompetitions = useMemo(
-    () => competitions.filter((competition) => competition.status === 'ACTIVE'),
-    [competitions]
-  );
-
-  const selectedFinalCompetition = useMemo(
-    () => competitions.find((competition) => competition.id === finalResultState.competitionId),
-    [competitions, finalResultState.competitionId]
-  );
-
-  useEffect(() => {
-    if (competitions.length === 0 || finalResultState.competitionId) {
-      return;
-    }
-
-    const defaultCompetition =
-      competitions.find((competition) => competition.status === 'CLOSED') ?? competitions[0];
-
-    if (defaultCompetition) {
-      setFinalResultState({
-        competitionId: defaultCompetition.id,
-        finalJudgeX:
-          typeof defaultCompetition.finalJudgeX === 'number'
-            ? defaultCompetition.finalJudgeX.toString()
-            : '',
-        finalJudgeY:
-          typeof defaultCompetition.finalJudgeY === 'number'
-            ? defaultCompetition.finalJudgeY.toString()
-            : '',
-      });
-    }
-  }, [competitions, finalResultState.competitionId]);
 
   if (isLoading) {
     return (
@@ -505,24 +220,26 @@ export default function AdminDashboardPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-brand-primary/5 via-white to-brand-accent/5 py-8 px-4">
       <div className="container-custom max-w-6xl">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold font-heading">Admin Dashboard</h1>
             <p className="text-muted-foreground mt-1">Manage competitions and tickets</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => router.push('/admin/phases')}>
+            <Button variant="outline" onClick={() => router.push("/admin/phases")}>
               Phases
             </Button>
-            <Button variant="outline" onClick={() => router.push('/admin/entries')}>
+            <Button variant="outline" onClick={() => router.push("/admin/results")}>
+              Results
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/admin/entries")}>
               View Entries
             </Button>
-            <Button variant="outline" onClick={() => router.push('/admin/settings')}>
+            <Button variant="outline" onClick={() => router.push("/admin/settings")}>
               Settings
             </Button>
             <Button variant="outline" onClick={() => setIsCreateOpen((prev) => !prev)}>
-              {isCreateOpen ? 'Cancel' : 'New Competition'}
+              {isCreateOpen ? "Cancel" : "New Competition"}
             </Button>
             <Button onClick={handleLogout} variant="outline">
               Logout
@@ -531,7 +248,6 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Competitions List */}
           <Card>
             <CardHeader>
               <CardTitle>Active Competitions</CardTitle>
@@ -547,13 +263,12 @@ export default function AdminDashboardPage() {
                   </div>
                 ) : (
                   competitions.map((competition) => {
-                    const isActive = competition.status === 'ACTIVE';
-                    // Use dynamic values from settings or fallback to competition data
+                    const isActive = competition.status === "ACTIVE";
                     const displayMaxTickets = maxCompetitionTickets || competition.maxEntries;
                     const displayTicketsSold = ticketsSold;
                     const displayRemaining = displayMaxTickets - displayTicketsSold;
                     const displayPrice = ticketPrice || competition.pricePerTicket;
-                    
+
                     return (
                       <div
                         key={competition.id}
@@ -566,8 +281,8 @@ export default function AdminDashboardPage() {
                               <span
                                 className={`text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-full ${
                                   isActive
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-slate-200 text-slate-700'
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-slate-200 text-slate-700"
                                 }`}
                               >
                                 {competition.status}
@@ -592,9 +307,20 @@ export default function AdminDashboardPage() {
                             <span className="text-muted-foreground">Markers per ticket:</span>
                             <span className="ml-2 font-medium">{competition.markersPerTicket}</span>
                           </div>
+                          <div>
+                            <span className="text-muted-foreground">Price per ticket:</span>
+                            <span className="ml-2 font-medium">₹{displayPrice}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Max tickets:</span>
+                            <span className="ml-2 font-medium">{displayMaxTickets}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Remaining:</span>
+                            <span className="ml-2 font-medium">{displayRemaining}</span>
+                          </div>
                         </div>
-                        
-                        {/* Admin Access Code Display */}
+
                         <div className="border-t pt-3 mt-3">
                           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                             <div className="flex items-center justify-between">
@@ -606,14 +332,19 @@ export default function AdminDashboardPage() {
                                   </span>
                                   <button
                                     onClick={() => {
-                                      navigator.clipboard.writeText('999999');
-                                      alert('Admin code copied!');
+                                      navigator.clipboard.writeText("999999");
+                                      alert("Admin code copied!");
                                     }}
                                     className="text-green-600 hover:text-green-800 p-1"
                                     title="Copy admin code"
                                   >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                      />
                                     </svg>
                                   </button>
                                 </div>
@@ -622,11 +353,12 @@ export default function AdminDashboardPage() {
                             <p className="text-xs text-green-600 mt-1">Universal access for testing</p>
                           </div>
                         </div>
-                        
+
                         <div className="text-xs text-muted-foreground">
-                          {typeof competition.finalJudgeX === 'number' && typeof competition.finalJudgeY === 'number'
+                          {typeof competition.finalJudgeX === "number" &&
+                          typeof competition.finalJudgeY === "number"
                             ? `Final judged coordinate: (${competition.finalJudgeX.toFixed(3)}, ${competition.finalJudgeY.toFixed(3)})`
-                            : 'Final judged coordinate pending'}
+                            : "Final judged coordinate pending"}
                         </div>
                       </div>
                     );
@@ -635,209 +367,21 @@ export default function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
-          {/* Final Result Entry */}
+
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Enter Judged Coordinates</CardTitle>
-              <CardDescription>Record the final judge decision (values between 0 and 1)</CardDescription>
+              <CardTitle>Competition Results</CardTitle>
+              <CardDescription>
+                Enter judged coordinates and compute winners from the dedicated results page.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmitFinalResult} className="space-y-4">
-                <div>
-                  <label htmlFor="final-competition" className="block text-sm font-medium mb-2">
-                    Competition
-                  </label>
-                  <select
-                    id="final-competition"
-                    value={finalResultState.competitionId}
-                    onChange={(event) => {
-                      const competitionId = event.target.value;
-                      const competition = competitions.find((item) => item.id === competitionId);
-
-                      setFinalResultState({
-                        competitionId,
-                        finalJudgeX:
-                          competition && typeof competition.finalJudgeX === 'number'
-                            ? competition.finalJudgeX.toString()
-                            : '',
-                        finalJudgeY:
-                          competition && typeof competition.finalJudgeY === 'number'
-                            ? competition.finalJudgeY.toString()
-                            : '',
-                      });
-                      setWinnerResult(null);
-                      setComputeError(null);
-                      setExportError(null);
-                    }}
-                    className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-                    required
-                  >
-                    <option value="">Select a competition</option>
-                    {competitions.map((competition) => (
-                      <option key={competition.id} value={competition.id}>
-                        {competition.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="finalJudgeX" className="block text-sm font-medium mb-2">
-                      X coordinate
-                    </label>
-                    <input
-                      id="finalJudgeX"
-                      type="number"
-                      min={0}
-                      max={1}
-                      step={0.0001}
-                      value={finalResultState.finalJudgeX}
-                      onChange={(event) => {
-                        setFinalResultState((prev) => ({
-                          ...prev,
-                          finalJudgeX: event.target.value,
-                        }));
-                        setExportError(null);
-                        setWinnerResult(null);
-                      }}
-                      className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="finalJudgeY" className="block text-sm font-medium mb-2">
-                      Y coordinate
-                    </label>
-                    <input
-                      id="finalJudgeY"
-                      type="number"
-                      min={0}
-                      max={1}
-                      step={0.0001}
-                      value={finalResultState.finalJudgeY}
-                      onChange={(event) => {
-                        setFinalResultState((prev) => ({
-                          ...prev,
-                          finalJudgeY: event.target.value,
-                        }));
-                        setExportError(null);
-                        setWinnerResult(null);
-                      }}
-                      className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {selectedFinalCompetition &&
-                  typeof selectedFinalCompetition.finalJudgeX === 'number' &&
-                  typeof selectedFinalCompetition.finalJudgeY === 'number' && (
-                    <p className="text-xs text-muted-foreground">
-                      {`Stored coordinate: (${selectedFinalCompetition.finalJudgeX.toFixed(3)}, ${selectedFinalCompetition.finalJudgeY.toFixed(3)})`}
-                    </p>
-                  )}
-
-                {finalResultError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-sm text-red-700 rounded-lg">
-                    {finalResultError}
-                  </div>
-                )}
-
-                {computeError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-sm text-red-700 rounded-lg">
-                    {computeError}
-                  </div>
-                )}
-
-                {exportError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-sm text-red-700 rounded-lg">
-                    {exportError}
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                  <Button
-                    type="submit"
-                    disabled={isSubmittingFinal || !finalResultState.competitionId}
-                  >
-                    {isSubmittingFinal ? 'Saving…' : 'Save final result'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleComputeWinners}
-                    disabled={
-                      isComputing ||
-                      !finalResultState.competitionId ||
-                      finalResultState.finalJudgeX === '' ||
-                      finalResultState.finalJudgeY === ''
-                    }
-                  >
-                    {isComputing ? 'Computing…' : 'Compute winners'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleExportResults}
-                    disabled={
-                      isExporting ||
-                      !finalResultState.competitionId ||
-                      finalResultState.finalJudgeX === '' ||
-                      finalResultState.finalJudgeY === ''
-                    }
-                  >
-                    {isExporting ? 'Exporting…' : 'Export results'}
-                  </Button>
-                </div>
-
-                {winnerResult && (
-                  <div className="mt-6 border border-border rounded-lg p-4 space-y-3 bg-muted/40">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <p className="text-sm font-medium">
-                        Final judged coordinate: (
-                        {winnerResult.result.finalJudgeX.toFixed(3)},
-                        {winnerResult.result.finalJudgeY.toFixed(3)})
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Computed at {new Date(winnerResult.result.computedAt).toLocaleString()}
-                      </p>
-                    </div>
-
-                    {winnerResult.winners.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        No markers submitted yet, winners cannot be determined.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {winnerResult.winners.map((winner, index) => (
-                          <div
-                            key={winner.ticketId}
-                            className="rounded-md border border-border bg-background p-3 text-sm"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold">#{index + 1}: {winner.participantName}</span>
-                              <span className="text-xs text-muted-foreground">
-                                Ticket {winner.ticketNumber}
-                              </span>
-                            </div>
-                            <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-muted-foreground">
-                              <span>Participant ID: {winner.participantId}</span>
-                              <span>Phone: {winner.participantPhone}</span>
-                              <span>Distance: {winner.distance.toFixed(4)}</span>
-                              {winner.marker && (
-                                <span>
-                                  Marker: ({winner.marker.x.toFixed(3)}, {winner.marker.y.toFixed(3)})
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </form>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Use the results workspace to manage final judging, winner computation, and exports.
+                </p>
+                <Button onClick={() => router.push("/admin/results")}>Open results page</Button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -852,17 +396,23 @@ export default function AdminDashboardPage() {
               <form onSubmit={handleCreateCompetition} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="title" className="block text-sm font-medium mb-2">Title</label>
+                    <label htmlFor="title" className="block text-sm font-medium mb-2">
+                      Title
+                    </label>
                     <input
                       id="title"
                       value={formState.title}
-                      onChange={(event) => setFormState((prev) => ({ ...prev, title: event.target.value }))}
+                      onChange={(event) =>
+                        setFormState((prev) => ({ ...prev, title: event.target.value }))
+                      }
                       className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="maxEntries" className="block text-sm font-medium mb-2">Max entries</label>
+                    <label htmlFor="maxEntries" className="block text-sm font-medium mb-2">
+                      Max entries
+                    </label>
                     <input
                       id="maxEntries"
                       type="number"
@@ -878,28 +428,38 @@ export default function AdminDashboardPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="invitePassword" className="block text-sm font-medium mb-2">Invite password</label>
+                    <label htmlFor="invitePassword" className="block text-sm font-medium mb-2">
+                      Invite password
+                    </label>
                     <input
                       id="invitePassword"
                       value={formState.invitePassword}
-                      onChange={(event) => setFormState((prev) => ({ ...prev, invitePassword: event.target.value }))}
+                      onChange={(event) =>
+                        setFormState((prev) => ({ ...prev, invitePassword: event.target.value }))
+                      }
                       className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="imageUrl" className="block text-sm font-medium mb-2">Image URL</label>
+                    <label htmlFor="imageUrl" className="block text-sm font-medium mb-2">
+                      Image URL
+                    </label>
                     <input
                       id="imageUrl"
                       type="url"
                       value={formState.imageUrl}
-                      onChange={(event) => setFormState((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                      onChange={(event) =>
+                        setFormState((prev) => ({ ...prev, imageUrl: event.target.value }))
+                      }
                       className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
                       required
                     />
                   </div>
                   <div>
-                    <label htmlFor="pricePerTicket" className="block text-sm font-medium mb-2">Price per ticket (₹)</label>
+                    <label htmlFor="pricePerTicket" className="block text-sm font-medium mb-2">
+                      Price per ticket (₹)
+                    </label>
                     <input
                       id="pricePerTicket"
                       type="number"
@@ -915,7 +475,9 @@ export default function AdminDashboardPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="markersPerTicket" className="block text-sm font-medium mb-2">Markers per ticket</label>
+                    <label htmlFor="markersPerTicket" className="block text-sm font-medium mb-2">
+                      Markers per ticket
+                    </label>
                     <input
                       id="markersPerTicket"
                       type="number"
@@ -931,12 +493,16 @@ export default function AdminDashboardPage() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label htmlFor="endsAt" className="block text-sm font-medium mb-2">Ends at (optional)</label>
+                    <label htmlFor="endsAt" className="block text-sm font-medium mb-2">
+                      Ends at (optional)
+                    </label>
                     <input
                       id="endsAt"
                       type="datetime-local"
                       value={formState.endsAt}
-                      onChange={(event) => setFormState((prev) => ({ ...prev, endsAt: event.target.value }))}
+                      onChange={(event) =>
+                        setFormState((prev) => ({ ...prev, endsAt: event.target.value }))
+                      }
                       className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
@@ -958,7 +524,7 @@ export default function AdminDashboardPage() {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isCreating}>
-                    {isCreating ? 'Creating…' : 'Create competition'}
+                    {isCreating ? "Creating…" : "Create competition"}
                   </Button>
                 </div>
               </form>
@@ -966,7 +532,6 @@ export default function AdminDashboardPage() {
           </Card>
         )}
 
-        {/* View Details Modal */}
         {showViewDetailsModal && highlightedParticipantId && selectedCompetition && (
           <ViewEntryDetailsModal
             competitionId={selectedCompetition}

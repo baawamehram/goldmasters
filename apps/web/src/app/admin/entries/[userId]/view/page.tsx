@@ -39,12 +39,15 @@ type CheckoutData = {
 
 type ParticipantData = {
   id: string;
+  participantId: string;
+  competitionId: string;
   name: string;
   phone: string;
-  competitionId: string;
   accessCode: string;
   createdAt: string;
 };
+
+const FALLBACK_COMPETITION_ID = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || "test-id";
 
 export default function UserViewPage({
   params,
@@ -86,9 +89,10 @@ export default function UserViewPage({
           }
         );
 
+        let foundParticipant: ParticipantData | undefined;
         if (participantResponse.ok) {
           const participantData = await participantResponse.json();
-          const foundParticipant = participantData.data?.find(
+          foundParticipant = participantData.data?.find(
             (p: ParticipantData) => p.id === userId
           );
           if (foundParticipant) {
@@ -96,9 +100,12 @@ export default function UserViewPage({
           }
         }
 
+        const targetCompetitionId = foundParticipant?.competitionId ?? FALLBACK_COMPETITION_ID;
+        const targetParticipantId = foundParticipant?.participantId ?? userId;
+
         // Fetch checkout data
         const checkoutResponse = await fetch(
-          buildApiUrl(`competitions/${userId}/checkout-summary/${userId}`),
+          buildApiUrl(`competitions/${targetCompetitionId}/checkout-summary/${targetParticipantId}`),
           {
             headers: {
               Authorization: `Bearer ${token}`,

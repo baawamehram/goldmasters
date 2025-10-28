@@ -6,10 +6,10 @@ import { signToken } from '@/server/auth/jwt';
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const body = await req.json();
   const { password } = body as { password?: string };
 

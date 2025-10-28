@@ -10,10 +10,10 @@ import { fieldError, validationFailure, fail, success, error, ValidationError } 
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const tokenOrResponse = requireParticipantToken(req, id);
 
     if (tokenOrResponse instanceof Response) {

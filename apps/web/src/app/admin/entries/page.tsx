@@ -7,11 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 interface Participant {
   id: string;
+  participantId: string;
+  competitionId: string;
   name: string;
   phone: string;
   email: string | null;
   createdAt: string;
   assignedTickets: number;
+  ticketsPurchased: number;
   isLoggedIn: boolean;
   lastLoginAt: string | null;
   lastLogoutAt: string | null;

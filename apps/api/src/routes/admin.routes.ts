@@ -16,6 +16,7 @@ import {
   MockCompetitionWinner,
   MockCompetitionResult,
   findParticipantById,
+  getCheckoutSummary,
 } from '../data/mockDb';
 
 const router: Router = Router();
@@ -33,22 +34,35 @@ router.get(
     try {
       // Get all competitions
       const competitions = getCompetitionsWithStats();
-      
-      // Aggregate all participants
-      const allParticipants = competitions.flatMap(comp => 
-        getParticipantsByCompetition(comp.id).map(participant => ({
-          id: participant.id,
-          name: participant.name,
-          phone: participant.phone,
-          email: participant.email || null,
-          createdAt: participant.lastSubmissionAt?.toISOString() || new Date().toISOString(),
-          assignedTickets: participant.tickets.length,
-          isLoggedIn: false, // Mock: assume offline
-          lastLoginAt: participant.lastSubmissionAt?.toISOString() || null,
-          lastLogoutAt: null,
-          accessCode: participant.id.slice(-4).toUpperCase(), // Mock access code
-          currentPhase: null, // Mock phase
-        }))
+
+      // Aggregate only participants that completed checkout (have a summary)
+      const allParticipants = competitions.flatMap((comp) =>
+        getParticipantsByCompetition(comp.id)
+          .map((participant) => {
+            const summary = getCheckoutSummary(comp.id, participant.id);
+            if (!summary) {
+              return null;
+            }
+
+            const resolvedId = summary.userId ?? participant.id;
+            return {
+              id: resolvedId,
+              participantId: summary.participant?.id ?? participant.id,
+              competitionId: summary.competition?.id ?? comp.id,
+              name: summary.participant?.name ?? participant.name,
+              phone: summary.participant?.phone ?? participant.phone,
+              email: participant.email || null,
+              createdAt: summary.checkoutTime,
+              assignedTickets: summary.participant?.ticketsPurchased ?? participant.tickets.length,
+              ticketsPurchased: summary.participant?.ticketsPurchased ?? participant.tickets.length,
+              isLoggedIn: false, // Mock: assume offline
+              lastLoginAt: summary.checkoutTime,
+              lastLogoutAt: null,
+              accessCode: resolvedId.slice(-4).toUpperCase(),
+              currentPhase: null, // Mock phase
+            };
+          })
+          .filter((participant): participant is NonNullable<typeof participant> => Boolean(participant))
       );
 
       res.status(200).json({
@@ -361,15 +375,61 @@ router.get(
     try {
       const { id } = req.params;
 
-      // TODO: Fetch results from database
-      console.log('Fetching results for competition:', id);
-      
+      const competition = findCompetitionById(id);
+      if (!competition) {
+        res.status(404).json({
+          status: 'fail',
+          message: 'Competition not found',
+        });
+        return;
+      }
+
+      const result = getCompetitionResult(id);
+
+      const responsePayload = {
+        competition: {
+          id: competition.id,
+          title: competition.title,
+          status: competition.status,
+          finalJudgeX: typeof competition.finalJudgeX === 'number' ? competition.finalJudgeX : null,
+          finalJudgeY: typeof competition.finalJudgeY === 'number' ? competition.finalJudgeY : null,
+          markersPerTicket: competition.markersPerTicket,
+          ticketsSold: calculateTicketsSold(competition.id),
+          maxEntries: competition.maxEntries,
+        },
+        result: result
+          ? {
+              competitionId: result.competitionId,
+              finalJudgeX: result.finalJudgeX,
+              finalJudgeY: result.finalJudgeY,
+              computedAt: result.computedAt.toISOString(),
+            }
+          : null,
+        winners: result
+          ? result.winners.map((winner) => ({
+              ticketId: winner.ticketId,
+              ticketNumber: winner.ticketNumber,
+              participantId: winner.participantId,
+              userId: winner.userId ?? null,
+              participantName: winner.participantName,
+              participantPhone: winner.participantPhone,
+              distance: Number.isFinite(winner.distance)
+                ? Number(winner.distance.toFixed(6))
+                : null,
+              marker: winner.marker
+                ? {
+                    id: winner.marker.id,
+                    x: winner.marker.x,
+                    y: winner.marker.y,
+                  }
+                : null,
+            }))
+          : [],
+      };
+
       res.status(200).json({
         status: 'success',
-        data: {
-          results: [],
-          averageJudgePosition: { x: 0, y: 0 },
-        },
+        data: responsePayload,
       });
     } catch (error) {
       res.status(500).json({
@@ -413,11 +473,21 @@ router.post(
       const finalJudgeX = competition.finalJudgeX as number;
       const finalJudgeY = competition.finalJudgeY as number;
 
-  const participants = getParticipantsByCompetition(id);
+      const participants = getParticipantsByCompetition(id);
 
-  const ticketScores: MockCompetitionWinner[] = [];
+      const ticketScores: MockCompetitionWinner[] = [];
 
       participants.forEach((participant) => {
+        const summary = getCheckoutSummary(id, participant.id);
+        // Ignore legacy participants that never completed the current checkout flow.
+        if (!summary) {
+          return;
+        }
+
+        const userId = summary.userId ?? participant.id;
+        const participantName = summary.participant?.name ?? participant.name;
+        const participantPhone = summary.participant?.phone ?? participant.phone;
+
         participant.tickets.forEach((ticket) => {
           if (!ticket.markers.length) {
             return;
@@ -446,8 +516,9 @@ router.post(
             ticketId: ticket.id,
             ticketNumber: ticket.ticketNumber,
             participantId: participant.id,
-            participantName: participant.name,
-            participantPhone: participant.phone,
+            userId,
+            participantName,
+            participantPhone,
             distance: closest.distance,
             marker: closest.marker,
           });
@@ -505,6 +576,7 @@ router.post(
           },
           winners: result.winners.map((winner) => ({
             ...winner,
+            userId: winner.userId ?? null,
             distance: Number(winner.distance.toFixed(6)),
           })),
         },

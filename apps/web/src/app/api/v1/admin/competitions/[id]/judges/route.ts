@@ -10,7 +10,7 @@ import {
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const tokenOrResponse = requireAdminToken(req);
   if (tokenOrResponse instanceof Response) {
@@ -47,7 +47,9 @@ export async function POST(
       return validationFailure(errors, 400);
     }
 
-    console.log('Submitting judge marks for competition:', context.params.id, judgeMarks);
+  const { id } = await context.params;
+
+  console.log('Submitting judge marks for competition:', id, judgeMarks);
 
     return success({
       message: 'Judge marks submitted successfully',

@@ -178,5 +178,41 @@
       }
     ],
     "lastSubmissionAt": null
+  },
+  {
+    "id": "participant-1761656953958-vv69w7gve",
+    "competitionId": "test-id",
+    "name": "fifty",
+    "phone": "+915050505050",
+    "tickets": [
+      {
+        "id": "ticket-1761656953958-02m6hs89j",
+        "ticketNumber": 1013,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761656953958-ufsiso21u",
+        "ticketNumber": 1015,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761656953958-nlrumycid",
+        "ticketNumber": 1017,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
   }
 ]

@@ -31,7 +31,7 @@ const appendRow = (rows: string[][], row: Array<string | number | null | undefin
 
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const tokenOrResponse = requireAdminToken(req);
   if (tokenOrResponse instanceof Response) {
@@ -39,7 +39,7 @@ export async function GET(
   }
 
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
 
     const competition = findCompetitionById(id);
     if (!competition) {

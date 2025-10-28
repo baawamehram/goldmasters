@@ -11,7 +11,7 @@ import {
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const tokenOrResponse = requireAdminToken(req);
   if (tokenOrResponse instanceof Response) {
@@ -46,7 +46,7 @@ export async function POST(
       return validationFailure(errors, 400);
     }
 
-    const competitionId = context.params.id;
+  const { id: competitionId } = await context.params;
 
     const mockCompetition = {
       id: competitionId,

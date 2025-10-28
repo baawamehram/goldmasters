@@ -15,7 +15,7 @@ import {
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const tokenOrResponse = requireAdminToken(req);
   if (tokenOrResponse instanceof Response) {
@@ -47,8 +47,10 @@ export async function PATCH(
       return validationFailure(errors, 400);
     }
 
+    const { id } = await context.params;
+
     const updatedCompetition = setCompetitionFinalResult(
-      context.params.id,
+      id,
       Number(finalJudgeX),
       Number(finalJudgeY)
     );
@@ -57,7 +59,7 @@ export async function PATCH(
       return fail('Competition not found', 404);
     }
 
-    const ticketsSold = calculateTicketsSold(context.params.id);
+    const ticketsSold = calculateTicketsSold(id);
 
     return success({
       competition: {

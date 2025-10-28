@@ -9,7 +9,7 @@ import { success, fail, error } from '@/server/http';
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const tokenOrResponse = requireAdminToken(req);
   if (tokenOrResponse instanceof Response) {
@@ -17,7 +17,7 @@ export async function PATCH(
   }
 
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
 
     const competition = getCompetitionById(id);
 

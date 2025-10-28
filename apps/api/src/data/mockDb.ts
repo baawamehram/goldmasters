@@ -65,6 +65,7 @@ export type MockCompetitionWinner = {
   ticketId: string;
   ticketNumber: number;
   participantId: string;
+  userId?: string | null;
   participantName: string;
   participantPhone: string;
   distance: number;

@@ -11,7 +11,7 @@ import { success, fail, error } from '@/server/http';
 
 export async function POST(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const tokenOrResponse = requireAdminToken(req);
   if (tokenOrResponse instanceof Response) {
@@ -19,7 +19,7 @@ export async function POST(
   }
 
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
 
     const competition = findCompetitionById(id);
     if (!competition) {

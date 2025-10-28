@@ -128,5 +128,18 @@
     "lastLogoutAt": null,
     "accessCode": "693580",
     "currentPhase": null
+  },
+  {
+    "id": "user-1761656857540-7mwb9fjpa",
+    "name": "fifty",
+    "phone": "+915050505050",
+    "email": null,
+    "createdAt": "2025-10-28T13:07:37.540Z",
+    "assignedTickets": 3,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-28T13:09:33.855Z",
+    "lastLogoutAt": null,
+    "accessCode": "214826",
+    "currentPhase": null
   }
 ]
