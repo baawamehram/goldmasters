@@ -1,71 +1,39 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminToken } from '@/server/auth/admin';
-import {
-  calculateTicketsSold,
-  setCompetitionFinalResult,
-} from '@/server/data/mockDb';
-import {
-  fieldError,
-  validationFailure,
-  fail,
-  success,
-  error,
-  ValidationError,
-} from '@/server/http';
+import { error } from '@/server/http';
 
 export async function PATCH(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const tokenOrResponse = requireAdminToken(req);
-  if (tokenOrResponse instanceof Response) {
-    return tokenOrResponse;
-  }
-
   try {
-    const body = await req.json();
-    const { finalJudgeX, finalJudgeY } = body as {
-      finalJudgeX?: number;
-      finalJudgeY?: number;
-    };
-
-    const errors: ValidationError[] = [];
-
-    if (typeof finalJudgeX !== 'number') {
-      errors.push(fieldError('finalJudgeX', 'finalJudgeX is required', finalJudgeX));
-    } else if (finalJudgeX < 0 || finalJudgeX > 1) {
-      errors.push(fieldError('finalJudgeX', 'finalJudgeX must be between 0 and 1', finalJudgeX));
-    }
-
-    if (typeof finalJudgeY !== 'number') {
-      errors.push(fieldError('finalJudgeY', 'finalJudgeY is required', finalJudgeY));
-    } else if (finalJudgeY < 0 || finalJudgeY > 1) {
-      errors.push(fieldError('finalJudgeY', 'finalJudgeY must be between 0 and 1', finalJudgeY));
-    }
-
-    if (errors.length) {
-      return validationFailure(errors, 400);
+    const tokenOrResponse = requireAdminToken(req);
+    if (tokenOrResponse instanceof Response) {
+      return tokenOrResponse;
     }
 
     const { id } = await context.params;
+    const authHeader = req.headers.get('authorization');
+    const body = await req.text();
 
-    const updatedCompetition = setCompetitionFinalResult(
-      id,
-      Number(finalJudgeX),
-      Number(finalJudgeY)
+    const response = await fetch(
+      `http://localhost:4000/api/v1/admin/competitions/${id}/final-result`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': authHeader ?? '',
+          'Content-Type': 'application/json',
+        },
+        body,
+      }
     );
 
-    if (!updatedCompetition) {
-      return fail('Competition not found', 404);
-    }
+    const responseText = await response.text();
 
-    const ticketsSold = calculateTicketsSold(id);
-
-    return success({
-      competition: {
-        ...updatedCompetition,
-        ticketsSold,
-        remainingSlots: Math.max(0, updatedCompetition.maxEntries - ticketsSold),
+    return new NextResponse(responseText, {
+      status: response.status,
+      headers: {
+        'Content-Type': response.headers.get('content-type') ?? 'application/json',
       },
     });
   } catch (err) {

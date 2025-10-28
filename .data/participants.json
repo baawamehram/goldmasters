@@ -528,5 +528,41 @@
       }
     ],
     "lastSubmissionAt": null
+  },
+  {
+    "id": "participant-1761673714872-cgzjfvtk8",
+    "competitionId": "test-id",
+    "name": "ninety",
+    "phone": "+910909090909",
+    "tickets": [
+      {
+        "id": "ticket-1761673714872-47t765cig",
+        "ticketNumber": 1037,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761673714872-posw00q92",
+        "ticketNumber": 1039,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1761673714872-jqdzmiv3e",
+        "ticketNumber": 1041,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
   }
 ]

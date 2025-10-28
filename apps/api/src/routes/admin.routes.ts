@@ -17,6 +17,7 @@ import {
   MockCompetitionResult,
   findParticipantById,
   getCheckoutSummary,
+  getCheckoutSummariesByCompetition,
 } from '../data/mockDb';
 
 const router: Router = Router();
@@ -430,6 +431,8 @@ router.get(
       }
 
       const result = getCompetitionResult(id);
+      console.log(`[GET-RESULTS] Fetching result for competition ID: "${id}"`);
+      console.log(`[GET-RESULTS] Retrieved result for competition ${id}:`, result);
 
       const responsePayload = {
         competition: {
@@ -497,6 +500,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
+      console.log(`[COMPUTE-WINNER] Starting compute for competition ID: "${id}"`);
 
       const competition = findCompetitionById(id);
       if (!competition) {
@@ -518,32 +522,63 @@ router.post(
       const finalJudgeX = competition.finalJudgeX as number;
       const finalJudgeY = competition.finalJudgeY as number;
 
-      const participants = getParticipantsByCompetition(id);
+      // Get all checkout summaries for this competition instead of mock participants
+      const checkoutSummaries = getCheckoutSummariesByCompetition(id);
+      console.log(`[COMPUTE-WINNER] Found ${checkoutSummaries.length} checkout summaries for competition ${id}`);
 
       const ticketScores: MockCompetitionWinner[] = [];
 
-      participants.forEach((participant) => {
-        const summary = getCheckoutSummary(id, participant.id);
-        // Ignore legacy participants that never completed the current checkout flow.
-        if (!summary) {
-          return;
-        }
+      checkoutSummaries.forEach((summary) => {
+        console.log(`[COMPUTE-WINNER]   Processing checkout summary: ${summary.userId || summary.participant?.id} with ${Array.isArray(summary.tickets) ? summary.tickets.length : 0} tickets`);
+        const userId = summary.userId ?? summary.participant?.id ?? '';
+        const participantName = summary.participant?.name ?? '';
+        const participantPhone = summary.participant?.phone ?? '';
+        const participantId = summary.participant?.id ?? userId;
 
-        const userId = summary.userId ?? participant.id;
-        const participantName = summary.participant?.name ?? participant.name;
-        const participantPhone = summary.participant?.phone ?? participant.phone;
+        const summaryTickets = Array.isArray(summary.tickets) ? summary.tickets : [];
+        summaryTickets.forEach((ticketSummary, index) => {
+          const markerList = Array.isArray(ticketSummary?.markers)
+            ? ticketSummary.markers
+            : [];
 
-        participant.tickets.forEach((ticket) => {
-          if (!ticket.markers.length) {
+          const summaryTicketNumber =
+            typeof ticketSummary.ticketNumber === 'number'
+              ? ticketSummary.ticketNumber
+              : Number.parseInt(String(ticketSummary.ticketNumber ?? ''), 10);
+
+          const normalizedMarkers = markerList
+            .map((rawMarker, markerIndex) => {
+              if (!rawMarker || typeof rawMarker !== 'object') {
+                return null;
+              }
+
+              const x = Number((rawMarker as any).x);
+              const y = Number((rawMarker as any).y);
+
+              if (!Number.isFinite(x) || !Number.isFinite(y)) {
+                return null;
+              }
+
+              const id =
+                typeof (rawMarker as any).id === 'string'
+                  ? (rawMarker as any).id
+                  : `${participantId}:${Number.isFinite(summaryTicketNumber) ? summaryTicketNumber : index}-marker-${markerIndex + 1}`;
+
+              return { id, x, y };
+            })
+            .filter((marker): marker is { id: string; x: number; y: number } => marker !== null);
+
+          if (!normalizedMarkers.length) {
             return;
           }
 
-          const closest = ticket.markers.reduce(
+          // Use ticket info from summary directly since we don't have participant.tickets
+          const fallbackTicketId = `${participantId}:${Number.isFinite(summaryTicketNumber) ? summaryTicketNumber : index}`;
+          const fallbackTicketNumber = Number.isFinite(summaryTicketNumber) ? summaryTicketNumber : index + 1;
+
+          const closest = normalizedMarkers.reduce(
             (acc, marker) => {
-              const distance = Math.hypot(
-                marker.x - finalJudgeX,
-                marker.y - finalJudgeY
-              );
+              const distance = Math.hypot(marker.x - finalJudgeX, marker.y - finalJudgeY);
 
               if (distance < acc.distance) {
                 return {
@@ -554,13 +589,19 @@ router.post(
 
               return acc;
             },
-            { marker: ticket.markers[0], distance: Number.POSITIVE_INFINITY }
+            {
+              marker: normalizedMarkers[0],
+              distance: Math.hypot(
+                normalizedMarkers[0].x - finalJudgeX,
+                normalizedMarkers[0].y - finalJudgeY
+              ),
+            }
           );
 
           ticketScores.push({
-            ticketId: ticket.id,
-            ticketNumber: ticket.ticketNumber,
-            participantId: participant.id,
+            ticketId: fallbackTicketId,
+            ticketNumber: fallbackTicketNumber,
+            participantId,
             userId,
             participantName,
             participantPhone,
@@ -600,6 +641,8 @@ router.post(
         .sort((a, b) => a.distance - b.distance)
         .slice(0, 3);
 
+      console.log(`[COMPUTE-WINNER] Total ticket scores: ${ticketScores.length}, top 3 winners: ${sortedWinners.length}`);
+
       const result: MockCompetitionResult = {
         competitionId: id,
   finalJudgeX,
@@ -608,7 +651,9 @@ router.post(
         computedAt: new Date(),
       };
 
+      console.log(`[COMPUTE-WINNER] Saving ${sortedWinners.length} winners for competition ${id}:`, sortedWinners);
       saveCompetitionResult(result);
+      console.log(`[COMPUTE-WINNER] Result saved for competition ${id}`);
 
       res.status(200).json({
         status: 'success',

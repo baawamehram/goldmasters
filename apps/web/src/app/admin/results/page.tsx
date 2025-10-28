@@ -558,16 +558,8 @@ export default function AdminResultsPage() {
         if (participantsWithMarkers.length === 0) {
           throw new Error("No markers located for any participant. Review entry details before computing winners.");
         }
-
-        const incompleteEntries = scanReport.results.filter((entry) =>
-          entry.errors.length > 0 || !entry.checkoutLoaded || !entry.submissionLoaded
-        );
-        const issueCount = incompleteEntries.length;
-
-        const readyParticipantCount = scanReport.processed - issueCount;
-        if (readyParticipantCount <= 0) {
-          throw new Error('No participants with complete entry data are available for computing winners yet.');
-        }
+        const readyParticipantCount = participantsWithMarkers.length;
+        const skippedCount = Math.max(0, scanReport.processed - readyParticipantCount);
 
         // 3) Save coordinates via PATCH before computing
         const saveResponse = await fetch(buildApiUrl(`admin/competitions/${competitionId}/final-result`), {
@@ -585,6 +577,7 @@ export default function AdminResultsPage() {
         setCompetition((prev) => createCompetitionSummary({ ...prev, finalJudgeX: x, finalJudgeY: y }));
 
         // 4) Compute winners
+        console.log(`[PHASE ${phase}] Computing winners with coordinates (${x}, ${y})`);
         const computeResponse = await fetch(buildApiUrl(`admin/competitions/${competitionId}/compute-winner`), {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -592,26 +585,33 @@ export default function AdminResultsPage() {
         if (!computeResponse.ok) {
           throw new Error(await extractErrorMessage(computeResponse));
         }
+        const computeData = await computeResponse.json();
+        console.log(`[PHASE ${phase}] Compute response data:`, computeData);
 
         // 5) Pull and apply winners
         const payload = await fetchCompetitionResults(token, competitionId);
+        console.log('Fetched competition results payload:', payload);
+        console.log('Winners array:', payload.winners);
+        console.log('Winners length:', payload.winners?.length ?? 'undefined');
         if (payload.competition) {
           setCompetition(createCompetitionSummary(payload.competition));
         } else {
           setCompetition(createCompetitionSummary({ id: competitionId }));
         }
         const winners = mapWinnersToForm(payload.winners);
+        console.log('Mapped winners to form:', winners);
         setPhaseState(phase, (current) => ({
           ...current,
           winners,
           lastUpdated: new Date().toISOString(),
         }));
+        console.log('Phase state updated with winners');
         const participantSummary = `Scanned ${scanReport.processed} participant${scanReport.processed === 1 ? "" : "s"}`;
         const checkoutSummary = `${scanReport.withCheckout} checkout${scanReport.withCheckout === 1 ? "" : "s"}`;
         const submissionSummary = `${scanReport.withSubmissions} submission${scanReport.withSubmissions === 1 ? "" : "s"}`;
         const markerSummary = `${scanReport.totalMarkers} marker${scanReport.totalMarkers === 1 ? "" : "s"} assessed`;
-        const skippedSummary = issueCount
-          ? ` Skipped ${issueCount} participant${issueCount === 1 ? "" : "s"} with missing data.`
+        const skippedSummary = skippedCount
+          ? ` Skipped ${skippedCount} participant${skippedCount === 1 ? "" : "s"} with insufficient markers.`
           : "";
         const readySummary = ` Winners computed from ${readyParticipantCount} participant${readyParticipantCount === 1 ? "" : "s"}.`;
         setPhaseFeedback((prev) => ({

@@ -7,6 +7,7 @@ import path from 'path';
 const DATA_DIR = path.join(process.cwd(), '..', '..', '.data');
 const CHECKOUT_SUMMARIES_FILE = path.join(DATA_DIR, 'checkout-summaries.json');
 const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
+const COMPETITION_RESULTS_FILE = path.join(DATA_DIR, 'competition-results.json');
 
 // Ensure data directory exists
 const ensureDataDir = () => {
@@ -201,6 +202,34 @@ let mockParticipants: MockParticipant[] = [
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
 
+// Load competition results from file
+const loadCompetitionResults = (): MockCompetitionResult[] => {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(COMPETITION_RESULTS_FILE)) {
+      const data = fs.readFileSync(COMPETITION_RESULTS_FILE, 'utf-8');
+      const parsed = JSON.parse(data) as any[];
+      return parsed.map((result: any) => ({
+        ...result,
+        computedAt: new Date(result.computedAt),
+      }));
+    }
+  } catch (error) {
+    console.error('Error loading competition results from file:', error);
+  }
+  return [];
+};
+
+// Save competition results to file
+const saveCompetitionResultsToFile = (results: MockCompetitionResult[]) => {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(COMPETITION_RESULTS_FILE, JSON.stringify(results, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('Error saving competition results to file:', error);
+  }
+};
+
 // Load checkout summaries from file
 const loadCheckoutSummaries = (): Map<string, CheckoutSummary> => {
   try {
@@ -258,6 +287,7 @@ const saveUserEntriesToFile = (entries: UserEntry[]) => {
 };
 
 const checkoutSummaries = loadCheckoutSummaries();
+mockCompetitionResults = loadCompetitionResults();
 let userEntries: UserEntry[] = loadUserEntries();
 
 // Generate unique 6-digit access code
@@ -508,19 +538,37 @@ export const setCompetitionFinalResult = (
 };
 
 export const saveCompetitionResult = (result: MockCompetitionResult): void => {
+  console.log(`[mockDb] Saving competition result for ID: "${result.competitionId}" (length: ${result.competitionId.length}) with ${result.winners.length} winners`);
   const exists = mockCompetitionResults.some((entry) => entry.competitionId === result.competitionId);
 
   if (exists) {
+    console.log(`[mockDb] Updating existing result for ${result.competitionId}`);
     mockCompetitionResults = mockCompetitionResults.map((entry) =>
       entry.competitionId === result.competitionId ? result : entry
     );
   } else {
+    console.log(`[mockDb] Adding new result for ${result.competitionId}`);
     mockCompetitionResults = [...mockCompetitionResults, result];
   }
+  console.log(`[mockDb] Total stored results: ${mockCompetitionResults.length}`);
+  mockCompetitionResults.forEach((r, i) => {
+    console.log(`[mockDb]   [${i}] competitionId: "${r.competitionId}" (length: ${r.competitionId.length}) - ${r.winners.length} winners`);
+  });
+  
+  // Persist to file
+  saveCompetitionResultsToFile(mockCompetitionResults);
 };
 
-export const getCompetitionResult = (competitionId: string): MockCompetitionResult | null =>
-  mockCompetitionResults.find((entry) => entry.competitionId === competitionId) ?? null;
+export const getCompetitionResult = (competitionId: string): MockCompetitionResult | null => {
+  console.log(`[mockDb] Fetching competition result for ID: "${competitionId}" (length: ${competitionId.length})`);
+  console.log(`[mockDb] Available results: ${mockCompetitionResults.length}`);
+  mockCompetitionResults.forEach((r, i) => {
+    console.log(`[mockDb]   [${i}] competitionId: "${r.competitionId}" (length: ${r.competitionId.length}) === "${competitionId}" ? ${r.competitionId === competitionId}`);
+  });
+  const found = mockCompetitionResults.find((entry) => entry.competitionId === competitionId);
+  console.log(`[mockDb] Result found: ${found ? `${found.winners.length} winners` : 'null'}`);
+  return found ?? null;
+};
 
 export const saveCheckoutSummary = (
   competitionId: string,
@@ -554,6 +602,16 @@ export const getCheckoutSummaryByUserId = (
 ): CheckoutSummary | null => {
   const userKey = `${competitionId}:user:${userId}`;
   return checkoutSummaries.get(userKey) ?? null;
+};
+
+export const getCheckoutSummariesByCompetition = (competitionId: string): CheckoutSummary[] => {
+  const results: CheckoutSummary[] = [];
+  checkoutSummaries.forEach((summary) => {
+    if (summary.competition?.id === competitionId) {
+      results.push(summary);
+    }
+  });
+  return results;
 };
 
 export const hasParticipantCompletedEntry = (
