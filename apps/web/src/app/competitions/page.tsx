@@ -275,7 +275,23 @@ export default function CompetitionsPage() {
           {/* Enter Now Button */}
           <div className="p-4">
             <button
-              onClick={() => router.push('/competition/1/how-to-play')}
+              onClick={() => {
+                // Get user's unique ID from participant profile
+                const participantProfile = localStorage.getItem('participant_profile');
+                let userCompetitionId = '1'; // fallback
+                
+                if (participantProfile) {
+                  try {
+                    const profile = JSON.parse(participantProfile);
+                    // Use user's ID as their unique competition ID
+                    userCompetitionId = profile.id || '1';
+                  } catch (e) {
+                    console.error('Error parsing participant profile:', e);
+                  }
+                }
+                
+                router.push(`/competition/${userCompetitionId}/how-to-play`);
+              }}
               className="w-full bg-[#055F3C] text-white py-3 rounded font-bold text-sm uppercase tracking-wide hover:bg-[#044a2f] transition-colors"
             >
               ENTER NOW

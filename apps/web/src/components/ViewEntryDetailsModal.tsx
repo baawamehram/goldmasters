@@ -82,7 +82,7 @@ export default function ViewEntryDetailsModal({
   const [competition, setCompetition] = useState<CompetitionData | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
-  const [activeTab, setActiveTab] = useState<'submissions' | 'checkout'>('submissions');
+  const [activeTab, setActiveTab] = useState<'submissions' | 'checkout'>('checkout'); // Default to checkout tab
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -95,7 +95,38 @@ export default function ViewEntryDetailsModal({
           throw new Error("Admin not authenticated");
         }
 
-        // Use admin-specific endpoint
+        // First, try to load checkout data
+        let hasCheckoutData = false;
+        try {
+          const checkoutResponse = await fetch(
+            buildApiUrl(`competitions/${competitionId}/checkout-summary/${participantId}`),
+            {
+              headers: {
+                "Authorization": `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (checkoutResponse.ok) {
+            const checkoutDataResponse = await checkoutResponse.json();
+            // The Express API returns { summary: ... }
+            if (checkoutDataResponse.summary) {
+              setCheckoutData(checkoutDataResponse.summary);
+              hasCheckoutData = true;
+              console.log('Loaded checkout data:', checkoutDataResponse.summary);
+            } else if (checkoutDataResponse.data) {
+              setCheckoutData(checkoutDataResponse.data);
+              hasCheckoutData = true;
+              console.log('Loaded checkout data:', checkoutDataResponse.data);
+            }
+          } else {
+            console.warn(`Checkout data not found: ${checkoutResponse.status}`);
+          }
+        } catch (checkoutErr) {
+          console.warn("Could not load checkout data:", checkoutErr);
+        }
+
+        // Then load submissions data
         const response = await fetch(
           buildApiUrl(`admin/competitions/${competitionId}/participants/${participantId}/submissions`),
           {
@@ -118,25 +149,9 @@ export default function ViewEntryDetailsModal({
           setSubmissions(data.data.submissions || []);
         }
 
-        // Try to load checkout data
-        try {
-          const checkoutResponse = await fetch(
-            buildApiUrl(`competitions/${competitionId}/checkout-summary/${participantId}`),
-            {
-              headers: {
-                "Authorization": `Bearer ${token}`,
-              },
-            }
-          );
-
-          if (checkoutResponse.ok) {
-            const checkoutDataResponse = await checkoutResponse.json();
-            if (checkoutDataResponse.data) {
-              setCheckoutData(checkoutDataResponse.data);
-            }
-          }
-        } catch (checkoutErr) {
-          console.warn("Could not load checkout data:", checkoutErr);
+        // If no checkout data but has submissions, default to submissions tab
+        if (!hasCheckoutData && data.data?.submissions?.length > 0) {
+          setActiveTab('submissions');
         }
       } catch (err) {
         console.error("Error fetching submission details:", err);

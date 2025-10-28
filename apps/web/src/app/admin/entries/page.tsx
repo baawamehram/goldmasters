@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ViewEntryDetailsModal from "@/components/ViewEntryDetailsModal";
 
 interface Participant {
   id: string;
@@ -34,9 +33,6 @@ export default function AdminEntriesPage() {
   const [newUserNotification, setNewUserNotification] = useState<string | null>(null);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
   const [errorNotification, setErrorNotification] = useState<string | null>(null);
-  const [highlightedParticipantId, setHighlightedParticipantId] = useState<string | null>(null);
-  const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
-  const [showViewDetailsModal, setShowViewDetailsModal] = useState(false);
 
   useEffect(() => {
     // Check if admin is logged in
@@ -44,20 +40,6 @@ export default function AdminEntriesPage() {
     if (!token) {
       router.push('/login');
       return;
-    }
-
-    // Get competition ID from localStorage (if available)
-    const savedCompetitionId = localStorage.getItem('admin_selected_competition');
-    if (savedCompetitionId) {
-      setSelectedCompetitionId(savedCompetitionId);
-    }
-
-    // Check for highlight parameter
-    const highlight = searchParams.get('highlight');
-    if (highlight && highlight.startsWith('user-')) {
-      const userId = highlight.replace('user-', '');
-      setHighlightedParticipantId(userId);
-      setShowViewDetailsModal(true);
     }
 
     // Load max tickets setting
@@ -355,6 +337,9 @@ export default function AdminEntriesPage() {
                   <thead className="bg-gray-50 border-b-2 border-gray-200">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        User ID
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Name
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -392,6 +377,25 @@ export default function AdminEntriesPage() {
                               : 'hover:bg-gray-50'
                           }`}
                         >
+                        <td className="px-4 py-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded border border-gray-300 text-gray-700">
+                              {participant.id}
+                            </span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(participant.id);
+                                alert('User ID copied!');
+                              }}
+                              className="text-gray-400 hover:text-gray-600"
+                              title="Copy User ID"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
                         <td className="px-4 py-4 text-sm font-semibold">
                           <div className="flex items-center gap-2">
                             {isNewUser && (
@@ -500,10 +504,8 @@ export default function AdminEntriesPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setHighlightedParticipantId(participant.id);
-                              // Use hardcoded competition ID for now
-                              setSelectedCompetitionId('test-id');
-                              setShowViewDetailsModal(true);
+                              // Navigate to dedicated view page for this user
+                              router.push(`/admin/entries/${participant.id}/view`);
                             }}
                           >
                             View Details
@@ -541,18 +543,6 @@ export default function AdminEntriesPage() {
         <div className="fixed top-20 right-6 bg-brand-primary text-white px-6 py-4 rounded-lg shadow-lg animate-slide-in-right flex items-center gap-3 max-w-md z-50">
           <span>{newUserNotification}</span>
         </div>
-      )}
-
-      {/* View Details Modal */}
-      {showViewDetailsModal && highlightedParticipantId && selectedCompetitionId && (
-        <ViewEntryDetailsModal
-          competitionId={selectedCompetitionId}
-          participantId={highlightedParticipantId}
-          onClose={() => {
-            setShowViewDetailsModal(false);
-            setHighlightedParticipantId(null);
-          }}
-        />
       )}
     </main>
   );

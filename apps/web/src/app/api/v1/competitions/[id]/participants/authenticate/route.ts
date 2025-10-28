@@ -45,21 +45,23 @@ export async function POST(
     
     if (defaultParticipant && defaultParticipant.tickets.length > 0) {
       // User has tickets in default competition, create participant for this competition
+      // Use the competitionId (which is the user's unique ID) as the participant ID
       console.log('[authenticate] Creating participant from default competition:', {
         sourceCompetition: defaultCompetitionId,
         targetCompetition: competitionId,
+        participantId: competitionId, // Using competitionId as participant ID for consistency
         ticketCount: defaultParticipant.tickets.length
       });
       
       const newParticipant: MockParticipant = {
-        id: `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: competitionId, // Use user's ID from URL (same as competitionId)
         competitionId: competitionId,
         name: defaultParticipant.name,
         phone: defaultParticipant.phone,
         email: defaultParticipant.email,
-        tickets: defaultParticipant.tickets.map(ticket => ({
+        tickets: defaultParticipant.tickets.map((ticket, index) => ({
           ...ticket,
-          id: `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          id: `ticket-${competitionId}-${index}` // Use consistent ID pattern
         })),
         lastSubmissionAt: null,
       };

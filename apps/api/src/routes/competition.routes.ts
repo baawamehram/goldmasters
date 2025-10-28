@@ -1036,7 +1036,7 @@ router.post(
 
       const summary: CheckoutSummary = {
         competitionId: id,
-        participantId,
+        participantId: id, // Use URL id for both to match admin lookup pattern
         competition: {
           id: competition.id,
           title: competition.title,
@@ -1059,7 +1059,7 @@ router.post(
             : new Date().toISOString(),
       };
 
-      saveCheckoutSummary(id, participantId, summary);
+      saveCheckoutSummary(id, id, summary); // Use id for both params to match admin lookup
 
       res.status(201).json({ message: 'Checkout saved', summary });
     } catch (error) {

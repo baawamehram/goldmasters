@@ -586,10 +586,10 @@ const generateAccessCode = (): string => {
   return code;
 };
 
-export const createOrUpdateUserEntry = (name: string, phone: string): UserEntry => {
+export const createOrUpdateUserEntry = (name: string, phone: string, existingId?: string): UserEntry => {
   const sanitized = sanitizePhone(phone);
   
-  // Check if user already exists
+  // Check if user already exists by phone
   const existing = userEntries.find((entry) => entry.phone === sanitized);
   
   if (existing) {
@@ -604,9 +604,23 @@ export const createOrUpdateUserEntry = (name: string, phone: string): UserEntry 
     return existing;
   }
   
-  // Create new entry
+  // If existingId is provided, check if a user with that ID already exists
+  if (existingId) {
+    const existingById = userEntries.find((entry) => entry.id === existingId);
+    if (existingById) {
+      // Update phone number if user exists with this ID
+      existingById.phone = sanitized;
+      existingById.name = name;
+      existingById.isLoggedIn = true;
+      existingById.lastLoginAt = new Date();
+      saveUserEntriesToStorage();
+      return existingById;
+    }
+  }
+  
+  // Create new entry with provided ID or generate new one
   const newEntry: UserEntry = {
-    id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: existingId || `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name,
     phone: sanitized,
     email: null,
@@ -649,6 +663,14 @@ export const getUserEntryByPhone = (phone: string): UserEntry | null => {
 
 export const getUserEntryById = (id: string): UserEntry | null => {
   return userEntries.find((entry) => entry.id === id) ?? null;
+};
+
+export const getUserEntryByNameAndPhone = (name: string, phone: string): UserEntry | null => {
+  const sanitized = sanitizePhone(phone);
+  return userEntries.find((entry) => 
+    entry.phone === sanitized && 
+    entry.name.trim().toLowerCase() === name.trim().toLowerCase()
+  ) ?? null;
 };
 
 export const logoutUserEntry = (phone: string): UserEntry | null => {
