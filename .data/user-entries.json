@@ -1,57 +1,5 @@
 [
   {
-    "id": "user-1",
-    "name": "Rajesh Kumar",
-    "phone": "9876543210",
-    "email": "rajesh@example.com",
-    "accessCode": "123456",
-    "currentPhase": 1,
-    "isLoggedIn": true,
-    "lastLoginAt": "2025-10-26T05:00:00.000Z",
-    "lastLogoutAt": null,
-    "assignedTickets": 0,
-    "createdAt": "2025-10-25T03:30:00.000Z"
-  },
-  {
-    "id": "user-2",
-    "name": "Priya Sharma",
-    "phone": "9876543211",
-    "email": "priya@example.com",
-    "accessCode": "234567",
-    "currentPhase": 1,
-    "isLoggedIn": false,
-    "lastLoginAt": "2025-10-26T02:45:00.000Z",
-    "lastLogoutAt": "2025-10-26T04:15:00.000Z",
-    "assignedTickets": 0,
-    "createdAt": "2025-10-25T05:00:00.000Z"
-  },
-  {
-    "id": "user-3",
-    "name": "Amit Patel",
-    "phone": "9876543212",
-    "email": "amit@example.com",
-    "accessCode": "345678",
-    "currentPhase": 2,
-    "isLoggedIn": true,
-    "lastLoginAt": "2025-10-26T05:30:00.000Z",
-    "lastLogoutAt": null,
-    "assignedTickets": 0,
-    "createdAt": "2025-10-25T05:45:00.000Z"
-  },
-  {
-    "id": "user-4",
-    "name": "Sneha Reddy",
-    "phone": "9876543213",
-    "email": "sneha@example.com",
-    "accessCode": "456789",
-    "currentPhase": null,
-    "isLoggedIn": false,
-    "lastLoginAt": "2025-10-25T08:50:00.000Z",
-    "lastLogoutAt": "2025-10-25T11:00:00.000Z",
-    "assignedTickets": 0,
-    "createdAt": "2025-10-25T08:30:00.000Z"
-  },
-  {
     "id": "user-5",
     "name": "Vikram Singh",
     "phone": "9876543214",
@@ -70,9 +18,9 @@
     "phone": "+913434343434",
     "email": null,
     "createdAt": "2025-10-28T09:53:33.358Z",
-    "assignedTickets": 0,
+    "assignedTickets": 4,
     "isLoggedIn": true,
-    "lastLoginAt": "2025-10-28T09:53:33.358Z",
+    "lastLoginAt": "2025-10-28T14:30:52.630Z",
     "lastLogoutAt": null,
     "accessCode": "323026",
     "currentPhase": null
@@ -111,7 +59,7 @@
     "createdAt": "2025-10-28T10:03:02.820Z",
     "assignedTickets": 3,
     "isLoggedIn": true,
-    "lastLoginAt": "2025-10-28T10:05:19.841Z",
+    "lastLoginAt": "2025-10-28T16:07:35.743Z",
     "lastLogoutAt": null,
     "accessCode": "371444",
     "currentPhase": null
@@ -140,6 +88,58 @@
     "lastLoginAt": "2025-10-28T13:09:33.855Z",
     "lastLogoutAt": null,
     "accessCode": "214826",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761657611076-tv9u1arck",
+    "name": "sixty",
+    "phone": "+916060606060",
+    "email": null,
+    "createdAt": "2025-10-28T13:20:11.076Z",
+    "assignedTickets": 5,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-28T13:34:14.951Z",
+    "lastLogoutAt": null,
+    "accessCode": "738702",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761660356620-vpqd8aur5",
+    "name": "Amit Patel",
+    "phone": "+919876543212",
+    "email": null,
+    "createdAt": "2025-10-28T14:05:56.620Z",
+    "assignedTickets": 3,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-28T14:05:56.620Z",
+    "lastLogoutAt": null,
+    "accessCode": "449742",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761661701149-3x2ea8qta",
+    "name": "Sneha Reddy",
+    "phone": "+919876543213",
+    "email": null,
+    "createdAt": "2025-10-28T14:28:21.149Z",
+    "assignedTickets": 0,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-28T14:28:21.149Z",
+    "lastLogoutAt": null,
+    "accessCode": "963498",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761665151411-50s8n8jbj",
+    "name": "thirty",
+    "phone": "+913030303030",
+    "email": null,
+    "createdAt": "2025-10-28T15:25:51.411Z",
+    "assignedTickets": 4,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-28T15:45:23.248Z",
+    "lastLogoutAt": null,
+    "accessCode": "321595",
     "currentPhase": null
   }
 ]

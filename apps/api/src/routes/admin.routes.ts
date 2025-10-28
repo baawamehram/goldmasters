@@ -51,7 +51,7 @@ router.get(
               competitionId: summary.competition?.id ?? comp.id,
               name: summary.participant?.name ?? participant.name,
               phone: summary.participant?.phone ?? participant.phone,
-              email: participant.email || null,
+              email: summary.participant?.email ?? summary.contactEmail ?? participant.email ?? null,
               createdAt: summary.checkoutTime,
               assignedTickets: summary.participant?.ticketsPurchased ?? participant.tickets.length,
               ticketsPurchased: summary.participant?.ticketsPurchased ?? participant.tickets.length,
@@ -65,9 +65,54 @@ router.get(
           .filter((participant): participant is NonNullable<typeof participant> => Boolean(participant))
       );
 
+      // Deduplicate participants by their resolved user id, keeping the latest details
+      const participantsById = new Map<string, (typeof allParticipants)[number]>();
+
+      allParticipants.forEach((record) => {
+        const existing = participantsById.get(record.id);
+        if (!existing) {
+          participantsById.set(record.id, record);
+          return;
+        }
+
+        const existingTime = Date.parse(existing.createdAt ?? "");
+        const recordTime = Date.parse(record.createdAt ?? "");
+        const useRecord = Number.isFinite(recordTime) && (!Number.isFinite(existingTime) || recordTime >= existingTime);
+        const latest = useRecord ? record : existing;
+        const fallback = useRecord ? existing : record;
+
+        participantsById.set(record.id, {
+          ...fallback,
+          ...latest,
+          createdAt: Number.isFinite(existingTime) && Number.isFinite(recordTime)
+            ? (existingTime <= recordTime ? existing.createdAt : record.createdAt)
+            : (existing.createdAt ?? record.createdAt),
+          lastLoginAt: latest.lastLoginAt ?? fallback.lastLoginAt ?? null,
+          lastLogoutAt: latest.lastLogoutAt ?? fallback.lastLogoutAt ?? null,
+          assignedTickets: latest.assignedTickets,
+          ticketsPurchased: latest.ticketsPurchased,
+          email: latest.email ?? fallback.email ?? null,
+        });
+      });
+
+      const dedupedParticipants = Array.from(participantsById.values()).sort((a, b) => {
+        const timeA = Date.parse(a.createdAt ?? "");
+        const timeB = Date.parse(b.createdAt ?? "");
+        if (!Number.isFinite(timeA) && !Number.isFinite(timeB)) {
+          return a.name.localeCompare(b.name);
+        }
+        if (!Number.isFinite(timeA)) {
+          return 1;
+        }
+        if (!Number.isFinite(timeB)) {
+          return -1;
+        }
+        return timeA - timeB;
+      });
+
       res.status(200).json({
         status: 'success',
-        data: allParticipants,
+        data: dedupedParticipants,
       });
     } catch (error) {
       console.error('Error fetching participants:', error);

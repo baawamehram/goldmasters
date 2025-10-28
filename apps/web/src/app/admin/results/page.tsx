@@ -559,14 +559,14 @@ export default function AdminResultsPage() {
           throw new Error("No markers located for any participant. Review entry details before computing winners.");
         }
 
-        const issueCount = scanReport.results.filter((entry) =>
+        const incompleteEntries = scanReport.results.filter((entry) =>
           entry.errors.length > 0 || !entry.checkoutLoaded || !entry.submissionLoaded
-        ).length;
+        );
+        const issueCount = incompleteEntries.length;
 
-        if (issueCount > 0) {
-          throw new Error(
-            `${issueCount} participant${issueCount === 1 ? '' : 's'} still have missing entry data. Review each affected entry using the scan panel before computing winners.`
-          );
+        const readyParticipantCount = scanReport.processed - issueCount;
+        if (readyParticipantCount <= 0) {
+          throw new Error('No participants with complete entry data are available for computing winners yet.');
         }
 
         // 3) Save coordinates via PATCH before computing
@@ -610,11 +610,15 @@ export default function AdminResultsPage() {
         const checkoutSummary = `${scanReport.withCheckout} checkout${scanReport.withCheckout === 1 ? "" : "s"}`;
         const submissionSummary = `${scanReport.withSubmissions} submission${scanReport.withSubmissions === 1 ? "" : "s"}`;
         const markerSummary = `${scanReport.totalMarkers} marker${scanReport.totalMarkers === 1 ? "" : "s"} assessed`;
+        const skippedSummary = issueCount
+          ? ` Skipped ${issueCount} participant${issueCount === 1 ? "" : "s"} with missing data.`
+          : "";
+        const readySummary = ` Winners computed from ${readyParticipantCount} participant${readyParticipantCount === 1 ? "" : "s"}.`;
         setPhaseFeedback((prev) => ({
           ...prev,
           [phase]: {
             type: "success",
-            text: `Winners computed and applied. ${participantSummary} · ${checkoutSummary} · ${submissionSummary} · ${markerSummary}.`,
+            text: `Winners computed and applied.${readySummary} ${participantSummary} · ${checkoutSummary} · ${submissionSummary} · ${markerSummary}.${skippedSummary}`,
           },
         }));
       } catch (error) {

@@ -1137,6 +1137,31 @@ router.post(
 
       const competition = getCompetitionById(actualCompetitionId);
 
+      const rawParticipantEmail = typeof payload?.participant?.email === 'string'
+        ? payload.participant.email.trim().toLowerCase()
+        : undefined;
+      const rawContactEmail = typeof payload?.contactEmail === 'string'
+        ? payload.contactEmail.trim().toLowerCase()
+        : undefined;
+      const resolvedEmail = rawParticipantEmail || rawContactEmail || participant.email || null;
+
+      if (resolvedEmail && participant.email !== resolvedEmail) {
+        participant.email = resolvedEmail;
+        saveParticipant(participant);
+      }
+
+      const completedFlag = payload?.completed === true || payload?.isCompleted === true;
+      const completedAtValue = completedFlag
+        ? (typeof payload?.completedAt === 'string' && payload.completedAt.trim()
+            ? payload.completedAt
+            : new Date().toISOString())
+        : null;
+
+      if (completedFlag && completedAtValue) {
+        participant.lastSubmissionAt = new Date(completedAtValue);
+        saveParticipant(participant);
+      }
+
       const tickets = ticketsInput.map((ticket: any) => {
         const markersArray = Array.isArray(ticket?.markers) ? ticket.markers : [];
 
@@ -1174,8 +1199,12 @@ router.post(
           id: participant.id,
           name: participant.name,
           phone: participant.phone,
+          email: resolvedEmail,
           ticketsPurchased: participant.tickets.length,
         },
+        contactEmail: resolvedEmail,
+        completed: completedFlag,
+        completedAt: completedAtValue,
         tickets,
         totalMarkers,
         checkoutTime:

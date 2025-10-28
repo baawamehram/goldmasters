@@ -820,3 +820,55 @@ export const updateUserTickets = (userId: string, ticketCount: number): UserEntr
   
   return user;
 };
+
+// Delete user entries and related participant data by a list of IDs
+export const deleteUserEntriesByIds = (ids: string[]): { deleted: number; failed: number } => {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { deleted: 0, failed: 0 };
+  }
+
+  const idSet = new Set(ids);
+  let deletedCount = 0;
+
+  try {
+    // Reload latest data from storage to ensure we have the latest state
+    userEntries = loadUserEntriesFromStorage();
+    mockParticipants = loadParticipantsFromStorage();
+
+    console.log(`[deleteUserEntriesByIds] Before deletion: ${userEntries.length} users, ${mockParticipants.length} participants`);
+
+    // Find emails of users to be deleted (for participant lookup)
+    const usersToDelete = userEntries.filter((entry) => idSet.has(entry.id));
+    const emailsToDelete = new Set(usersToDelete.map((u) => u.email));
+    const phonesToDelete = new Set(usersToDelete.map((u) => u.phone));
+
+    // Delete user entries
+    const userEntriesBeforeDelete = userEntries.length;
+    userEntries = userEntries.filter((entry) => !idSet.has(entry.id));
+    deletedCount = userEntriesBeforeDelete - userEntries.length;
+
+    // Delete all participants associated with these users (match by email or phone)
+    const participantsBeforeDelete = mockParticipants.length;
+    mockParticipants = mockParticipants.filter((participant) => {
+      // Keep this participant if it doesn't match any deleted user's email or phone
+      const shouldDelete = 
+        (participant.email && emailsToDelete.has(participant.email)) || 
+        phonesToDelete.has(participant.phone);
+      return !shouldDelete;
+    });
+
+    // Persist changes to storage
+    saveUserEntriesToStorage();
+    saveParticipantsToStorage();
+
+    const participantsDeleted = participantsBeforeDelete - mockParticipants.length;
+    console.log(`[deleteUserEntriesByIds] Deleted ${deletedCount} users, ${participantsDeleted} participants`);
+    console.log(`[deleteUserEntriesByIds] After deletion: ${userEntries.length} users, ${mockParticipants.length} participants`);
+
+    return { deleted: deletedCount, failed: 0 };
+  } catch (err) {
+    console.error('[deleteUserEntriesByIds] Error:', err);
+    return { deleted: 0, failed: ids.length };
+  }
+};
+

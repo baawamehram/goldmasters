@@ -28,6 +28,7 @@ interface ParticipantSummary {
   id: string;
   name: string;
   phone: string;
+  email?: string | null;
   ticketsPurchased: number;
 }
 

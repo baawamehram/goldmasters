@@ -21,8 +21,12 @@ type CheckoutData = {
     id: string;
     name: string;
     phone: string;
+    email?: string | null;
     ticketsPurchased: number;
   };
+  contactEmail?: string | null;
+  completed?: boolean;
+  completedAt?: string | null;
   tickets: Array<{
     ticketNumber: number;
     markerCount: number;
@@ -43,8 +47,10 @@ type ParticipantData = {
   competitionId: string;
   name: string;
   phone: string;
+  email?: string | null;
   accessCode: string;
   createdAt: string;
+  ticketsPurchased?: number;
 };
 
 const FALLBACK_COMPETITION_ID = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || "test-id";
@@ -60,6 +66,8 @@ export default function UserViewPage({
   const [error, setError] = useState<string | null>(null);
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
   const [participant, setParticipant] = useState<ParticipantData | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     params.then((p) => setUserId(p.userId));
@@ -137,7 +145,69 @@ export default function UserViewPage({
   }, [userId, router]);
 
   const formatDate = (dateString: string) => {
+    if (!dateString) {
+      return "-";
+    }
     return new Date(dateString).toLocaleString();
+  };
+
+  const handleDeleteUser = async () => {
+    if (!participant) return;
+    
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${participant.name}? This will remove their entry, checkout data, and all related information. This action cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const token = localStorage.getItem("admin_token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      console.log(`[View Page] Attempting to delete user: ${participant.id}`);
+
+      const response = await fetch(buildApiUrl("admin/participants"), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          participants: [
+            {
+              competitionId: participant.competitionId,
+              participantId: participant.participantId,
+              userId: participant.id,
+            },
+          ],
+        }),
+      });
+
+      const responseData = await response.json() as unknown;
+
+      console.log(`[View Page] Delete response status: ${response.status}`, responseData);
+
+      if (!response.ok) {
+        const errorData = responseData as { message?: string } | null;
+        const errorMessage = errorData?.message || `HTTP ${response.status}: Delete failed`;
+        throw new Error(errorMessage);
+      }
+
+      console.log(`[View Page] User ${participant.id} deleted successfully`);
+      alert(`${participant.name} has been successfully deleted.`);
+      router.push("/admin/entries");
+    } catch (err) {
+      console.error("[View Page] Error deleting user:", err);
+      const errorMsg = err instanceof Error ? err.message : "Failed to delete participant";
+      setDeleteError(errorMsg);
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -190,8 +260,23 @@ export default function UserViewPage({
             ← Back to Entries
           </Button>
           <h1 className="text-2xl font-bold text-gray-900">User Details</h1>
-          <div className="w-32"></div> {/* Spacer for centering */}
+          <Button
+            onClick={handleDeleteUser}
+            disabled={isDeleting || !participant}
+            variant="destructive"
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            {isDeleting ? "Deleting..." : "Delete User"}
+          </Button>
         </div>
+
+        {/* Delete Error Alert */}
+        {deleteError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <p className="font-semibold">Error deleting user:</p>
+            <p className="text-sm">{deleteError}</p>
+          </div>
+        )}
 
         {/* User Info Card */}
         {participant && (
@@ -219,7 +304,36 @@ export default function UserViewPage({
                   <p className="text-sm text-gray-600">Access Code</p>
                   <p className="font-mono">{participant.accessCode || "N/A"}</p>
                 </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm text-gray-600">Email</p>
+                  <p className="font-semibold break-all">
+                    {checkoutData?.participant.email || participant.email || checkoutData?.contactEmail || "Not provided"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Tickets Purchased</p>
+                  <p className="font-semibold">{checkoutData?.participant.ticketsPurchased ?? participant?.ticketsPurchased ?? "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Account Created</p>
+                  <p className="font-semibold">{formatDate(participant.createdAt)}</p>
+                </div>
               </div>
+
+              {checkoutData && (
+                <div
+                  className={`mt-6 rounded-lg border p-4 ${checkoutData.completed ? "border-green-300 bg-green-50" : "border-amber-300 bg-amber-50"}`}
+                >
+                  <p className="text-sm font-semibold text-gray-800">
+                    Entry Status: {checkoutData.completed ? "Completed" : "Awaiting completion"}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {checkoutData.completed
+                      ? `Finalised at ${formatDate(checkoutData.completedAt ?? "")}`
+                      : "This participant has not confirmed their checkout yet."}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -258,7 +372,7 @@ export default function UserViewPage({
                 </div>
 
                 {/* Summary Stats */}
-                <div className="grid grid-cols-3 gap-4 border-b pb-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-b pb-4">
                   <div className="bg-blue-50 p-4 rounded">
                     <p className="text-sm text-gray-600">Total Tickets</p>
                     <p className="text-2xl font-bold text-blue-600">
@@ -276,6 +390,17 @@ export default function UserViewPage({
                     <p className="text-sm font-semibold text-purple-600">
                       {formatDate(checkoutData.checkoutTime)}
                     </p>
+                  </div>
+                  <div className={`p-4 rounded ${checkoutData.completed ? "bg-emerald-50" : "bg-amber-50"}`}>
+                    <p className="text-sm text-gray-600">Completion</p>
+                    <p className={`text-2xl font-bold ${checkoutData.completed ? "text-emerald-600" : "text-amber-600"}`}>
+                      {checkoutData.completed ? "Completed" : "Pending"}
+                    </p>
+                    {checkoutData.completedAt && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        {formatDate(checkoutData.completedAt)}
+                      </p>
+                    )}
                   </div>
                 </div>
 

@@ -96,8 +96,12 @@ export type CheckoutSummary = {
     id: string;
     name: string;
     phone: string;
+    email?: string | null;
     ticketsPurchased: number;
   };
+  contactEmail?: string | null;
+  completed?: boolean;
+  completedAt?: string | null;
   tickets: Array<{
     ticketNumber: number;
     markerCount: number;

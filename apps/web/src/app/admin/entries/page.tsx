@@ -36,6 +36,8 @@ export default function AdminEntriesPage() {
   const [newUserNotification, setNewUserNotification] = useState<string | null>(null);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
   const [errorNotification, setErrorNotification] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     // Check if admin is logged in
@@ -201,6 +203,93 @@ export default function AdminEntriesPage() {
     }).format(date);
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(prev => {
+      const isAllSelected = filteredParticipants.every(p => prev.has(p.id));
+      if (isAllSelected) {
+        const next = new Set(prev);
+        filteredParticipants.forEach(p => next.delete(p.id));
+        return next;
+      }
+      const next = new Set(prev);
+      filteredParticipants.forEach(p => next.add(p.id));
+      return next;
+    });
+  };
+
+  const deleteParticipants = async (toDelete: Participant[]) => {
+    if (toDelete.length === 0) return;
+    
+    const confirmed = window.confirm(
+      `Delete ${toDelete.length} participant(s)? This will remove their entries and checkout data. This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
+      const payload = {
+        participants: toDelete.map(p => ({
+          competitionId: p.competitionId,
+          participantId: p.participantId,
+          userId: p.id,
+        })),
+      };
+
+      console.log(`[Entries Page] Attempting to delete ${toDelete.length} participants:`, toDelete.map(p => p.id));
+
+      const response = await fetch('/api/v1/admin/participants', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json() as unknown;
+      
+      console.log(`[Entries Page] Delete response status: ${response.status}`, data);
+
+      if (!response.ok) {
+        const errorData = data as { message?: string } | null;
+        const errorMessage = errorData?.message || `HTTP ${response.status}: Failed to delete`;
+        throw new Error(errorMessage);
+      }
+
+      console.log(`[Entries Page] Successfully deleted ${toDelete.length} participants`);
+
+      const deletedIds = new Set<string>(toDelete.map(p => p.id));
+      setParticipants(prev => prev.filter(p => !deletedIds.has(p.id)));
+      setSelectedIds(new Set());
+      setSuccessNotification(`🗑️ Deleted ${toDelete.length} participant(s).`);
+      setTimeout(() => setSuccessNotification(null), 3000);
+    } catch (error) {
+      console.error('[Entries Page] Error deleting participants:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to delete participants';
+      setErrorNotification(errorMsg);
+      setTimeout(() => setErrorNotification(null), 5000);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -251,6 +340,16 @@ export default function AdminEntriesPage() {
             </Button>
             <Button variant="outline" onClick={() => router.push('/admin/dashboard')}>
               Dashboard
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={selectedIds.size === 0 || isDeleting}
+              onClick={() => {
+                const items = participants.filter(p => selectedIds.has(p.id));
+                deleteParticipants(items);
+              }}
+            >
+              Delete Selected ({selectedIds.size})
             </Button>
             <Button onClick={handleLogout} variant="outline">
               Logout
@@ -339,6 +438,15 @@ export default function AdminEntriesPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b-2 border-gray-200">
                     <tr>
+                      <th className="px-4 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          aria-label="Select all"
+                          checked={filteredParticipants.length > 0 && filteredParticipants.every(p => selectedIds.has(p.id))}
+                          onChange={toggleSelectAll}
+                          disabled={isDeleting}
+                        />
+                      </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         User ID
                       </th>
@@ -350,9 +458,6 @@ export default function AdminEntriesPage() {
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Access Code
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Phase
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Status
@@ -371,15 +476,26 @@ export default function AdminEntriesPage() {
                   <tbody className="divide-y divide-gray-200">
                     {filteredParticipants.map((participant) => {
                       const isNewUser = newUserIds.has(participant.id);
+                      const isSelected = selectedIds.has(participant.id);
                       return (
                         <tr 
                           key={participant.id} 
                           className={`transition-all duration-500 ${
+                            isSelected ? 'bg-blue-50 ring-2 ring-blue-300' :
                             isNewUser 
                               ? 'bg-green-50 border-l-4 border-l-green-500 animate-pulse' 
                               : 'hover:bg-gray-50'
                           }`}
                         >
+                        <td className="px-4 py-4 text-sm">
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${participant.name}`}
+                            checked={isSelected}
+                            onChange={() => toggleSelect(participant.id)}
+                            disabled={isDeleting}
+                          />
+                        </td>
                         <td className="px-4 py-4 text-sm">
                           <div className="flex items-center gap-2">
                             <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded border border-gray-300 text-gray-700">
@@ -430,19 +546,6 @@ export default function AdminEntriesPage() {
                               </svg>
                             </button>
                           </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          {participant.currentPhase ? (
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                              participant.currentPhase === 1 ? 'bg-green-100 text-green-800' :
-                              participant.currentPhase === 2 ? 'bg-blue-100 text-blue-800' :
-                              'bg-purple-100 text-purple-800'
-                            }`}>
-                              Phase {participant.currentPhase}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400 text-xs">Not assigned</span>
-                          )}
                         </td>
                         <td className="px-4 py-4 text-sm">
                           <div className="flex flex-col gap-1">
@@ -503,16 +606,25 @@ export default function AdminEntriesPage() {
                           {formatDate(participant.createdAt)}
                         </td>
                         <td className="px-4 py-4 text-sm">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              // Navigate to dedicated view page for this user
-                              router.push(`/admin/entries/${participant.id}/view`);
-                            }}
-                          >
-                            View Details
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                router.push(`/admin/entries/${participant.id}/view`);
+                              }}
+                            >
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteParticipants([participant])}
+                              disabled={isDeleting}
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     );
