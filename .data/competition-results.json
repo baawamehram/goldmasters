@@ -1,35 +1,21 @@
 [
   {
     "competitionId": "test-id",
-    "finalJudgeX": 0.89,
-    "finalJudgeY": 0.45,
+    "finalJudgeX": 0.81,
+    "finalJudgeY": 0.47,
     "winners": [
       {
-        "ticketId": "user-1761673672989-03k13dbdx:1037",
-        "ticketNumber": 1037,
-        "participantId": "user-1761673672989-03k13dbdx",
-        "userId": "user-1761673672989-03k13dbdx",
-        "participantName": "ninety",
-        "participantPhone": "+910909090909",
-        "distance": 0.003220248437620941,
+        "ticketId": "user-1761674895978-gwqtk0hv6:1040",
+        "ticketNumber": 1040,
+        "participantId": "user-1761674895978-gwqtk0hv6",
+        "userId": "user-1761674895978-gwqtk0hv6",
+        "participantName": "ten",
+        "participantPhone": "+911010101010",
+        "distance": 0.009353608929178074,
         "marker": {
-          "id": "ticket-user-1761673672989-03k13dbdx-0-marker-1",
-          "x": 0.8929,
-          "y": 0.4514
-        }
-      },
-      {
-        "ticketId": "user-1761673672989-03k13dbdx:1037",
-        "ticketNumber": 1037,
-        "participantId": "user-1761673672989-03k13dbdx",
-        "userId": "user-1761673672989-03k13dbdx",
-        "participantName": "ninety",
-        "participantPhone": "+910909090909",
-        "distance": 0.003220248437620941,
-        "marker": {
-          "id": "ticket-user-1761673672989-03k13dbdx-0-marker-1",
-          "x": 0.8929,
-          "y": 0.4514
+          "id": "ticket-user-1761674895978-gwqtk0hv6-0-marker-1",
+          "x": 0.8182,
+          "y": 0.4745
         }
       },
       {
@@ -39,14 +25,28 @@
         "userId": "user-1761657611076-tv9u1arck",
         "participantName": "sixty",
         "participantPhone": "+916060606060",
-        "distance": 0.0860232526704263,
+        "distance": 0.03162277660168379,
         "marker": {
           "id": "ticket-user-1761657611076-tv9u1arck-4-marker-1",
           "x": 0.82,
           "y": 0.5
         }
+      },
+      {
+        "ticketId": "user-1761646719384-5zzgyadx1:1015",
+        "ticketNumber": 1015,
+        "participantId": "user-1761646719384-5zzgyadx1",
+        "userId": "user-1761646719384-5zzgyadx1",
+        "participantName": "forty",
+        "participantPhone": "+914040404040",
+        "distance": 0.07615773105863916,
+        "marker": {
+          "id": "ticket-user-1761646719384-5zzgyadx1-3-marker-1",
+          "x": 0.74,
+          "y": 0.5
+        }
       }
     ],
-    "computedAt": "2025-10-28T17:51:51.555Z"
+    "computedAt": "2025-10-28T18:11:31.213Z"
   }
 ]

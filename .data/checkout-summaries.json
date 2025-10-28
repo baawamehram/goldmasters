@@ -2207,5 +2207,113 @@
       "totalMarkers": 9,
       "checkoutTime": "2025-10-28T17:49:51.939Z"
     }
+  ],
+  [
+    "test-id:user-1761674895978-gwqtk0hv6",
+    {
+      "competitionId": "test-id",
+      "participantId": "user-1761674895978-gwqtk0hv6",
+      "userId": "user-1761674895978-gwqtk0hv6",
+      "competition": {
+        "id": "test-id",
+        "title": "Gold Coin",
+        "imageUrl": "/images/gold-coin.svg",
+        "pricePerTicket": 500,
+        "markersPerTicket": 3,
+        "status": "ACTIVE"
+      },
+      "participant": {
+        "id": "user-1761674895978-gwqtk0hv6",
+        "name": "ten",
+        "phone": "+911010101010",
+        "email": "e@mail.com",
+        "ticketsPurchased": 1
+      },
+      "contactEmail": "e@mail.com",
+      "completed": true,
+      "completedAt": "2025-10-28T18:10:34.535Z",
+      "tickets": [
+        {
+          "ticketNumber": 1040,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-user-1761674895978-gwqtk0hv6-0-marker-1",
+              "x": 0.8182,
+              "y": 0.4745,
+              "label": "T1040M1"
+            },
+            {
+              "id": "ticket-user-1761674895978-gwqtk0hv6-0-marker-2",
+              "x": 0.46,
+              "y": 0.56,
+              "label": "T1040M2"
+            },
+            {
+              "id": "ticket-user-1761674895978-gwqtk0hv6-0-marker-3",
+              "x": 0.42,
+              "y": 0.62,
+              "label": "T1040M3"
+            }
+          ]
+        }
+      ],
+      "totalMarkers": 3,
+      "checkoutTime": "2025-10-28T18:10:08.660Z"
+    }
+  ],
+  [
+    "test-id:user:user-1761674895978-gwqtk0hv6",
+    {
+      "competitionId": "test-id",
+      "participantId": "user-1761674895978-gwqtk0hv6",
+      "userId": "user-1761674895978-gwqtk0hv6",
+      "competition": {
+        "id": "test-id",
+        "title": "Gold Coin",
+        "imageUrl": "/images/gold-coin.svg",
+        "pricePerTicket": 500,
+        "markersPerTicket": 3,
+        "status": "ACTIVE"
+      },
+      "participant": {
+        "id": "user-1761674895978-gwqtk0hv6",
+        "name": "ten",
+        "phone": "+911010101010",
+        "email": "e@mail.com",
+        "ticketsPurchased": 1
+      },
+      "contactEmail": "e@mail.com",
+      "completed": true,
+      "completedAt": "2025-10-28T18:10:34.535Z",
+      "tickets": [
+        {
+          "ticketNumber": 1040,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-user-1761674895978-gwqtk0hv6-0-marker-1",
+              "x": 0.8182,
+              "y": 0.4745,
+              "label": "T1040M1"
+            },
+            {
+              "id": "ticket-user-1761674895978-gwqtk0hv6-0-marker-2",
+              "x": 0.46,
+              "y": 0.56,
+              "label": "T1040M2"
+            },
+            {
+              "id": "ticket-user-1761674895978-gwqtk0hv6-0-marker-3",
+              "x": 0.42,
+              "y": 0.62,
+              "label": "T1040M3"
+            }
+          ]
+        }
+      ],
+      "totalMarkers": 3,
+      "checkoutTime": "2025-10-28T18:10:08.660Z"
+    }
   ]
 ]

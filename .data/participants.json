@@ -564,5 +564,23 @@
       }
     ],
     "lastSubmissionAt": null
+  },
+  {
+    "id": "participant-1761674925376-sxkkh0av4",
+    "competitionId": "test-id",
+    "name": "ten",
+    "phone": "+911010101010",
+    "tickets": [
+      {
+        "id": "ticket-1761674925376-lrwit7tgp",
+        "ticketNumber": 1040,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
   }
 ]

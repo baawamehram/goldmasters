@@ -639,9 +639,17 @@ router.post(
       const sortedWinners = ticketScores
         .slice()
         .sort((a, b) => a.distance - b.distance)
+        .reduce((uniqueWinners: MockCompetitionWinner[], current) => {
+          // Check if this ticket ID has already been selected as a winner
+          const isDuplicate = uniqueWinners.some((winner) => winner.ticketId === current.ticketId);
+          if (!isDuplicate) {
+            uniqueWinners.push(current);
+          }
+          return uniqueWinners;
+        }, [])
         .slice(0, 3);
 
-      console.log(`[COMPUTE-WINNER] Total ticket scores: ${ticketScores.length}, top 3 winners: ${sortedWinners.length}`);
+      console.log(`[COMPUTE-WINNER] Total ticket scores: ${ticketScores.length}, unique winners: ${sortedWinners.length}`);
 
       const result: MockCompetitionResult = {
         competitionId: id,
