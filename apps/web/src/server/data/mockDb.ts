@@ -625,9 +625,14 @@ export const createOrUpdateUserEntry = (name: string, phone: string): UserEntry 
 };
 
 export const getAllUserEntries = (): UserEntry[] => {
-  // Calculate ticket counts for each user
+  const defaultCompetitionId = 'test-id';
+  
   return userEntries.map((entry) => {
-    const participants = mockParticipants.filter((p) => sanitizePhone(p.phone) === entry.phone);
+    // Only count tickets from the default competition to match admin assignment logic
+    // This prevents checkout/gameplay tickets in other competitions from affecting the count
+    const participants = mockParticipants.filter(
+      (p) => sanitizePhone(p.phone) === entry.phone && p.competitionId === defaultCompetitionId
+    );
     const ticketCount = participants.reduce((total, p) => total + p.tickets.length, 0);
     
     return {

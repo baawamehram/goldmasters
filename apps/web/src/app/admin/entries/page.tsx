@@ -489,7 +489,7 @@ export default function AdminEntriesPage() {
                             </Button>
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            Current: {participant.assignedTickets}
+                            Current: {ticketAssignmentCount[participant.id] ?? participant.assignedTickets}
                           </div>
                         </td>
                         <td className="px-4 py-4 text-sm text-gray-600">
