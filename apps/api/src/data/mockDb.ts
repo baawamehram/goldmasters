@@ -63,6 +63,7 @@ export type MockCompetitionResult = {
 export type CheckoutSummary = {
   competitionId: string;
   participantId: string;
+  userId?: string; // Add userId to link with user entries
   competition: {
     id: string;
     title: string;
@@ -84,6 +85,20 @@ export type CheckoutSummary = {
   }>;
   totalMarkers: number;
   checkoutTime: string;
+};
+
+export type UserEntry = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string | null;
+  createdAt: Date;
+  assignedTickets: number;
+  isLoggedIn: boolean;
+  lastLoginAt: Date | null;
+  lastLogoutAt: Date | null;
+  accessCode: string;
+  currentPhase: number | null;
 };
 
 const DEFAULT_INVITE_PASSWORD = 'competition123';
@@ -162,6 +177,70 @@ let mockParticipants: MockParticipant[] = [
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
 const checkoutSummaries = new Map<string, CheckoutSummary>();
+let userEntries: UserEntry[] = [];
+
+// Generate unique 6-digit access code
+const generateAccessCode = (): string => {
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const exists = userEntries.some(entry => entry.accessCode === code);
+  if (exists) {
+    return generateAccessCode();
+  }
+  return code;
+};
+
+export const createOrUpdateUserEntry = (name: string, phone: string, existingId?: string): UserEntry => {
+  const sanitized = sanitizePhone(phone);
+  
+  // Check if user already exists by phone
+  const existing = userEntries.find((entry) => entry.phone === sanitized);
+  
+  if (existing) {
+    // Update name if changed
+    if (existing.name !== name) {
+      existing.name = name;
+    }
+    // Update login status
+    existing.isLoggedIn = true;
+    existing.lastLoginAt = new Date();
+    return existing;
+  }
+  
+  // If existingId is provided, check if a user with that ID already exists
+  if (existingId) {
+    const existingById = userEntries.find((entry) => entry.id === existingId);
+    if (existingById) {
+      // Update phone number if user exists with this ID
+      existingById.phone = sanitized;
+      existingById.name = name;
+      existingById.isLoggedIn = true;
+      existingById.lastLoginAt = new Date();
+      return existingById;
+    }
+  }
+  
+  // Create new entry with provided ID or generate new one
+  const newEntry: UserEntry = {
+    id: existingId || `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    name,
+    phone: sanitized,
+    email: null,
+    createdAt: new Date(),
+    assignedTickets: 0,
+    isLoggedIn: true,
+    lastLoginAt: new Date(),
+    lastLogoutAt: null,
+    accessCode: generateAccessCode(),
+    currentPhase: null,
+  };
+  
+  userEntries.push(newEntry);
+  return newEntry;
+};
+
+export const getUserEntryById = (id: string): UserEntry | null => {
+  return userEntries.find((entry) => entry.id === id) ?? null;
+};
 
 export const getCompetitions = (): MockCompetition[] => mockCompetitions;
 
@@ -366,6 +445,12 @@ export const saveCheckoutSummary = (
 ): void => {
   const key = `${competitionId}:${participantId}`;
   checkoutSummaries.set(key, summary);
+  
+  // Also save by userId if available for easier lookup
+  if (summary.userId) {
+    const userKey = `${competitionId}:user:${summary.userId}`;
+    checkoutSummaries.set(userKey, summary);
+  }
 };
 
 export const getCheckoutSummary = (
@@ -374,4 +459,12 @@ export const getCheckoutSummary = (
 ): CheckoutSummary | null => {
   const key = `${competitionId}:${participantId}`;
   return checkoutSummaries.get(key) ?? null;
+};
+
+export const getCheckoutSummaryByUserId = (
+  competitionId: string,
+  userId: string
+): CheckoutSummary | null => {
+  const userKey = `${competitionId}:user:${userId}`;
+  return checkoutSummaries.get(userKey) ?? null;
 };

@@ -17,11 +17,13 @@ import {
   getCompetitionById,
   getCompetitionsWithStats,
   getCheckoutSummary,
+  getCheckoutSummaryByUserId,
   getParticipants,
   getParticipantsByCompetition,
   sanitizePhone,
   saveCheckoutSummary,
   saveParticipant,
+  createOrUpdateUserEntry,
 } from '../data/mockDb';
 
 const router: Router = Router();
@@ -491,11 +493,16 @@ router.post(
         return;
       }
 
-  const sanitizedPhone = sanitizePhone(phone);
-  const baseCompetition = getCompetitionById(id);
-      const markersPerTicket = baseCompetition.markersPerTicket;
-
-      const markerGroups = new Map<
+      const sanitizedPhone = sanitizePhone(phone);
+      
+      // Check if the id parameter is a userId or competitionId
+      // Treat both 'user-xxx' and 'participant-xxx' as user identifiers
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+      const requestedUserId = isUserId ? id : null;
+      
+      const baseCompetition = getCompetitionById(actualCompetitionId);
+      const markersPerTicket = baseCompetition.markersPerTicket;      const markerGroups = new Map<
         string,
         {
           ticketNumber: number | null;
@@ -534,8 +541,13 @@ router.post(
         }
       }
 
-      const existingParticipant = findParticipantByPhone(id, sanitizedPhone);
-      const participantId = existingParticipant?.id || `participant-${Date.now()}`;
+      const existingParticipant = findParticipantByPhone(actualCompetitionId, sanitizedPhone);
+      const participantId = existingParticipant?.id || `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Create or update user entry to get/create a userId
+      // If a userId was provided in the URL, use it; otherwise create new one
+      const userEntry = createOrUpdateUserEntry(name.trim(), sanitizedPhone, requestedUserId || undefined);
+      const userId = userEntry.id;
 
       const participantRecord: MockParticipant = existingParticipant
         ? {
@@ -546,7 +558,7 @@ router.post(
           }
         : {
             id: participantId,
-            competitionId: id,
+            competitionId: actualCompetitionId,
             name: name.trim(),
             phone: sanitizedPhone,
             email: email.trim().toLowerCase(),
@@ -591,6 +603,53 @@ router.post(
 
       saveParticipant(participantRecord);
 
+      // Save checkout summary with userId for admin view
+      console.log('[POST checkout] Saving checkout summary:', {
+        actualCompetitionId,
+        participantId: participantRecord.id,
+        userId,
+        isUserId,
+        requestedUserId
+      });
+      
+      const checkoutSummary: CheckoutSummary = {
+        competitionId: actualCompetitionId,
+        participantId: participantRecord.id,
+        userId: userId,
+        competition: {
+          id: baseCompetition.id,
+          title: baseCompetition.title,
+          imageUrl: baseCompetition.imageUrl,
+          pricePerTicket: baseCompetition.pricePerTicket,
+          markersPerTicket: baseCompetition.markersPerTicket,
+          status: baseCompetition.status,
+        },
+        participant: {
+          id: participantRecord.id,
+          name: participantRecord.name,
+          phone: participantRecord.phone,
+          ticketsPurchased: updatedTickets.length,
+        },
+        tickets: updatedTickets.map((ticket) => ({
+          ticketNumber: ticket.ticketNumber,
+          markerCount: ticket.markers.length,
+          markers: ticket.markers.map((marker, idx) => ({
+            id: marker.id,
+            x: marker.x,
+            y: marker.y,
+            label: `T${ticket.ticketNumber}M${idx + 1}`,
+          })),
+        })),
+        totalMarkers: updatedTickets.reduce((sum, t) => sum + t.markers.length, 0),
+        checkoutTime: new Date().toISOString(),
+      };
+
+      saveCheckoutSummary(actualCompetitionId, participantRecord.id, checkoutSummary);
+      console.log('[POST checkout] Checkout summary saved with keys:', {
+        participantKey: `${actualCompetitionId}:${participantRecord.id}`,
+        userKey: `${actualCompetitionId}:user:${userId}`
+      });
+
       const responseTickets = participantRecord.tickets.map((ticket) => ({
         id: ticket.id,
         ticketNumber: ticket.ticketNumber,
@@ -606,6 +665,7 @@ router.post(
         data: {
           message: 'Checkout completed successfully',
           participantId: participantRecord.id,
+          userId: userId,
           tickets: responseTickets,
         },
       });
@@ -953,7 +1013,21 @@ router.post(
         return;
       }
 
-      let participant = findParticipantById(id, participantId);
+      // Check if the id parameter is a userId or competitionId
+      // Treat both 'user-xxx' and 'participant-xxx' as user identifiers
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+      const userId = isUserId ? id : null;
+
+      console.log('[POST checkout-summary] Request:', {
+        urlId: id,
+        isUserId,
+        actualCompetitionId,
+        userId,
+        participantId
+      });
+
+      let participant = findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
         // Fallback: check if participant exists in any competition and clone
         const allParticipants = getParticipants();
@@ -963,7 +1037,7 @@ router.post(
           // Clone participant to current competition
           const clonedParticipant: MockParticipant = {
             ...existingParticipant,
-            competitionId: id,
+            competitionId: actualCompetitionId,
             tickets: existingParticipant.tickets.map(ticket => ({
               ...ticket,
               markers: [], // Reset markers for new competition
@@ -982,7 +1056,7 @@ router.post(
           
           const newParticipant: MockParticipant = {
             id: participantId,
-            competitionId: id,
+            competitionId: actualCompetitionId,
             name: participantPayload.name || 'Unknown',
             phone: participantPayload.phone || '',
             email: undefined,
@@ -1011,7 +1085,7 @@ router.post(
         return;
       }
 
-      const competition = getCompetitionById(id);
+      const competition = getCompetitionById(actualCompetitionId);
 
       const tickets = ticketsInput.map((ticket: any) => {
         const markersArray = Array.isArray(ticket?.markers) ? ticket.markers : [];
@@ -1035,8 +1109,9 @@ router.post(
         : tickets.reduce((sum, ticket) => sum + ticket.markerCount, 0);
 
       const summary: CheckoutSummary = {
-        competitionId: id,
-        participantId: id, // Use URL id for both to match admin lookup pattern
+        competitionId: actualCompetitionId,
+        participantId: participantId,
+        userId: userId || undefined, // Include userId if this was a userId-based request
         competition: {
           id: competition.id,
           title: competition.title,
@@ -1059,7 +1134,12 @@ router.post(
             : new Date().toISOString(),
       };
 
-      saveCheckoutSummary(id, id, summary); // Use id for both params to match admin lookup
+      console.log('[POST checkout-summary] Saving with keys:', {
+        participantKey: `${actualCompetitionId}:${participantId}`,
+        userKey: userId ? `${actualCompetitionId}:user:${userId}` : 'none'
+      });
+
+      saveCheckoutSummary(actualCompetitionId, participantId, summary);
 
       res.status(201).json({ message: 'Checkout saved', summary });
     } catch (error) {
@@ -1081,13 +1161,33 @@ router.get(
   async (req: AuthRequest, res: Response) => {
     try {
       const { id, participantId } = req.params;
-      const summary = getCheckoutSummary(id, participantId);
+      
+      console.log('[GET checkout-summary] Request params:', { id, participantId });
+      
+      // Check if the id parameter is a userId or competitionId
+      // Treat both 'user-xxx' and 'participant-xxx' as user identifiers
+      const isUserId = id.startsWith('user-') || id.startsWith('participant-');
+      const actualCompetitionId = isUserId ? 'test-id' : id;
+      
+      console.log('[GET checkout-summary] Resolved:', { isUserId, actualCompetitionId });
+      
+      // Try to get by participantId first (with actual competition ID)
+      let summary = getCheckoutSummary(actualCompetitionId, participantId);
+      console.log('[GET checkout-summary] By participantId:', summary ? 'found' : 'not found');
+      
+      // If not found, try to get by userId (in case participantId is actually a userId)
+      if (!summary) {
+        summary = getCheckoutSummaryByUserId(actualCompetitionId, participantId);
+        console.log('[GET checkout-summary] By userId:', summary ? 'found' : 'not found');
+      }
 
       if (!summary) {
+        console.log('[GET checkout-summary] No summary found, returning 404');
         res.status(404).json({ message: 'Checkout summary not found' });
         return;
       }
 
+      console.log('[GET checkout-summary] Returning summary');
       res.status(200).json({ summary });
     } catch (error) {
       console.error('Error retrieving checkout summary:', error);

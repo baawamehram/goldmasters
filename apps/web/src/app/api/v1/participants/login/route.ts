@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     return success({
       token: loginToken,
       participant: {
-        id: primaryParticipant.id,
+        id: userEntry.id, // Use userEntry.id instead of primaryParticipant.id for consistency
         name: primaryParticipant.name,
         phone: primaryParticipant.phone,
         ticketsPurchased: primaryParticipant.tickets.length,
