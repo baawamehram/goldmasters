@@ -7,6 +7,7 @@ import path from 'path';
 const DATA_DIR = path.join(process.cwd(), '..', '..', '.data');
 const PARTICIPANTS_FILE = path.join(DATA_DIR, 'participants.json');
 const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
+const COMPLETED_ENTRIES_FILE = path.join(DATA_DIR, 'completed-entries.json');
 
 // Ensure data directory exists (server-side only)
 const ensureDataDir = () => {
@@ -220,9 +221,62 @@ const saveParticipantsToStorage = () => {
   }
 };
 
+const COMPLETED_ENTRIES_STORAGE_KEY = 'completed_entries_db';
+
+const loadCompletedEntriesFromStorage = (): Set<string> => {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(COMPLETED_ENTRIES_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return new Set(parsed.filter((value): value is string => typeof value === 'string'));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading completed entries from localStorage:', error);
+    }
+  } else {
+    try {
+      ensureDataDir();
+      if (fs.existsSync(COMPLETED_ENTRIES_FILE)) {
+        const data = fs.readFileSync(COMPLETED_ENTRIES_FILE, 'utf-8');
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          return new Set(parsed.filter((value: unknown): value is string => typeof value === 'string'));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading completed entries from file:', error);
+    }
+  }
+
+  return new Set();
+};
+
+const saveCompletedEntriesToStorage = (entries: Set<string>) => {
+  const payload = JSON.stringify(Array.from(entries), null, 2);
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(COMPLETED_ENTRIES_STORAGE_KEY, payload);
+    } catch (error) {
+      console.error('Error saving completed entries to localStorage:', error);
+    }
+  } else {
+    try {
+      ensureDataDir();
+      fs.writeFileSync(COMPLETED_ENTRIES_FILE, payload, 'utf-8');
+    } catch (error) {
+      console.error('Error saving completed entries to file:', error);
+    }
+  }
+};
+
 let mockParticipants: MockParticipant[] = loadParticipantsFromStorage();
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
+let completedEntries: Set<string> = loadCompletedEntriesFromStorage();
 
 export const getCompetitions = (): MockCompetition[] => mockCompetitions;
 
@@ -419,6 +473,51 @@ export const saveCompetitionResult = (result: MockCompetitionResult): void => {
 
 export const getCompetitionResult = (competitionId: string): MockCompetitionResult | null =>
   mockCompetitionResults.find((entry) => entry.competitionId === competitionId) ?? null;
+
+const buildCompletionKey = (competitionId: string, participantId: string) =>
+  `${competitionId}:${participantId}`;
+
+export const hasParticipantCompletedEntry = (
+  competitionId: string,
+  participantId: string | null | undefined
+): boolean => {
+  if (!competitionId || !participantId) {
+    return false;
+  }
+
+  return completedEntries.has(buildCompletionKey(competitionId, participantId));
+};
+
+export const markParticipantCompletedEntry = (
+  competitionId: string,
+  participantId: string | null | undefined
+) => {
+  if (!competitionId || !participantId) {
+    return;
+  }
+
+  const key = buildCompletionKey(competitionId, participantId);
+  if (completedEntries.has(key)) {
+    return;
+  }
+
+  completedEntries.add(key);
+  saveCompletedEntriesToStorage(completedEntries);
+};
+
+export const clearParticipantCompletion = (
+  competitionId: string,
+  participantId: string | null | undefined
+) => {
+  if (!competitionId || !participantId) {
+    return;
+  }
+
+  const key = buildCompletionKey(competitionId, participantId);
+  if (completedEntries.delete(key)) {
+    saveCompletedEntriesToStorage(completedEntries);
+  }
+};
 
 // ============================================
 // USER ENTRY TRACKING (Auto-create on login)

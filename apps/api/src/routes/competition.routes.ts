@@ -24,6 +24,7 @@ import {
   saveCheckoutSummary,
   saveParticipant,
   createOrUpdateUserEntry,
+  hasParticipantCompletedEntry,
 } from '../data/mockDb';
 
 const router: Router = Router();
@@ -262,6 +263,16 @@ router.post(
         return;
       }
 
+      const participantCompleted = hasParticipantCompletedEntry(actualCompetitionId, participant.id);
+      if (participantCompleted) {
+        console.log('[POST authenticate] Participant already completed entry:', { participantId: participant.id });
+        res.status(403).json({
+          status: 'fail',
+          message: 'This participant has already completed their entry and cannot play again.',
+        });
+        return;
+      }
+
       const participantAccessToken = jwt.sign(
         {
           competitionId: actualCompetitionId,
@@ -339,6 +350,15 @@ router.get(
         res.status(404).json({
           status: 'fail',
           message: 'Participant record not found',
+        });
+        return;
+      }
+
+      if (hasParticipantCompletedEntry(actualCompetitionId, participant.id)) {
+        console.log('[GET me/tickets] Participant already completed entry:', { participantId: participant.id });
+        res.status(403).json({
+          status: 'fail',
+          message: 'This entry is already completed. Further gameplay is not permitted.',
         });
         return;
       }
@@ -571,6 +591,14 @@ router.post(
       }
 
       const existingParticipant = findParticipantByPhone(actualCompetitionId, sanitizedPhone);
+      if (existingParticipant && hasParticipantCompletedEntry(actualCompetitionId, existingParticipant.id)) {
+        console.log('[POST checkout] Participant already completed entry:', { participantId: existingParticipant.id });
+        res.status(403).json({
+          status: 'fail',
+          message: 'This participant has already completed their entry and cannot submit another checkout.',
+        });
+        return;
+      }
       const participantId = existingParticipant?.id || `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Create or update user entry to get/create a userId
@@ -764,6 +792,15 @@ router.post(
         res.status(404).json({
           status: 'fail',
           message: 'Participant not found',
+        });
+        return;
+      }
+
+      if (hasParticipantCompletedEntry(actualCompetitionId, participant.id)) {
+        console.log('[POST entries] Participant already completed entry:', { participantId: participant.id });
+        res.status(403).json({
+          status: 'fail',
+          message: 'This entry is already completed. Additional markers cannot be submitted.',
         });
         return;
       }

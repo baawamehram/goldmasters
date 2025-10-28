@@ -4,7 +4,8 @@ import {
   findParticipantByPhone, 
   saveParticipant, 
   MockParticipant,
-  getParticipants 
+  getParticipants,
+  hasParticipantCompletedEntry
 } from '@/server/data/mockDb';
 import { signToken } from '@/server/auth/jwt';
 
@@ -73,6 +74,10 @@ export async function POST(
   
   if (!participant) {
     return fail('Participant not found. Please contact support.', 404);
+  }
+
+  if (hasParticipantCompletedEntry(competitionId, participant.id)) {
+    return fail('This participant has already completed their entry and cannot play again.', 403);
   }
 
   const normalizedInputName = nameValue.toLowerCase();

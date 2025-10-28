@@ -5,6 +5,7 @@ import {
   MockParticipant,
   MockTicket,
   saveParticipant,
+  hasParticipantCompletedEntry,
 } from '@/server/data/mockDb';
 import { fieldError, validationFailure, fail, success, error, ValidationError } from '@/server/http';
 
@@ -61,6 +62,10 @@ export async function POST(
     const participant = findParticipantById(id, tokenOrResponse.participantId);
     if (!participant) {
       return fail('Participant not found', 404);
+    }
+
+    if (hasParticipantCompletedEntry(id, participant.id)) {
+      return fail('This entry is already completed. Additional markers cannot be submitted.', 403);
     }
 
     const submissions: MockTicket[] = [];

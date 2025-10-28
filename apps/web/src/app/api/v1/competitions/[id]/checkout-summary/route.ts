@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserEntryByNameAndPhone, createOrUpdateUserEntry } from '@/server/data/mockDb';
+import {
+  getUserEntryByNameAndPhone,
+  createOrUpdateUserEntry,
+  markParticipantCompletedEntry,
+  clearParticipantCompletion,
+} from '@/server/data/mockDb';
 
 /**
  * POST /api/v1/competitions/[id]/checkout-summary
@@ -22,6 +27,10 @@ export async function POST(
 
     const rawBody = await req.text();
     const checkoutData = JSON.parse(rawBody);
+
+    const originalParticipantId = typeof checkoutData?.participant?.id === 'string'
+      ? checkoutData.participant.id
+      : null;
 
     // Extract participant info from checkout data
     const participantName = checkoutData?.participant?.name;
@@ -63,6 +72,28 @@ export async function POST(
     );
 
     const responseText = await response.text();
+    let responsePayload: any = null;
+    try {
+      responsePayload = JSON.parse(responseText);
+    } catch {
+      responsePayload = null;
+    }
+
+    if (response.ok) {
+      const resolvedSummary = responsePayload?.summary ?? checkoutData;
+      const completionFlag = resolvedSummary?.completed === true
+        || resolvedSummary?.isCompleted === true
+        || Boolean(resolvedSummary?.completedAt);
+
+      const participantIdForCompletion = originalParticipantId
+        ?? (typeof resolvedSummary?.participant?.id === 'string' ? resolvedSummary.participant.id : null);
+
+      if (completionFlag) {
+        markParticipantCompletedEntry(id, participantIdForCompletion ?? originalParticipantId);
+      } else {
+        clearParticipantCompletion(id, participantIdForCompletion ?? originalParticipantId);
+      }
+    }
 
     return new NextResponse(responseText, {
       status: response.status,

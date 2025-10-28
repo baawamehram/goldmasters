@@ -555,3 +555,19 @@ export const getCheckoutSummaryByUserId = (
   const userKey = `${competitionId}:user:${userId}`;
   return checkoutSummaries.get(userKey) ?? null;
 };
+
+export const hasParticipantCompletedEntry = (
+  competitionId: string,
+  participantId: string
+): boolean => {
+  const summary = getCheckoutSummary(competitionId, participantId);
+  if (!summary) {
+    return false;
+  }
+
+  if (summary.completed === true) {
+    return true;
+  }
+
+  return Boolean(summary.completedAt);
+};

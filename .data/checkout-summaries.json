@@ -17,12 +17,12 @@
         "id": "user-1761645782820-ekdclhfev",
         "name": "offer",
         "phone": "+916767676767",
-        "email": "offer@mail.com",
+        "email": "new@mail.com",
         "ticketsPurchased": 3
       },
-      "contactEmail": "offer@mail.com",
+      "contactEmail": "new@mail.com",
       "completed": true,
-      "completedAt": "2025-10-28T16:06:39.863Z",
+      "completedAt": "2025-10-28T16:34:38.454Z",
       "tickets": [
         {
           "ticketNumber": 1003,
@@ -30,8 +30,8 @@
           "markers": [
             {
               "id": "ticket-user-1761645782820-ekdclhfev-0-marker-1",
-              "x": 0.5549,
-              "y": 0.4399,
+              "x": 0.5,
+              "y": 0.5,
               "label": "T1003M1"
             },
             {
@@ -98,7 +98,7 @@
         }
       ],
       "totalMarkers": 9,
-      "checkoutTime": "2025-10-28T16:06:29.614Z"
+      "checkoutTime": "2025-10-28T16:34:23.703Z"
     }
   ],
   [
@@ -119,12 +119,12 @@
         "id": "user-1761645782820-ekdclhfev",
         "name": "offer",
         "phone": "+916767676767",
-        "email": "offer@mail.com",
+        "email": "new@mail.com",
         "ticketsPurchased": 3
       },
-      "contactEmail": "offer@mail.com",
+      "contactEmail": "new@mail.com",
       "completed": true,
-      "completedAt": "2025-10-28T16:06:39.863Z",
+      "completedAt": "2025-10-28T16:34:38.454Z",
       "tickets": [
         {
           "ticketNumber": 1003,
@@ -132,8 +132,8 @@
           "markers": [
             {
               "id": "ticket-user-1761645782820-ekdclhfev-0-marker-1",
-              "x": 0.5549,
-              "y": 0.4399,
+              "x": 0.5,
+              "y": 0.5,
               "label": "T1003M1"
             },
             {
@@ -200,7 +200,7 @@
         }
       ],
       "totalMarkers": 9,
-      "checkoutTime": "2025-10-28T16:06:29.614Z"
+      "checkoutTime": "2025-10-28T16:34:23.703Z"
     }
   ],
   [
