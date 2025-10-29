@@ -505,8 +505,8 @@ export default function HomePage() {
             {/* Left Side - Range Rover Image */}
             <div className="relative">
               <img 
-                src="/images/range-rover-prize.jpg" 
-                alt="Range Rover Grand Prize"
+                src="/images/gold bar.jpg" 
+                alt="Gold Bar Grand Prize"
                 className="w-full h-full object-cover rounded-lg shadow-xl"
                 onError={(e) => {
                   e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><defs><linearGradient id="car2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1f2937"/><stop offset="100%" style="stop-color:#374151"/></linearGradient></defs><rect fill="url(#car2)" width="800" height="600"/><rect x="100" y="250" width="600" height="250" rx="20" fill="#4b5563"/><rect x="150" y="280" width="200" height="150" fill="#6b7280"/><rect x="450" y="280" width="200" height="150" fill="#6b7280"/><circle cx="250" cy="480" r="40" fill="#1f2937" stroke="#9ca3af" stroke-width="8"/><circle cx="550" cy="480" r="40" fill="#1f2937" stroke="#9ca3af" stroke-width="8"/><text x="50%" y="50%" text-anchor="middle" fill="#d1d5db" font-size="24" font-weight="bold">RANGE ROVER</text></svg>');

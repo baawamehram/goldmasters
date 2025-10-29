@@ -165,7 +165,7 @@ export default function CheckoutConfirmPage() {
               <Button
                 onClick={handleViewSummary}
                 variant="outline"
-                className="flex-1 border-slate-700 text-slate-200 hover:bg-slate-800/60"
+                className="flex-1 border-slate-700 text-slate-900 font-semibold hover:bg-slate-200/80"
               >
                 View Entry Summary
               </Button>

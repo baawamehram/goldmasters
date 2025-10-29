@@ -382,7 +382,7 @@ export default function CompetitionCheckoutPage() {
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Checkout Summary</p>
                 <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">
-                  {competition?.title ?? "Competition"}
+                  Gold Prize Competition
                 </h1>
               </div>
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200">
@@ -391,7 +391,7 @@ export default function CompetitionCheckoutPage() {
               </span>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
                 <p className="text-xs uppercase tracking-wide text-slate-500">Participant</p>
                 <p className="mt-2 text-lg font-medium text-white">{participant?.name ?? "Guest"}</p>
@@ -406,13 +406,6 @@ export default function CompetitionCheckoutPage() {
                 <p className="text-xs uppercase tracking-wide text-slate-500">Markers / Ticket</p>
                 <p className="mt-2 text-lg font-semibold text-white">{competition?.markersPerTicket ?? "-"}</p>
                 <p className="text-sm text-slate-400">Configured requirement</p>
-              </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Entry Value</p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  ₹{(competition?.pricePerTicket ?? 0) * groupedMarkers.length}
-                </p>
-                <p className="text-sm text-slate-400">Est. total value</p>
               </div>
             </div>
 

@@ -2334,12 +2334,12 @@
         "id": "user-1761718931975-kja0gy9er",
         "name": "sixtytwo",
         "phone": "+916262626262",
-        "email": null,
+        "email": "six@mail.com",
         "ticketsPurchased": 2
       },
-      "contactEmail": null,
-      "completed": false,
-      "completedAt": null,
+      "contactEmail": "six@mail.com",
+      "completed": true,
+      "completedAt": "2025-10-29T11:49:52.318Z",
       "tickets": [
         {
           "ticketNumber": 1041,
@@ -2347,8 +2347,8 @@
           "markers": [
             {
               "id": "ticket-user-1761718931975-kja0gy9er-0-marker-1",
-              "x": 0.5816,
-              "y": 0.4362,
+              "x": 0.5591,
+              "y": 0.4438,
               "label": "T1041M1"
             },
             {
@@ -2391,7 +2391,7 @@
         }
       ],
       "totalMarkers": 6,
-      "checkoutTime": "2025-10-29T06:28:37.759Z"
+      "checkoutTime": "2025-10-29T11:49:24.148Z"
     }
   ],
   [
@@ -2412,12 +2412,12 @@
         "id": "user-1761718931975-kja0gy9er",
         "name": "sixtytwo",
         "phone": "+916262626262",
-        "email": null,
+        "email": "six@mail.com",
         "ticketsPurchased": 2
       },
-      "contactEmail": null,
-      "completed": false,
-      "completedAt": null,
+      "contactEmail": "six@mail.com",
+      "completed": true,
+      "completedAt": "2025-10-29T11:49:52.318Z",
       "tickets": [
         {
           "ticketNumber": 1041,
@@ -2425,8 +2425,8 @@
           "markers": [
             {
               "id": "ticket-user-1761718931975-kja0gy9er-0-marker-1",
-              "x": 0.5816,
-              "y": 0.4362,
+              "x": 0.5591,
+              "y": 0.4438,
               "label": "T1041M1"
             },
             {
@@ -2469,7 +2469,7 @@
         }
       ],
       "totalMarkers": 6,
-      "checkoutTime": "2025-10-29T06:28:37.759Z"
+      "checkoutTime": "2025-10-29T11:49:24.148Z"
     }
   ]
 ]

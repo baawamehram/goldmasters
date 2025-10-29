@@ -88,24 +88,6 @@ export default function JudgingProcessPage() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
-              <Link href="/competitions" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                Competitions
-              </Link>
-              <Link href="/how-it-works" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                How It Works
-              </Link>
-              <Link href="/winners" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                Winners
-              </Link>
-              <Link href="/login" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                Login
-              </Link>
-              <Link 
-                href="/signup" 
-                className="bg-[#055F3C] text-white px-6 py-2 rounded-lg hover:bg-[#044a2f] transition-colors"
-              >
-                Sign Up
-              </Link>
             </nav>
 
             {/* Mobile Menu Button */}
@@ -127,24 +109,6 @@ export default function JudgingProcessPage() {
           {/* Mobile Menu */}
           {menuOpen && (
             <nav className="lg:hidden mt-4 pb-4 flex flex-col gap-4">
-              <Link href="/competitions" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                Competitions
-              </Link>
-              <Link href="/how-it-works" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                How It Works
-              </Link>
-              <Link href="/winners" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                Winners
-              </Link>
-              <Link href="/login" className="text-gray-700 hover:text-[#055F3C] transition-colors">
-                Login
-              </Link>
-              <Link 
-                href="/signup" 
-                className="bg-[#055F3C] text-white px-6 py-2 rounded-lg hover:bg-[#044a2f] transition-colors text-center"
-              >
-                Sign Up
-              </Link>
             </nav>
           )}
         </div>
@@ -154,7 +118,7 @@ export default function JudgingProcessPage() {
       <section className="relative h-[500px] bg-gray-900">
         <div className="absolute inset-0">
           <img 
-            src="/images/judging-motorcycle.jpg" 
+            src="/images/gold-is-money-gold-bars-gold-shop-gold.jpg" 
             alt="Judging Process"
             className="w-full h-full object-cover opacity-70"
             onError={(e) => {
