@@ -247,7 +247,7 @@ export default function HomePage() {
         {/* Background Image with Checkered Pattern Overlay */}
         <div className="absolute inset-0">
           <img 
-            src="/images/contest-background.jpg" 
+            src="/images/about us landing image 1 (1).png" 
             alt="Background"
             className="w-full h-full object-cover"
             onError={(e) => {

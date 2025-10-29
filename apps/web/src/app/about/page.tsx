@@ -315,7 +315,7 @@ export default function AboutPage() {
         {/* Background Image */}
         <div className="absolute inset-0">
           <img 
-            src="/images/hero-car.jpg" 
+            src="/images/hero-car-desktop.jpg" 
             alt="Luxury car on city street"
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -373,7 +373,7 @@ export default function AboutPage() {
             {/* Left - Image */}
             <div className="bg-purple-300 aspect-video rounded-lg overflow-hidden">
               <img 
-                src="/images/cricket-stadium.jpg" 
+                src="/images/image 2276.jpg" 
                 alt="Cricket Stadium"
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -413,7 +413,7 @@ export default function AboutPage() {
             {/* Right - Image */}
             <div className="bg-black aspect-video rounded-lg overflow-hidden">
               <img 
-                src="/images/luxury-watch.jpg" 
+                src="/images/image 2277.jpg" 
                 alt="Luxury Watches"
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -551,7 +551,7 @@ export default function AboutPage() {
                 {/* Gift image placeholder */}
                 <div className="bg-gray-100 aspect-video rounded-lg mb-6 overflow-hidden flex items-center justify-center">
                   <img 
-                    src="/images/gift-tax.jpg" 
+                    src="/images/image 2285.jpg" 
                     alt="Gift with bow"
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -566,168 +566,6 @@ export default function AboutPage() {
                   Bring home your dream prize and gift tax amount, Wishmasters ensures you don't spend an extra dime on your prize
                 </p>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Meet the Team Section */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Header */}
-          <div className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#055F3C] mb-4">
-              Meet the Team Behind Wishmasters
-            </h2>
-            <p className="text-gray-600 max-w-4xl">
-              Wishmasters is built by a passionate team of dreamers, doers, and disruptors—each bringing deep domain expertise across gaming, technology, digital growth, and consumer experience. Together, we're reimagining what skill-based gaming can look like in India and beyond.
-            </p>
-          </div>
-
-          {/* Team Members Carousel */}
-          <div className="relative">
-            {/* Desktop View - Show 4 members at a time */}
-            <div className="hidden lg:grid grid-cols-4 gap-6 mb-8 transition-all duration-500">
-              {getCurrentMembers().map((member, index) => (
-                <div key={`desktop-${currentSlide}-${index}`} className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="aspect-[3/4] bg-gray-200">
-                    <img 
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const colorMap: { [key: string]: string } = {
-                          "#e5e7eb": "#9ca3af",
-                          "#f3e8ff": "#a78bfa",
-                          "#dbeafe": "#60a5fa",
-                          "#fef3c7": "#fcd34d",
-                          "#ccfbf1": "#5eead4",
-                          "#fce7f3": "#f9a8d4",
-                          "#ddd6fe": "#a78bfa"
-                        };
-                        const circleColor = colorMap[member.fallbackColor] || "#9ca3af";
-                        e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"><rect fill="${member.fallbackColor}" width="300" height="400"/><circle cx="150" cy="150" r="60" fill="${circleColor}"/><rect x="90" y="240" width="120" height="160" fill="#374151"/><text x="50%" y="380" text-anchor="middle" fill="#6b7280" font-size="16" font-weight="bold">${member.name}</text></svg>`);
-                      }}
-                    />
-                  </div>
-                  <div className="p-4 border-t-2 border-gray-200">
-                    <p className="text-xs text-gray-500 uppercase mb-1">{member.role}</p>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">{member.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-4">
-                      {member.description}
-                    </p>
-                    <button className="text-[#055F3C] text-sm font-semibold hover:underline">
-                      Read More
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Mobile View - Show 1 member at a time */}
-            <div className="lg:hidden mb-8 transition-all duration-500">
-              <div className="max-w-sm mx-auto">
-                {getCurrentMobileMember().map((member, index) => (
-                  <div key={`mobile-${currentSlide}-${index}`} className="bg-white border-2 border-gray-200 rounded-lg overflow-hidden shadow-lg">
-                    <div className="aspect-[3/4] bg-gray-200">
-                      <img 
-                        src={member.image}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const colorMap: { [key: string]: string } = {
-                            "#e5e7eb": "#9ca3af",
-                            "#f3e8ff": "#a78bfa",
-                            "#dbeafe": "#60a5fa",
-                            "#fef3c7": "#fcd34d",
-                            "#ccfbf1": "#5eead4",
-                            "#fce7f3": "#f9a8d4",
-                            "#ddd6fe": "#a78bfa"
-                          };
-                          const circleColor = colorMap[member.fallbackColor] || "#9ca3af";
-                          e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"><rect fill="${member.fallbackColor}" width="300" height="400"/><circle cx="150" cy="150" r="60" fill="${circleColor}"/><rect x="90" y="240" width="120" height="160" fill="#374151"/><text x="50%" y="380" text-anchor="middle" fill="#6b7280" font-size="16" font-weight="bold">${member.name}</text></svg>`);
-                        }}
-                      />
-                    </div>
-                    <div className="p-4 border-t-2 border-gray-200">
-                      <p className="text-xs text-gray-500 uppercase mb-1">{member.role}</p>
-                      <h3 className="text-lg font-bold text-gray-800 mb-2">{member.name}</h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-4">
-                        {member.description}
-                      </p>
-                      <button className="text-[#055F3C] text-sm font-semibold hover:underline">
-                        Read More
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Navigation Arrows - Desktop (2 slides with 4 members each) */}
-            <div className="hidden lg:flex items-center justify-center gap-4">
-              <button 
-                onClick={handlePrevSlide}
-                className="w-12 h-12 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              
-              {/* Progress Dots */}
-              <div className="flex gap-2">
-                {[...Array(totalSlides)].map((_, index) => (
-                  <div 
-                    key={index}
-                    className={`w-16 h-2 rounded-full transition-colors ${
-                      currentSlide === index ? 'bg-[#055F3C]' : 'bg-gray-300'
-                    }`}
-                  ></div>
-                ))}
-              </div>
-
-              <button 
-                onClick={handleNextSlide}
-                className="w-12 h-12 rounded-full bg-[#055F3C] flex items-center justify-center hover:bg-[#044a2f] transition-colors"
-              >
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Navigation Arrows - Mobile (8 slides with 1 member each) */}
-            <div className="lg:hidden flex items-center justify-center gap-4">
-              <button 
-                onClick={handlePrevSlide}
-                className="w-12 h-12 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              
-              {/* Progress Dots - Show dots for mobile */}
-              <div className="flex gap-1.5">
-                {teamMembers.map((_, index) => (
-                  <div 
-                    key={index}
-                    className={`h-2 rounded-full transition-all ${
-                      currentSlide === index ? 'w-12 bg-[#055F3C]' : 'w-2 bg-gray-300'
-                    }`}
-                  ></div>
-                ))}
-              </div>
-
-              <button 
-                onClick={handleNextSlide}
-                className="w-12 h-12 rounded-full bg-[#055F3C] flex items-center justify-center hover:bg-[#044a2f] transition-colors"
-              >
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
@@ -748,26 +586,12 @@ export default function AboutPage() {
               <p className="text-gray-600 leading-relaxed">
                 Every game played, every ticket purchased actively contributes to this cause—turning every dream fulfilled into a step toward a kinder, more compassionate world.
               </p>
-              
-              {/* Feline Foundation Logo */}
-              <div className="mt-8">
-                <div className="inline-block bg-white px-4 py-3 rounded border border-gray-200">
-                  <img 
-                    src="/images/feline-foundation-logo.png" 
-                    alt="The Feline Foundation"
-                    className="h-12 object-contain"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60"><rect fill="#ffffff" width="200" height="60"/><text x="10" y="35" fill="#000000" font-size="12" font-weight="bold">THE FELINE</text><text x="10" y="50" fill="#000000" font-size="12" font-weight="bold">FOUNDATION</text></svg>');
-                    }}
-                  />
-                </div>
-              </div>
             </div>
 
             {/* Right - Cat Image */}
             <div className="aspect-video md:aspect-[4/3] rounded-lg overflow-hidden shadow-lg">
               <img 
-                src="/images/cat-kitten.jpg" 
+                src="/images/image.jpg" 
                 alt="Cat being held"
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -786,7 +610,7 @@ export default function AboutPage() {
             {/* Left - Range Rover Image */}
             <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
               <img 
-                src="/images/range-rover-hero.jpg" 
+                src="/images/Group 1000004279.png" 
                 alt="Range Rover"
                 className="w-full h-full object-cover"
                 onError={(e) => {

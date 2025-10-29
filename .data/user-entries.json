@@ -167,5 +167,18 @@
     "lastLogoutAt": null,
     "accessCode": "356147",
     "currentPhase": null
+  },
+  {
+    "id": "user-1761718931975-kja0gy9er",
+    "name": "sixtytwo",
+    "phone": "+916262626262",
+    "email": null,
+    "createdAt": "2025-10-29T06:22:11.975Z",
+    "assignedTickets": 2,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-29T07:14:41.253Z",
+    "lastLogoutAt": null,
+    "accessCode": "640014",
+    "currentPhase": null
   }
 ]

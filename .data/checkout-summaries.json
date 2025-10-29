@@ -2315,5 +2315,161 @@
       "totalMarkers": 3,
       "checkoutTime": "2025-10-28T18:10:08.660Z"
     }
+  ],
+  [
+    "test-id:user-1761718931975-kja0gy9er",
+    {
+      "competitionId": "test-id",
+      "participantId": "user-1761718931975-kja0gy9er",
+      "userId": "user-1761718931975-kja0gy9er",
+      "competition": {
+        "id": "test-id",
+        "title": "Gold Coin",
+        "imageUrl": "/images/gold-coin.svg",
+        "pricePerTicket": 500,
+        "markersPerTicket": 3,
+        "status": "ACTIVE"
+      },
+      "participant": {
+        "id": "user-1761718931975-kja0gy9er",
+        "name": "sixtytwo",
+        "phone": "+916262626262",
+        "email": null,
+        "ticketsPurchased": 2
+      },
+      "contactEmail": null,
+      "completed": false,
+      "completedAt": null,
+      "tickets": [
+        {
+          "ticketNumber": 1041,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-0-marker-1",
+              "x": 0.5816,
+              "y": 0.4362,
+              "label": "T1041M1"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-0-marker-2",
+              "x": 0.46,
+              "y": 0.56,
+              "label": "T1041M2"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-0-marker-3",
+              "x": 0.42,
+              "y": 0.62,
+              "label": "T1041M3"
+            }
+          ]
+        },
+        {
+          "ticketNumber": 1043,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-1-marker-1",
+              "x": 0.58,
+              "y": 0.5,
+              "label": "T1043M1"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-1-marker-2",
+              "x": 0.54,
+              "y": 0.56,
+              "label": "T1043M2"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-1-marker-3",
+              "x": 0.5,
+              "y": 0.62,
+              "label": "T1043M3"
+            }
+          ]
+        }
+      ],
+      "totalMarkers": 6,
+      "checkoutTime": "2025-10-29T06:28:37.759Z"
+    }
+  ],
+  [
+    "test-id:user:user-1761718931975-kja0gy9er",
+    {
+      "competitionId": "test-id",
+      "participantId": "user-1761718931975-kja0gy9er",
+      "userId": "user-1761718931975-kja0gy9er",
+      "competition": {
+        "id": "test-id",
+        "title": "Gold Coin",
+        "imageUrl": "/images/gold-coin.svg",
+        "pricePerTicket": 500,
+        "markersPerTicket": 3,
+        "status": "ACTIVE"
+      },
+      "participant": {
+        "id": "user-1761718931975-kja0gy9er",
+        "name": "sixtytwo",
+        "phone": "+916262626262",
+        "email": null,
+        "ticketsPurchased": 2
+      },
+      "contactEmail": null,
+      "completed": false,
+      "completedAt": null,
+      "tickets": [
+        {
+          "ticketNumber": 1041,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-0-marker-1",
+              "x": 0.5816,
+              "y": 0.4362,
+              "label": "T1041M1"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-0-marker-2",
+              "x": 0.46,
+              "y": 0.56,
+              "label": "T1041M2"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-0-marker-3",
+              "x": 0.42,
+              "y": 0.62,
+              "label": "T1041M3"
+            }
+          ]
+        },
+        {
+          "ticketNumber": 1043,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-1-marker-1",
+              "x": 0.58,
+              "y": 0.5,
+              "label": "T1043M1"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-1-marker-2",
+              "x": 0.54,
+              "y": 0.56,
+              "label": "T1043M2"
+            },
+            {
+              "id": "ticket-user-1761718931975-kja0gy9er-1-marker-3",
+              "x": 0.5,
+              "y": 0.62,
+              "label": "T1043M3"
+            }
+          ]
+        }
+      ],
+      "totalMarkers": 6,
+      "checkoutTime": "2025-10-29T06:28:37.759Z"
+    }
   ]
 ]
