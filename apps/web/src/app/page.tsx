@@ -388,10 +388,10 @@ export default function HomePage() {
 
               <ul className="space-y-3 text-white/90 mb-6">
                 <li>• Enter the <strong>Qualification Round</strong></li>
-                <li>• You'll be shown <strong>10 images</strong> — your task is to <strong>Spot the Ball</strong> in each image</li>
-                <li>• Pick the block where you think the ball is</li>
-                <li>• After every selection, see the correct answer</li>
-                <li>• <strong>Score 6 or more correct answers</strong> to qualify for the main contest</li>
+                <li>• You’ll receive tickets with a fixed number of <strong>markers</strong> to place on a single image</li>
+                <li>• Drag, adjust and <strong>lock</strong> each marker where you think the ball should be</li>
+                <li>• Place all required markers, then <strong>proceed to checkout</strong> to confirm your entry</li>
+                <li>• Winners are decided by how close your markers are to the <strong>judge’s</strong> position</li>
               </ul>
 
               <p className="text-white/90">

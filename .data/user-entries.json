@@ -1,18 +1,5 @@
 [
   {
-    "id": "user-5",
-    "name": "Vikram Singh",
-    "phone": "9876543214",
-    "email": "vikram@example.com",
-    "accessCode": "567890",
-    "currentPhase": 3,
-    "isLoggedIn": true,
-    "lastLoginAt": "2025-10-26T04:00:00.000Z",
-    "lastLogoutAt": null,
-    "assignedTickets": 0,
-    "createdAt": "2025-10-24T11:15:00.000Z"
-  },
-  {
     "id": "user-1761645213358-25i4wwyev",
     "name": "grt",
     "phone": "+913434343434",
@@ -23,32 +10,6 @@
     "lastLoginAt": "2025-10-28T14:30:52.630Z",
     "lastLogoutAt": null,
     "accessCode": "323026",
-    "currentPhase": null
-  },
-  {
-    "id": "user-1761645550146-gwnq3nwl1",
-    "name": "Test User 152909",
-    "phone": "916663749002",
-    "email": null,
-    "createdAt": "2025-10-28T09:59:10.146Z",
-    "assignedTickets": 0,
-    "isLoggedIn": true,
-    "lastLoginAt": "2025-10-28T09:59:10.146Z",
-    "lastLogoutAt": null,
-    "accessCode": "917592",
-    "currentPhase": null
-  },
-  {
-    "id": "user-1761645726869-wx37kob2f",
-    "name": "Test User 153206",
-    "phone": "916734066307",
-    "email": null,
-    "createdAt": "2025-10-28T10:02:06.869Z",
-    "assignedTickets": 0,
-    "isLoggedIn": true,
-    "lastLoginAt": "2025-10-28T10:02:06.869Z",
-    "lastLogoutAt": null,
-    "accessCode": "121417",
     "currentPhase": null
   },
   {
@@ -179,6 +140,58 @@
     "lastLoginAt": "2025-10-29T07:14:41.253Z",
     "lastLogoutAt": null,
     "accessCode": "640014",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761742302664-tn15pkrtq",
+    "name": "eighty",
+    "phone": "+918080808080",
+    "email": null,
+    "createdAt": "2025-10-29T12:51:42.664Z",
+    "assignedTickets": 2,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-29T12:52:54.513Z",
+    "lastLogoutAt": null,
+    "accessCode": "276877",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761742893975-0nu58hy21",
+    "name": "fortyone",
+    "phone": "+914141414141",
+    "email": null,
+    "createdAt": "2025-10-29T13:01:33.975Z",
+    "assignedTickets": 3,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-29T13:02:32.713Z",
+    "lastLogoutAt": null,
+    "accessCode": "949858",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761743552569-bf5xta48j",
+    "name": "onethree",
+    "phone": "+911313131313",
+    "email": null,
+    "createdAt": "2025-10-29T13:12:32.569Z",
+    "assignedTickets": 2,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-29T13:13:25.551Z",
+    "lastLogoutAt": null,
+    "accessCode": "101088",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1761746500811-1k5d4k9hp",
+    "name": "thirtyone",
+    "phone": "+913131313131",
+    "email": null,
+    "createdAt": "2025-10-29T14:01:40.811Z",
+    "assignedTickets": 5,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-10-29T14:03:09.443Z",
+    "lastLogoutAt": null,
+    "accessCode": "818407",
     "currentPhase": null
   }
 ]

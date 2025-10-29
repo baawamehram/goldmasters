@@ -243,7 +243,7 @@ export default function CompetitionPage() {
               {
                 question: 'Is this a legitimate opportunity?',
                 answer:
-                  "Yes. Wishmasters operates within India's skill-gaming guidelines and each contest is audited by independent legal partners to keep everything transparent.",
+                  "Yes. Wishmasters operates within Country's skill-gaming guidelines and each contest is audited by independent legal partners to keep everything transparent.",
               },
               {
                 question: 'How do I enter a wishmasters contest? Masumi Parmar',

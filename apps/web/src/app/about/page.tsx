@@ -50,7 +50,7 @@ export default function AboutPage() {
       name: "Manjot Singh",
       role: "CO-FOUNDER AND BUSINESS HEAD",
       image: "/images/team/manjot-singh.jpg",
-      description: "Manjot's entrepreneurial journey began with BOTB UK, where he played a pivotal role before launching BOTB India in 2014. Under his leadership, the company achieved 3 consecutive years, declaring over 15 winners and pioneering the \"Spot the Ball\"...",
+  description: "Manjot's entrepreneurial journey began with BOTB UK, where he played a pivotal role before launching BOTB Country in 2014. Under his leadership, the company achieved 3 consecutive years, declaring over 15 winners and pioneering the \"Spot the Ball\"...",
       fallbackColor: "#e5e7eb"
     },
     {
@@ -509,7 +509,7 @@ export default function AboutPage() {
               
               <div className="space-y-6 text-white/90">
                 <p>
-                  Wishmasters is the first of our kind in India.
+                  Wishmasters is the first of our kind in Country.
                 </p>
                 <p>
                   Through our unique skill based approach and the limited odds system, we ensure that your luck is in your hands and you can control your chances.
@@ -581,7 +581,7 @@ export default function AboutPage() {
                 Impact At Wishmasters
               </h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                At Wishmasters we are deeply committed to compassion and animal welfare, because we believe this world is meant to be shared with all life. As part of our unwavering commitment, we've partnered with The Feline Foundation to support the wellbeing of cats and dogs across India.
+                At Wishmasters we are deeply committed to compassion and animal welfare, because we believe this world is meant to be shared with all life. As part of our unwavering commitment, we've partnered with The Feline Foundation to support the wellbeing of cats and dogs across Country.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 Every game played, every ticket purchased actively contributes to this cause—turning every dream fulfilled into a step toward a kinder, more compassionate world.

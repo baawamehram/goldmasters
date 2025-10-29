@@ -541,6 +541,23 @@ export default function EnterCompetitionPage() {
     router.push(`/competition/${id}/checkout`);
   }, [allMarkersPlaced, checkoutMarkersKey, id, markers, participantToken, router]);
 
+  const handleUndo = useCallback(() => {
+    setParticipantError(null);
+    const canvasHandle = markerCanvasRef.current;
+    if (!canvasHandle || typeof canvasHandle.undoLastPlacement !== 'function') return;
+    const undone = canvasHandle.undoLastPlacement();
+    if (undone) {
+      setSubmissionMessage('Last marker unlocked. Adjust and place again.');
+    }
+  }, []);
+
+  // Auto-dismiss the placement toast after a short delay so it feels professional
+  useEffect(() => {
+    if (!submissionMessage) return;
+    const timer = setTimeout(() => setSubmissionMessage(null), 1600); // ~1.6s
+    return () => clearTimeout(timer);
+  }, [submissionMessage]);
+
   if (isChecking) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -600,7 +617,7 @@ export default function EnterCompetitionPage() {
         </div>
 
         {/* Main Canvas Area - Fullscreen Phase Image */}
-        <div className="flex-1 relative bg-[#0E1C1F] overflow-hidden">
+  <div className="flex-1 relative bg-[#0E1C1F] overflow-hidden">
 
           {/* Ticket Counter - shown if tickets are available */}
           {placementSummary.totalCount > 0 && (
@@ -632,28 +649,40 @@ export default function EnterCompetitionPage() {
               </div>
             </div>
           )}
+
+          {/* Toast was moved to bottom control bar to avoid covering the image */}
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="bg-[#00563F] p-4 flex-shrink-0">
+        <div className="relative bg-[#00563F] p-4 flex-shrink-0">
+          {/* Professional toast inside the control bar (no layout shift, not on image) */}
           {submissionMessage && (
-            <div className="mb-3 bg-emerald-500 text-white text-xs rounded-lg px-3 py-2 text-center">
-              {submissionMessage}
+            <div
+              role="status"
+              aria-live="polite"
+              className="pointer-events-none absolute left-1/2 top-2 -translate-x-1/2 z-30"
+            >
+              <div className="flex items-center gap-2 rounded-full bg-emerald-600/95 text-white px-4 py-2 shadow-xl border border-white/10 backdrop-blur-sm text-xs font-medium">
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/20">✓</span>
+                <span>{submissionMessage}</span>
+              </div>
             </div>
           )}
+          {/* Controls remain stable height; feedback shown as floating toast above */}
           
           <div className="flex items-center justify-between gap-3 mb-3">
-            {/* Settings Icon */}
-            <button 
-              onClick={() => {
-                const info = `Competition: ${competition.title}\nPhase: ${currentPhase} (${phaseStatus})\nMarkers per ticket: ${competition.markersPerTicket}`;
-                alert(info);
-              }}
-              className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+            {/* Undo button (replaces settings) */}
+            <button
+              onClick={handleUndo}
+              disabled={placementSummary.placedCount === 0}
+              className="w-10 h-10 flex items-center justify-center rounded-lg transition-all bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Undo last placement"
+              title={placementSummary.placedCount === 0 ? 'Nothing to undo' : 'Undo last placement'}
             >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                {/* Curved undo arrow (uturn-left style) */}
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7.5 15.75l-4.5-4.5 4.5-4.5" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 11.25h10.5a4.5 4.5 0 010 9H12" />
               </svg>
             </button>
 
@@ -669,25 +698,35 @@ export default function EnterCompetitionPage() {
               </svg>
             </button>
 
-            {/* Share Icon */}
-            <button 
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: competition.title,
-                    text: `Join ${competition.title} competition!`,
-                    url: window.location.href,
-                  });
-                } else {
-                  alert('Share this link:\n' + window.location.href);
-                }
-              }}
-              className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all"
-            >
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
+            {/* Zoom controls (replace share) */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const h = markerCanvasRef.current;
+                  if (h && typeof h.zoomOut === 'function') h.zoomOut();
+                }}
+                className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+                aria-label="Zoom out"
+                title="Zoom out"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  const h = markerCanvasRef.current;
+                  if (h && typeof h.zoomIn === 'function') h.zoomIn();
+                }}
+                className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-lg hover:bg-white/20 transition-all"
+                aria-label="Zoom in"
+                title="Zoom in"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {placementSummary.totalCount > 0 && (

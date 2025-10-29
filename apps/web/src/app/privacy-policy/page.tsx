@@ -46,7 +46,7 @@ const securityHighlights = [
   {
     title: "Regional Hosting",
     copy:
-      "Infrastructure is hosted within India with automated backups to honour local data regulations.",
+      "Infrastructure is hosted within Country with automated backups to honour local data regulations.",
   },
   {
     title: "Human + Automated Reviews",
@@ -83,7 +83,7 @@ export default function PrivacyPolicyPage() {
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-300" aria-hidden />
-              Jurisdiction: India (Information Technology Act, 2000)
+              Jurisdiction: Country (Information Technology Act, 2000)
             </span>
           </div>
         </div>

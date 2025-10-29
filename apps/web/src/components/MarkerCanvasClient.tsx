@@ -47,6 +47,9 @@ interface Ticket {
 export interface MarkerCanvasHandle {
   placeCurrentMarker: () => { placed: boolean; hasMore: boolean };
   getActiveMarker: () => Marker | null;
+  undoLastPlacement: () => boolean;
+  zoomIn: () => void;
+  zoomOut: () => void;
 }
 
 interface MarkerCanvasClientProps {
@@ -86,6 +89,8 @@ function MarkerCanvasClient(
   const containerRef = useRef<HTMLDivElement>(null);
   const imageAreaRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Marker[]>([]);
+  const placementHistoryRef = useRef<Array<{ placedId: string; nextActivatedId: string | null }>>([]);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
 
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -356,6 +361,8 @@ function MarkerCanvasClient(
             return prev;
           }
 
+          const placedId = prev[activeIndex]?.id ?? '';
+
           const updated = prev.map((marker, index) => {
             if (index === activeIndex) {
               placed = true;
@@ -367,12 +374,18 @@ function MarkerCanvasClient(
           const nextPendingIndex = updated.findIndex((marker) => marker.state === 'pending');
           if (nextPendingIndex !== -1) {
             hasMore = true;
+            const nextActivatedId = updated[nextPendingIndex]?.id ?? null;
             updated[nextPendingIndex] = {
               ...updated[nextPendingIndex],
               locked: false,
               state: 'active' as const,
               isVisible: true,
             };
+            // Record history for undo
+            placementHistoryRef.current.push({ placedId, nextActivatedId });
+          } else {
+            // No next marker; still record the placedId with null nextActivatedId
+            placementHistoryRef.current.push({ placedId, nextActivatedId: null });
           }
 
           markersRef.current = updated;
@@ -383,6 +396,35 @@ function MarkerCanvasClient(
       },
       getActiveMarker: () => {
         return markersRef.current.find((marker) => marker.state === 'active') ?? null;
+      },
+      undoLastPlacement: () => {
+        const history = placementHistoryRef.current;
+        if (!history.length) return false;
+        const { placedId, nextActivatedId } = history.pop()!;
+        let undone = false;
+
+        setMarkers((prev) => {
+          const updated = prev.map((m) => {
+            if (m.id === placedId && m.state === 'placed') {
+              undone = true;
+              return { ...m, locked: false, state: 'active' as const, isVisible: true };
+            }
+            if (nextActivatedId && m.id === nextActivatedId && m.state === 'active') {
+              return { ...m, locked: true, state: 'pending' as const, isVisible: true };
+            }
+            return m;
+          });
+          markersRef.current = updated;
+          return updated;
+        });
+
+        return undone;
+      },
+      zoomIn: () => {
+        setZoomLevel((z) => Math.min(3, Math.round((z + 0.5) * 10) / 10));
+      },
+      zoomOut: () => {
+        setZoomLevel((z) => Math.max(1, Math.round((z - 0.5) * 10) / 10));
       },
     })
   );
@@ -438,6 +480,7 @@ function MarkerCanvasClient(
                   left,
                   top,
                   touchAction: 'none',
+                  zIndex: isActive ? 30 : 5,
                 }}
               >
                 <button
@@ -458,18 +501,106 @@ function MarkerCanvasClient(
                     className="absolute left-0 top-1/2 h-[2px] w-full -translate-y-1/2"
                     style={{ backgroundColor: displayColor, opacity: marker.locked && !isActive ? 0.7 : 1 }}
                   ></span>
-                  <span className="absolute -top-5 text-[10px] font-semibold text-white drop-shadow-sm">
-                    {marker.label}
-                  </span>
+                  {showPanels && (
+                    <span className="absolute -top-5 text-[10px] font-semibold text-white drop-shadow-sm">
+                      {marker.label}
+                    </span>
+                  )}
                 </button>
-                <div
-                  className="absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded bg-black/70 px-2 py-[2px] text-[10px] font-medium text-white"
-                >
-                  X {coordX.toFixed(1)} • Y {coordY.toFixed(1)}
-                </div>
+                {showPanels && (
+                  <div
+                    className="absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded bg-black/70 px-2 py-[2px] text-[10px] font-medium text-white"
+                  >
+                    X {coordX.toFixed(1)} • Y {coordY.toFixed(1)}
+                  </div>
+                )}
               </div>
             );
           })}
+
+          {/* Full-length guide lines for the ACTIVE marker to aid mobile placement */}
+          {(() => {
+            const active = markers.find((m) => m.state === 'active');
+            if (!active) return null;
+            const left = toPixels(active.x, 'x');
+            const top = toPixels(active.y, 'y');
+            const guideColor = 'rgba(16, 185, 129, 0.8)'; // emerald-500 with opacity
+            const guideSoft = 'rgba(16, 185, 129, 0.25)';
+            return (
+              <div className="pointer-events-none absolute inset-0 z-20">
+                {/* Vertical guide (soft glow) */}
+                <div
+                  className="absolute"
+                  style={{ left: left - 1, top: 0, width: 2, height: '100%', backgroundColor: guideSoft }}
+                />
+                {/* Vertical guide (crisp line) */}
+                <div
+                  className="absolute"
+                  style={{ left, top: 0, width: 1, height: '100%', backgroundColor: guideColor }}
+                />
+                {/* Horizontal guide (soft glow) */}
+                <div
+                  className="absolute"
+                  style={{ left: 0, top: top - 1, width: '100%', height: 2, backgroundColor: guideSoft }}
+                />
+                {/* Horizontal guide (crisp line) */}
+                <div
+                  className="absolute"
+                  style={{ left: 0, top, width: '100%', height: 1, backgroundColor: guideColor }}
+                />
+                {/* Subtle target ring at intersection */}
+                <div
+                  className="absolute rounded-full border"
+                  style={{
+                    left: left - 12,
+                    top: top - 12,
+                    width: 24,
+                    height: 24,
+                    borderColor: guideColor,
+                    boxShadow: `0 0 0 3px ${guideSoft}`,
+                  }}
+                />
+              </div>
+            );
+          })()}
+
+          {/* Magnifier lens centered on active marker when zoom > 1 */}
+          {(() => {
+            if (!imageLoaded || !imageUrl || zoomLevel <= 1) return null;
+            const active = markers.find((m) => m.state === 'active');
+            if (!active) return null;
+            const left = toPixels(active.x, 'x');
+            const top = toPixels(active.y, 'y');
+            const lensSize = Math.min(180, Math.max(120, containerWidth * 0.22));
+            const bgWidth = containerWidth * zoomLevel;
+            const bgHeight = containerWidth * TARGET_RATIO * zoomLevel;
+            const bgPosX = lensSize / 2 - left * zoomLevel;
+            const bgPosY = lensSize / 2 - top * zoomLevel;
+            return (
+              <div
+                className="pointer-events-none absolute z-30 rounded-full overflow-hidden"
+                style={{
+                  left: left - lensSize / 2,
+                  top: top - lensSize / 2,
+                  width: lensSize,
+                  height: lensSize,
+                  boxShadow: '0 6px 24px rgba(0,0,0,0.35)'
+                }}
+              >
+                <div
+                  style={{
+                    width: lensSize,
+                    height: lensSize,
+                    backgroundImage: `url(${imageUrl})`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: `${bgWidth}px ${bgHeight}px`,
+                    backgroundPosition: `${bgPosX}px ${bgPosY}px`,
+                    border: '2px solid rgba(255,255,255,0.9)'
+                  }}
+                />
+              </div>
+            );
+          })()}
 
           {!imageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60 text-white text-sm">
