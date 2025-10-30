@@ -1,6 +1,7 @@
-# Wishmasters Spot-the-Ball - Frontend
+````markdown
+# Goldmasters Spot-the-Ball - Frontend
 
-Next.js frontend application for the Wishmasters Spot-the-Ball competition platform.
+Next.js frontend application for the Goldmasters Spot-the-Ball competition platform.
 
 ## 🚀 Tech Stack
 

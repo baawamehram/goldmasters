@@ -16,10 +16,10 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Wishmasters Spot-the-Ball | Private Competition Platform",
-  description: "Invite-only spot-the-ball competition platform. Test your skills and win prizes.",
-  keywords: ["spot-the-ball", "competition", "wishmasters", "skill game"],
-  authors: [{ name: "Wishmasters" }],
+  title: "Goldmasters Spot-the-Ball | Private Competition Platform",
+  description: "Goldmasters - Spot-the-Ball Competition Platform",
+  keywords: ["spot-the-ball", "competition", "goldmasters", "skill game"],
+  authors: [{ name: "Goldmasters" }],
 };
 
 export const viewport: Viewport = {

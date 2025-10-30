@@ -17,7 +17,7 @@ const policySections = [
   {
     title: "How We Use Your Data",
     description:
-      "Wishmasters uses your information to keep contests fair, compliant, and rewarding.",
+      "Goldmasters uses your information to keep contests fair, compliant, and rewarding.",
     bullets: [
       "Authenticate you securely so only you can access your dashboard and tickets.",
       "Deliver contest updates, qualification results, and winner announcements you opt into.",
@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-5xl mx-auto px-6 py-16">
           <p className="text-sm uppercase tracking-widest text-white/70 mb-3">Privacy Policy</p>
           <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
-            Your trust powers every Wishmasters contest
+            Your trust powers every Goldmasters contest
           </h1>
           <p className="max-w-3xl text-white/80 text-base md:text-lg">
             We are committed to keeping your information private, compliant, and used only to craft
@@ -130,7 +130,7 @@ export default function PrivacyPolicyPage() {
         <section className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-100">
           <h2 className="text-2xl font-semibold text-[#055F3C] mb-4">Your controls & rights</h2>
           <p className="text-sm text-gray-700 mb-6">
-            You are always in charge. Reach out to privacy@wishmasters.in or submit a support ticket from your
+            You are always in charge. Reach out to privacy@goldmasters.in or submit a support ticket from your
             dashboard and we will action requests within 15 working days.
           </p>
           <ul className="space-y-3 text-sm text-gray-700">
@@ -155,12 +155,12 @@ export default function PrivacyPolicyPage() {
         <section className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-100">
           <h2 className="text-2xl font-semibold text-[#055F3C] mb-4">Staying accountable</h2>
           <p className="text-sm text-gray-700 mb-4">
-            Wishmasters is operated by Wishmasters Gaming Private Limited. We appoint an internal Data Protection
+            Goldmasters is operated by Goldmasters Gaming Private Limited. We appoint an internal Data Protection
             Officer and engage external counsel to make sure this policy reflects evolving regulations and our own
             promise of transparency.
           </p>
           <div className="space-y-2 text-sm text-gray-700">
-            <p><strong>Grievance officer:</strong> Ms. Riya Bhatia (dpo@wishmasters.in)</p>
+            <p><strong>Grievance officer:</strong> Ms. Riya Bhatia (dpo@goldmasters.in)</p>
             <p><strong>Registered office:</strong> 702, Bandra Kurla Complex, Mumbai 400051</p>
             <p><strong>Office hours:</strong> Monday – Friday, 10:00 AM to 6:00 PM IST</p>
           </div>

@@ -71,7 +71,7 @@ export default function HomePage() {
             <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <h1 className="text-xl font-bold tracking-wider">WISHMASTERS</h1>
+            <h1 className="text-xl font-bold tracking-wider">GOLDMASTERS</h1>
           </div>
 
           {/* Desktop Navigation */}
@@ -282,7 +282,7 @@ export default function HomePage() {
                   HOW TO PLAY
                 </h2>
                 <h3 className="text-2xl font-bold mb-4 leading-tight">
-                  Welcome to Wishmasters —<br />
+                  Welcome to Goldmasters —<br />
                   premier real-money skill<br />
                   gaming platform.
                 </h3>
@@ -348,7 +348,7 @@ export default function HomePage() {
                     Create Your Account
                   </h3>
                   <ul className="text-gray-700 text-sm space-y-2">
-                    <li>• Visit wishmasters.in</li>
+                    <li>• Visit goldmasters.in</li>
                     <li>• Sign up and set up your player profile</li>
                     <li>• Choose the <strong>contest</strong> you'd like to participate in</li>
                     <li>• Read the <strong>contest details</strong> carefully — every game is unique!</li>
@@ -531,7 +531,7 @@ export default function HomePage() {
               </div>
 
               <ul className="space-y-2 text-gray-700">
-                <li>• Winners are contacted personally and shown their prize in a Wishmasters reveal</li>
+                <li>• Winners are contacted personally and shown their prize in a Goldmasters reveal</li>
                 <li>• Prizes include luxury watches, bikes, cars, and exclusive experiences</li>
                 <li>• No gift tax — we cover it!</li>
                 <li>• Watch our social channels to see winners' reactions and stories</li>
@@ -601,7 +601,7 @@ export default function HomePage() {
         {/* Copyright */}
         <div className="border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-6 py-4 text-center text-sm text-gray-400">
-            © 2024 Wishmasters, Inc. All rights reserved.
+            © 2024 Goldmasters, Inc. All rights reserved.
           </div>
         </div>
       </footer>

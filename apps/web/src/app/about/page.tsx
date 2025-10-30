@@ -57,21 +57,21 @@ export default function AboutPage() {
       name: "Nabeel Merchant",
       role: "CO-FOUNDER AND MARKETING DIRECTOR",
       image: "/images/team/nabeel-merchant.jpg",
-      description: "At Wishmasters, Nabeel brings his sharp operational acumen and passion for innovation to co-lead the brand's mission—creating a groundbreaking, skill-driven real-money gaming platform rooted in purpose and possibility...",
+      description: "At Goldmasters, Nabeel brings his sharp operational acumen and passion for innovation to co-lead the brand's mission—creating a groundbreaking, skill-driven real-money gaming platform rooted in purpose and possibility...",
       fallbackColor: "#f3e8ff"
     },
     {
       name: "Tufayl Merchant",
       role: "LEADERSHIP",
       image: "/images/team/tufayl-merchant.jpg",
-      description: "Tufayl's strength lies in building operational systems that are agile, transparent, and built for trust—core pillars of the Wishmasters philosophy. With unwavering focus and empathy, Tufayl is instrumental in delivering on the brand's promise...",
+      description: "Tufayl's strength lies in building operational systems that are agile, transparent, and built for trust—core pillars of the Goldmasters philosophy. With unwavering focus and empathy, Tufayl is instrumental in delivering on the brand's promise...",
       fallbackColor: "#f3e8ff"
     },
     {
       name: "Rahul Kirpalani",
       role: "OPERATIONS AND PLANNING HEAD",
       image: "/images/team/rahul-kirpalani.jpg",
-      description: "Rahul Kirpalani leads product strategy at Wishmasters, where he is focused on crafting a seamless, intuitive, and emotionally rewarding experience for every participant. With a deep understanding of user behavior and game mechanics...",
+      description: "Rahul Kirpalani leads product strategy at Goldmasters, where he is focused on crafting a seamless, intuitive, and emotionally rewarding experience for every participant. With a deep understanding of user behavior and game mechanics...",
       fallbackColor: "#dbeafe"
     },
     {
@@ -85,21 +85,21 @@ export default function AboutPage() {
       name: "Team Member 6",
       role: "HEAD OF TECHNOLOGY",
       image: "/images/team/member6.jpg",
-      description: "Leading the technical vision and infrastructure development at Wishmasters. Focused on building scalable, secure, and innovative solutions for our platform...",
+      description: "Leading the technical vision and infrastructure development at Goldmasters. Focused on building scalable, secure, and innovative solutions for our platform...",
       fallbackColor: "#ccfbf1"
     },
     {
       name: "Team Member 7",
       role: "CREATIVE DIRECTOR",
       image: "/images/team/member7.jpg",
-      description: "Driving the creative vision and brand identity of Wishmasters. Committed to delivering exceptional user experiences through thoughtful design and storytelling...",
+      description: "Driving the creative vision and brand identity of Goldmasters. Committed to delivering exceptional user experiences through thoughtful design and storytelling...",
       fallbackColor: "#fce7f3"
     },
     {
       name: "Team Member 8",
       role: "CUSTOMER SUCCESS LEAD",
       image: "/images/team/member8.jpg",
-      description: "Dedicated to ensuring every customer has an exceptional experience with Wishmasters. Building lasting relationships and fostering a community of satisfied users...",
+      description: "Dedicated to ensuring every customer has an exceptional experience with Goldmasters. Building lasting relationships and fostering a community of satisfied users...",
       fallbackColor: "#ddd6fe"
     }
   ];
@@ -169,7 +169,7 @@ export default function AboutPage() {
             <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
-            <h1 className="text-xl font-bold tracking-wider">WISHMASTERS</h1>
+            <h1 className="text-xl font-bold tracking-wider">GOLDMASTERS</h1>
           </div>
 
           {/* Desktop Navigation */}
@@ -348,7 +348,7 @@ export default function AboutPage() {
                 Our Vision
               </h2>
               <h3 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
-                Wishmasters exists to elevate the gaming experience
+                Goldmasters exists to elevate the gaming experience
               </h3>
               <p className="text-white/90 text-base leading-relaxed">
                 through curated dream rewards, expert-audited competitions, and a fair-play ethos. Rooted in cricket culture and global entertainment, we turn aspirations into achievements—while pledging a part of our success to the welfare of animals.
@@ -389,7 +389,7 @@ export default function AboutPage() {
                 <span className="text-[#055F3C]">of the Nation.</span>
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                It's more than a religion and flexing your cricket prowess to win the prize of a lifetime is the dream that Wishmasters wants to offer all it's contestants
+                It's more than a religion and flexing your cricket prowess to win the prize of a lifetime is the dream that Goldmasters wants to offer all it's contestants
               </p>
             </div>
           </div>
@@ -433,10 +433,10 @@ export default function AboutPage() {
               <span className="text-[#055F3C]">Our Key Values</span>
             </h2>
             <p className="text-sm text-gray-500 uppercase tracking-wide mb-4">
-              THAT WISHMASTERS WILL ALWAYS LIVE BY
+              THAT GOLDMASTERS WILL ALWAYS LIVE BY
             </p>
             <p className="text-gray-600 leading-relaxed">
-              At Wishmasters, we are built on trust, driven by transparency, guided by ethics, and committed to welfare—ensuring every game uplifts, every win is fair, and every step creates a positive impact.
+              At Goldmasters, we are built on trust, driven by transparency, guided by ethics, and committed to welfare—ensuring every game uplifts, every win is fair, and every step creates a positive impact.
             </p>
           </div>
 
@@ -504,12 +504,12 @@ export default function AboutPage() {
                 Game-Changers
               </h2>
               <p className="text-sm uppercase tracking-wide mb-6 text-white/80">
-                OF WISHMASTERS
+                OF GOLDMASTERS
               </p>
               
               <div className="space-y-6 text-white/90">
                 <p>
-                  Wishmasters is the first of our kind in Country.
+                  Goldmasters is the first of our kind in Country.
                 </p>
                 <p>
                   Through our unique skill based approach and the limited odds system, we ensure that your luck is in your hands and you can control your chances.
@@ -563,7 +563,7 @@ export default function AboutPage() {
                   Gift Tax Credited
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Bring home your dream prize and gift tax amount, Wishmasters ensures you don't spend an extra dime on your prize
+                  Bring home your dream prize and gift tax amount, Goldmasters ensures you don't spend an extra dime on your prize
                 </p>
               </div>
             </div>
@@ -571,17 +571,17 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Impact At Wishmasters Section */}
+      {/* Impact At Goldmasters Section */}
       <section className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             {/* Left - Text Content */}
             <div className="bg-white p-8 md:p-12 rounded-lg shadow-lg">
               <h2 className="text-3xl md:text-4xl font-bold text-[#055F3C] mb-6">
-                Impact At Wishmasters
+                Impact At Goldmasters
               </h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                At Wishmasters we are deeply committed to compassion and animal welfare, because we believe this world is meant to be shared with all life. As part of our unwavering commitment, we've partnered with The Feline Foundation to support the wellbeing of cats and dogs across Country.
+                At Goldmasters we are deeply committed to compassion and animal welfare, because we believe this world is meant to be shared with all life. As part of our unwavering commitment, we've partnered with The Feline Foundation to support the wellbeing of cats and dogs across Country.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 Every game played, every ticket purchased actively contributes to this cause—turning every dream fulfilled into a step toward a kinder, more compassionate world.
@@ -622,7 +622,7 @@ export default function AboutPage() {
             {/* Right - CTA Content */}
             <div className="bg-[#055F3C] text-white p-8 md:p-12 rounded-lg">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Allow Wishmasters to turn your wishes into your reality
+                Allow Goldmasters to turn your wishes into your reality
               </h2>
               <button 
                 onClick={() => router.push('/')}
@@ -663,7 +663,7 @@ export default function AboutPage() {
         {/* Copyright */}
         <div className="border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-6 py-4 text-center text-sm text-gray-400">
-            © 2024 Wishmasters, Inc. All rights reserved.
+            © 2024 Goldmasters, Inc. All rights reserved.
           </div>
         </div>
       </footer>

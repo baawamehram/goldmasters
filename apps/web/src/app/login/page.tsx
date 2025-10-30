@@ -225,7 +225,7 @@ export default function ParticipantLoginPage() {
           <div className="mb-10 text-center">
             <div className="inline-flex items-center justify-center gap-1.5">
               <span className="text-3xl font-extrabold tracking-[0.25em] text-[#055F3C]">
-                WISH
+                GOLD
               </span>
               <span className="relative inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-[#055F3C] to-[#0a8f5a] text-white text-lg font-bold shadow-md">
                 ★

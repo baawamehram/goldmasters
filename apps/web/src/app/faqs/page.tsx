@@ -22,7 +22,7 @@ export default function FaqsPage() {
       <div className="max-w-6xl mx-auto px-4 py-16">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-[#055F3C]">THE COMPETITION — OFFICIAL FAQ</h1>
-          <p className="mt-3 text-gray-600">All the commonly asked questions about Wishmasters and how contests work.</p>
+          <p className="mt-3 text-gray-600">All the commonly asked questions about Goldmasters and how contests work.</p>
         </header>
 
         <div className="bg-white rounded-lg shadow-sm">

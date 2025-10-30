@@ -1,8 +1,8 @@
 {
-  "name": "wishmasters-spotball",
+  "name": "goldmasters-spotball",
   "version": "1.0.0",
   "private": true,
-  "description": "Wishmasters Spot-the-Ball Competition Platform",
+  "description": "Goldmasters Spot-the-Ball Competition Platform",
   "scripts": {
     "dev": "pnpm --filter web dev",
     "dev:web": "pnpm --filter web dev",

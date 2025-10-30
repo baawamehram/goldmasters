@@ -71,7 +71,7 @@ export default function CompetitionsPage() {
               onClick={() => handleNavigate('/')}
               className="text-xl font-bold tracking-wider hover:text-yellow-400 transition-colors"
             >
-              WISHMASTERS
+              GOLDMASTERS
             </button>
           </div>
 
@@ -320,7 +320,7 @@ export default function CompetitionsPage() {
 
         <div className="border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-6 py-4 text-center text-sm text-gray-400">
-            © 2024 Wishmasters, Inc. All rights reserved.
+            © 2024 Goldmasters, Inc. All rights reserved.
           </div>
         </div>
       </footer>

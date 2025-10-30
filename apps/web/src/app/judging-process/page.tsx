@@ -83,7 +83,7 @@ export default function JudgingProcessPage() {
           <div className="flex justify-between items-center">
             {/* Logo */}
             <Link href="/" className="text-2xl font-bold text-[#055F3C]">
-              WISHMASTERS
+              GOLDMASTERS
             </Link>
 
             {/* Desktop Navigation */}
@@ -130,7 +130,7 @@ export default function JudgingProcessPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent">
           <div className="max-w-7xl mx-auto px-6 h-full flex flex-col justify-center">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Judging Process at<br />Wishmasters
+              Judging Process at<br />Goldmasters
             </h1>
             
             <div className="space-y-2 text-white/90">
@@ -155,7 +155,7 @@ export default function JudgingProcessPage() {
             </div>
 
             <p className="mt-6 text-white/80 max-w-xl">
-              At Wishmasters, trust is everything. That's why we've crafted a multi-stage, independently verified judging system that brings you closer to your dream with complete fairness, integrity, and transparency.
+              At Goldmasters, trust is everything. That's why we've crafted a multi-stage, independently verified judging system that brings you closer to your dream with complete fairness, integrity, and transparency.
             </p>
           </div>
         </div>
@@ -418,7 +418,7 @@ export default function JudgingProcessPage() {
         {/* Copyright */}
         <div className="border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-6 py-4 text-center text-sm text-gray-400">
-            © 2024 Wishmasters, Inc. All rights reserved.
+            © 2024 Goldmasters, Inc. All rights reserved.
           </div>
         </div>
       </footer>

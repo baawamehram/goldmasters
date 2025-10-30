@@ -610,7 +610,7 @@ export default function EnterCompetitionPage() {
       <main className="h-screen w-screen bg-[#00563F] flex flex-col overflow-hidden fixed inset-0">
         {/* Header with logo */}
         <div className="bg-[#00563F] text-white p-4 flex items-center justify-between flex-shrink-0">
-          <div className="font-bold text-lg tracking-wider">WISHMASTERS</div>
+          <div className="font-bold text-lg tracking-wider">GOLDMASTERS</div>
           <div className="text-xs opacity-75">
             Phase {currentPhase} - {phaseStatus}
           </div>

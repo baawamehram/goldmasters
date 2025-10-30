@@ -2,9 +2,11 @@
   "name": "db",
   "version": "1.0.0",
   "private": true,
-  "description": "Wishmasters Spot-the-Ball Database Package with Prisma",
-  "main": "index.ts",
+  "description": "Goldmasters Spot-the-Ball Database Package with Prisma",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+  "build": "tsc && node -e \"require('fs').cpSync('prisma', 'dist/prisma', { recursive: true });\"",
     "generate": "prisma generate",
     "push": "prisma db push",
     "migrate": "prisma migrate dev",

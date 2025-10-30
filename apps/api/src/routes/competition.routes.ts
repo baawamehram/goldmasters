@@ -26,6 +26,8 @@ import {
   createOrUpdateUserEntry,
   hasParticipantCompletedEntry,
 } from '../data/mockDb';
+// Prisma client (workspace package)
+import prisma, { type Competition as PrismaCompetition } from 'db';
 
 const router: Router = Router();
 
@@ -38,19 +40,43 @@ let mockTicketCounter = 200;
  * @access  Public
  */
 router.get('/', async (_req: Request, res: Response) => {
+  // First attempt: fetch from Postgres via Prisma
+  try {
+    const dbCompetitions = await prisma.competition.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+  const mapped = dbCompetitions.map((c: PrismaCompetition) => {
+      const total = c.totalTickets ?? 0;
+      const available = c.availableTickets ?? 0;
+      const ticketsSold = Math.max(0, total - available);
+      const remainingSlots = Math.max(0, available);
+      return {
+        id: c.id,
+        title: c.title,
+        imageUrl: c.imageUrl || '/images/gold-coin.svg',
+        maxEntries: total,
+        ticketsSold,
+        remainingSlots,
+        status: c.status,
+        pricePerTicket: c.pricePerTicket,
+        markersPerTicket: c.markersPerTicket,
+        endsAt: c.endDate ? c.endDate.toISOString() : null,
+      };
+    });
+
+    res.status(200).json({ status: 'success', data: { competitions: mapped } });
+    return;
+  } catch (dbError) {
+    console.warn('[GET /competitions] Prisma fetch failed, falling back to mock:', dbError);
+  }
+
+  // Fallback: mock data (preserves current behavior if DB is unavailable)
   try {
     const competitions = getCompetitionsWithStats();
-    res.status(200).json({
-      status: 'success',
-      data: {
-        competitions,
-      },
-    });
+    res.status(200).json({ status: 'success', data: { competitions } });
   } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch competitions',
-    });
+    res.status(500).json({ status: 'error', message: 'Failed to fetch competitions' });
   }
 });
 
