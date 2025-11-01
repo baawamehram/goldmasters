@@ -1,13 +1,87 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserSessionTracker } from '@/components/UserSessionTracker';
+
+type PhaseStatus = 'NOT_STARTED' | 'ACTIVE' | 'CLOSED';
+
+type PhaseSnapshot = {
+  label: string;
+  seats: number;
+  status: PhaseStatus;
+};
 
 export default function CompetitionPage() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [phaseSnapshot, setPhaseSnapshot] = useState<PhaseSnapshot | null>(null);
+
+  const hydratePhaseSnapshot = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const readPhase = (phaseId: number): PhaseSnapshot => {
+      const statusKey = `admin_phase${phaseId}_status`;
+      const seatsKey = `admin_phase${phaseId}_max_members`;
+      const defaultSeats = phaseId === 1 ? 55 : phaseId === 2 ? 88 : 111;
+
+      const storedStatus = (localStorage.getItem(statusKey) as PhaseStatus | null) || 'NOT_STARTED';
+      const storedSeatsRaw = localStorage.getItem(seatsKey);
+      const parsedSeats = Number.parseInt(storedSeatsRaw ?? '', 10);
+      const safeSeats = Number.isFinite(parsedSeats) && parsedSeats > 0 ? parsedSeats : defaultSeats;
+
+      return {
+        label: `Phase ${phaseId}`,
+        seats: safeSeats,
+        status: storedStatus,
+      };
+    };
+
+    const phases: PhaseSnapshot[] = [readPhase(1), readPhase(2), readPhase(3)];
+    const openPhase = phases.find((phase) => phase.status === 'ACTIVE');
+
+    if (openPhase) {
+      setPhaseSnapshot(openPhase);
+      return;
+    }
+
+    const upcomingPhase = phases.find((phase) => phase.status !== 'CLOSED');
+    setPhaseSnapshot(upcomingPhase ?? null);
+  }, []);
+
+  useEffect(() => {
+    hydratePhaseSnapshot();
+
+    const onVisibility = () => hydratePhaseSnapshot();
+    const onFocus = () => hydratePhaseSnapshot();
+    const onStorage = () => hydratePhaseSnapshot();
+
+    window.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [hydratePhaseSnapshot]);
+
+  const phaseStatusLabel = (status: PhaseStatus | null) => {
+    switch (status) {
+      case 'ACTIVE':
+        return 'Now Open';
+      case 'NOT_STARTED':
+        return 'Starting Soon';
+      case 'CLOSED':
+        return 'Closed';
+      default:
+        return 'Status Pending';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -75,10 +149,25 @@ export default function CompetitionPage() {
             </div>
 
             <div className="flex flex-col items-center gap-4 md:items-start">
-              <div className="space-y-2 text-center md:text-left">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Hosted By</p>
-                <div className="flex h-16 w-48 items-center justify-center rounded-full border border-dashed border-gray-300 bg-white/70 text-xs uppercase tracking-[0.3em] text-gray-400">
-                  Host Logo
+              <div className="w-full max-w-sm rounded-3xl border border-[#055F3C]/30 bg-gradient-to-br from-[#055F3C] via-[#07744a] to-[#022d1d] p-6 text-white shadow-xl">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/70">Phase Update</p>
+                  {phaseSnapshot?.status === 'ACTIVE' && (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-100">
+                      <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
+                      Live
+                    </span>
+                  )}
+                </div>
+                <div className="mt-4 space-y-1">
+                  <h3 className="text-2xl font-semibold">
+                    {phaseSnapshot ? phaseSnapshot.label : 'Phases Coming Soon'}
+                  </h3>
+                  <p className="text-sm text-white/80">
+                    {phaseSnapshot
+                      ? `${phaseStatusLabel(phaseSnapshot.status)} • ${phaseSnapshot.seats} seats`
+                      : 'Stay tuned for phase announcements and seat availability.'}
+                  </p>
                 </div>
               </div>
 
