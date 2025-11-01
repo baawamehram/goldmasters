@@ -8,6 +8,7 @@ const DATA_DIR = path.join(process.cwd(), '..', '..', '.data');
 const CHECKOUT_SUMMARIES_FILE = path.join(DATA_DIR, 'checkout-summaries.json');
 const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
 const COMPETITION_RESULTS_FILE = path.join(DATA_DIR, 'competition-results.json');
+const PARTICIPANTS_FILE = path.join(DATA_DIR, 'participants.json');
 
 const DEFAULT_COMPETITION_ID = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
 
@@ -169,56 +170,94 @@ let mockCompetitions: MockCompetition[] = [
   },
 ];
 
-let mockParticipants: MockParticipant[] = [
-  {
-    id: 'participant-1',
-    competitionId: 'test-id',
-    name: 'Priya Sharma',
-    phone: sanitizePhone('+91 98765 43210'),
-    email: 'priya.sharma@example.com',
-    tickets: [
-      {
-        id: 'ticket-1',
-        ticketNumber: 101,
-        status: 'ASSIGNED',
-        markersAllowed: 3,
-        markersUsed: 0,
-        markers: [],
-      },
-      {
-        id: 'ticket-2',
-        ticketNumber: 102,
-        status: 'ASSIGNED',
-        markersAllowed: 3,
-        markersUsed: 0,
-        markers: [],
-      },
-    ],
-  },
-  {
-    id: 'participant-2',
-    competitionId: 'test-id',
-    name: 'Arjun Mehta',
-    phone: sanitizePhone('+91 91234 56789'),
-    email: 'arjun.mehta@example.com',
-    tickets: [
-      {
-        id: 'ticket-3',
-        ticketNumber: 103,
-        status: 'USED',
-        markersAllowed: 3,
-        markersUsed: 3,
-        markers: [
-          { id: 'ticket-3-marker-1', x: 0.42, y: 0.28 },
-          { id: 'ticket-3-marker-2', x: 0.55, y: 0.31 },
-          { id: 'ticket-3-marker-3', x: 0.51, y: 0.45 },
-        ],
-        submittedAt: new Date('2025-10-20T10:30:00Z'),
-      },
-    ],
-    lastSubmissionAt: new Date('2025-10-20T10:30:00Z'),
-  },
-];
+// Load participants from shared file so API sees tickets assigned by the admin UI (Next app)
+const loadParticipantsFromFile = (): MockParticipant[] => {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(PARTICIPANTS_FILE)) {
+      const data = fs.readFileSync(PARTICIPANTS_FILE, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        return parsed.map((participant: any) => ({
+          ...participant,
+          competitionId: normalizeCompetitionId(participant?.competitionId),
+          phone: sanitizePhone(participant?.phone ?? ''),
+          lastSubmissionAt: participant.lastSubmissionAt ? new Date(participant.lastSubmissionAt) : null,
+          tickets: Array.isArray(participant.tickets)
+            ? participant.tickets.map((ticket: any) => ({
+                ...ticket,
+                submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
+              }))
+            : [],
+        }));
+      }
+    }
+  } catch (error) {
+    console.error('Error loading participants from file:', error);
+  }
+  // Default sample participants if no file yet
+  return [
+    {
+      id: 'participant-1',
+      competitionId: DEFAULT_COMPETITION_ID,
+      name: 'Priya Sharma',
+      phone: sanitizePhone('+91 98765 43210'),
+      email: 'priya.sharma@example.com',
+      tickets: [
+        {
+          id: 'ticket-1',
+          ticketNumber: 101,
+          status: 'ASSIGNED',
+          markersAllowed: 3,
+          markersUsed: 0,
+          markers: [],
+        },
+        {
+          id: 'ticket-2',
+          ticketNumber: 102,
+          status: 'ASSIGNED',
+          markersAllowed: 3,
+          markersUsed: 0,
+          markers: [],
+        },
+      ],
+    },
+    {
+      id: 'participant-2',
+      competitionId: DEFAULT_COMPETITION_ID,
+      name: 'Arjun Mehta',
+      phone: sanitizePhone('+91 91234 56789'),
+      email: 'arjun.mehta@example.com',
+      tickets: [
+        {
+          id: 'ticket-3',
+          ticketNumber: 103,
+          status: 'USED',
+          markersAllowed: 3,
+          markersUsed: 3,
+          markers: [
+            { id: 'ticket-3-marker-1', x: 0.42, y: 0.28 },
+            { id: 'ticket-3-marker-2', x: 0.55, y: 0.31 },
+            { id: 'ticket-3-marker-3', x: 0.51, y: 0.45 },
+          ],
+          submittedAt: new Date('2025-10-20T10:30:00Z'),
+        },
+      ],
+      lastSubmissionAt: new Date('2025-10-20T10:30:00Z'),
+    },
+  ];
+};
+
+const saveParticipantsToFile = (participants: MockParticipant[]) => {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(PARTICIPANTS_FILE, JSON.stringify(participants, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('Error saving participants to file:', error);
+  }
+};
+
+let mockParticipants: MockParticipant[] = loadParticipantsFromFile();
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
 
@@ -496,6 +535,15 @@ export const getUserEntryById = (id: string): UserEntry | null => {
   return userEntries.find((entry) => entry.id === id) ?? null;
 };
 
+export const verifyAccessCode = (code: string): UserEntry | null => {
+  refreshUserEntries();
+  const trimmed = typeof code === 'string' ? code.trim() : '';
+  if (!trimmed) {
+    return null;
+  }
+  return userEntries.find((entry) => entry.accessCode === trimmed) ?? null;
+};
+
 export const getCompetitions = (): MockCompetition[] => mockCompetitions;
 
 export const getParticipants = (): MockParticipant[] => mockParticipants;
@@ -608,6 +656,8 @@ export const closeCompetition = (id: string): MockCompetition | null => {
 };
 
 export const findParticipantByPhone = (competitionId: string, phone: string) => {
+  // Refresh view from disk to capture admin updates
+  mockParticipants = loadParticipantsFromFile();
   const normalizedCompetitionId = normalizeCompetitionId(competitionId);
   const sanitized = sanitizePhone(phone);
 
@@ -619,6 +669,7 @@ export const findParticipantByPhone = (competitionId: string, phone: string) => 
 };
 
 export const findParticipantById = (competitionId: string, participantId: string) => {
+  mockParticipants = loadParticipantsFromFile();
   const normalizedCompetitionId = normalizeCompetitionId(competitionId);
   return mockParticipants.find(
     (participant) =>
@@ -639,6 +690,8 @@ export const getCompetitionsByIds = (ids: string[]): MockCompetition[] => {
 };
 
 export const saveParticipant = (updatedParticipant: MockParticipant) => {
+  // Ensure latest state
+  mockParticipants = loadParticipantsFromFile();
   const normalizedParticipant: MockParticipant = {
     ...updatedParticipant,
     competitionId: normalizeCompetitionId(updatedParticipant.competitionId),
@@ -656,6 +709,9 @@ export const saveParticipant = (updatedParticipant: MockParticipant) => {
   } else {
     mockParticipants = [...mockParticipants, normalizedParticipant];
   }
+
+  // Persist to disk so both apps see the same participants/tickets
+  saveParticipantsToFile(mockParticipants);
 };
 
 export const getCompetitionsWithStats = () =>

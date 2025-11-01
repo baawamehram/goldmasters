@@ -518,5 +518,31 @@
     "lastLogoutAt": null,
     "accessCode": "374911",
     "currentPhase": null
+  },
+  {
+    "id": "user-1762019707987-x0vh6r2kh",
+    "name": "greent",
+    "phone": "7267367654",
+    "email": null,
+    "createdAt": "2025-11-01T17:55:07.987Z",
+    "assignedTickets": 3,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-11-01T18:02:25.760Z",
+    "lastLogoutAt": null,
+    "accessCode": "459005",
+    "currentPhase": null
+  },
+  {
+    "id": "user-1762019732476-n9cgaq0re",
+    "name": "drea",
+    "phone": "6572910987",
+    "email": null,
+    "createdAt": "2025-11-01T17:55:32.476Z",
+    "assignedTickets": 2,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-11-01T18:06:05.163Z",
+    "lastLogoutAt": null,
+    "accessCode": "807150",
+    "currentPhase": null
   }
 ]

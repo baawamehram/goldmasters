@@ -660,8 +660,10 @@ export const saveCompetitionResult = (result: MockCompetitionResult): void => {
 export const getCompetitionResult = (competitionId: string): MockCompetitionResult | null =>
   mockCompetitionResults.find((entry) => entry.competitionId === competitionId) ?? null;
 
-const buildCompletionKey = (competitionId: string, participantId: string) =>
-  `${normalizeCompetitionId(competitionId)}:${participantId}`;
+// Use a function declaration (hoisted) to avoid TDZ errors when called above
+function buildCompletionKey(competitionId: string, participantId: string) {
+  return `${normalizeCompetitionId(competitionId)}:${participantId}`;
+}
 
 export const hasParticipantCompletedEntry = (
   competitionId: string,

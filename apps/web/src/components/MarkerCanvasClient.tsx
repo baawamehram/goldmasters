@@ -232,13 +232,20 @@ function MarkerCanvasClient(
     let nextWidth = Math.min(TARGET_WIDTH, Math.max(minWidth, viewportWidth - gutter));
 
     if (!showPanels) {
-      const parentHeight = containerRef.current?.parentElement?.clientHeight ?? window.innerHeight;
-      const reservedSpace = 0; // use full height in fullscreen mode
-      const maxHeight = parentHeight - reservedSpace;
-      if (maxHeight > 0) {
+      const viewportHeight = window.innerHeight || TARGET_HEIGHT;
+      const containerTop = containerRef.current
+        ? containerRef.current.getBoundingClientRect().top
+        : 0;
+      const safetyMargin = 40; // leave space for controls/borders
+      const availableHeight = Math.max(
+        360,
+        viewportHeight - containerTop - safetyMargin
+      );
+
+      if (availableHeight > 0) {
         const widthFromHeight = Math.min(
           TARGET_WIDTH,
-          Math.max(minWidth, maxHeight / TARGET_RATIO)
+          Math.max(minWidth, availableHeight / TARGET_RATIO)
         );
         nextWidth = Math.min(nextWidth, widthFromHeight);
       }
