@@ -1,52 +1,52 @@
 [
   {
     "competitionId": "test-id",
-    "finalJudgeX": 0.623,
-    "finalJudgeY": 0.423,
+    "finalJudgeX": 0.8818,
+    "finalJudgeY": 0.9417,
     "winners": [
       {
-        "ticketId": "user-1761807965221-6v1cc7gd8:1064",
-        "ticketNumber": 1064,
-        "participantId": "user-1761807965221-6v1cc7gd8",
-        "userId": "user-1761807965221-6v1cc7gd8",
-        "participantName": "greeg",
-        "participantPhone": "+916565656565",
-        "distance": 0.0005099019513592767,
+        "ticketId": "participant-1761991210512-inmhfj9qn:1152",
+        "ticketNumber": 1152,
+        "participantId": "participant-1761991210512-inmhfj9qn",
+        "userId": "user-1761991180757-8koyavp67",
+        "participantName": "eighttwo",
+        "participantPhone": "8282828282",
+        "distance": 0,
         "marker": {
-          "id": "ticket-user-1761807965221-6v1cc7gd8-0-marker-1",
-          "x": 0.6229,
-          "y": 0.4235
+          "id": "ticket-1761991210512-i0y84ldbb-marker-1",
+          "x": 0.8818,
+          "y": 0.9417
         }
       },
       {
-        "ticketId": "user-1761743552569-bf5xta48j:1053",
-        "ticketNumber": 1053,
-        "participantId": "user-1761743552569-bf5xta48j",
-        "userId": "user-1761743552569-bf5xta48j",
-        "participantName": "onethree",
-        "participantPhone": "+911313131313",
-        "distance": 0.012059850745345076,
+        "ticketId": "user-1761918220846-8wu55cp87:1078",
+        "ticketNumber": 1078,
+        "participantId": "user-1761918220846-8wu55cp87",
+        "userId": "user-1761918220846-8wu55cp87",
+        "participantName": "sixtyseven",
+        "participantPhone": "+916767676760",
+        "distance": 0.10797559909535112,
         "marker": {
-          "id": "ticket-user-1761743552569-bf5xta48j-0-marker-1",
-          "x": 0.6218,
-          "y": 0.435
+          "id": "ticket-user-1761918220846-8wu55cp87-0-marker-2",
+          "x": 0.8226,
+          "y": 0.8514
         }
       },
       {
-        "ticketId": "user-1761645213358-25i4wwyev:1040",
-        "ticketNumber": 1040,
-        "participantId": "user-1761645213358-25i4wwyev",
-        "userId": "user-1761645213358-25i4wwyev",
-        "participantName": "grt",
-        "participantPhone": "+913434343434",
-        "distance": 0.04307806866608574,
+        "ticketId": "participant-1761990990838-ut3sbp1oi:1150",
+        "ticketNumber": 1150,
+        "participantId": "participant-1761990990838-ut3sbp1oi",
+        "userId": "user-1761990990836-u6o97vqs9",
+        "participantName": "ninezero",
+        "participantPhone": "9090909090",
+        "distance": 0.29621622170299855,
         "marker": {
-          "id": "ticket-user-1761645213358-25i4wwyev-0-marker-1",
-          "x": 0.5824,
-          "y": 0.4374
+          "id": "ticket-1761990990838-lb0pseseo-marker-3",
+          "x": 0.5856,
+          "y": 0.9448
         }
       }
     ],
-    "computedAt": "2025-10-30T08:38:31.941Z"
+    "computedAt": "2025-11-01T10:04:14.088Z"
   }
 ]

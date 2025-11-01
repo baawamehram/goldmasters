@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Participant {
   id: string;
-  participantId: string;
-  competitionId: string;
+  participantId: string | null;
+  competitionId: string | null;
   name: string;
   phone: string;
   email: string | null;
@@ -38,6 +38,13 @@ export default function AdminEntriesPage() {
   const [errorNotification, setErrorNotification] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [creatingEntry, setCreatingEntry] = useState(false);
+  const [createEntryError, setCreateEntryError] = useState<string | null>(null);
+  const [newEntryName, setNewEntryName] = useState("");
+  const [newEntryPhone, setNewEntryPhone] = useState("");
+  const [newEntryEmail, setNewEntryEmail] = useState("");
+  const [newEntryTickets, setNewEntryTickets] = useState("0");
+  const [newEntryUserId, setNewEntryUserId] = useState("");
 
   useEffect(() => {
     // Check if admin is logged in
@@ -153,22 +160,50 @@ export default function AdminEntriesPage() {
         body: JSON.stringify({ ticketCount: count }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+      let payload: any = null;
+      let fallbackMessage: string | null = null;
+
+      if (contentType.includes('application/json')) {
+        payload = await response.json();
+      } else {
+        fallbackMessage = await response.text();
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to assign tickets');
+        const message =
+          (payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
+            ? payload.message
+            : null) ||
+          (fallbackMessage && fallbackMessage.trim().length > 0 ? fallbackMessage : null) ||
+          `Failed to assign tickets (HTTP ${response.status})`;
+        throw new Error(message);
       }
+
+      const successfulPayload =
+        payload && typeof payload === 'object' && 'data' in payload && payload.data
+          ? (payload.data as Partial<Participant>)
+          : null;
+      const updatedTicketCount =
+        typeof successfulPayload?.assignedTickets === 'number'
+          ? successfulPayload.assignedTickets
+          : count;
+      const participantName = participants.find((p) => p.id === participantId)?.name ?? 'participant';
 
       // Update the participant's ticket count in state
       setParticipants(prev => prev.map(p => 
         p.id === participantId 
-          ? { ...p, assignedTickets: count }
+          ? { ...p, assignedTickets: updatedTicketCount }
           : p
       ));
+      setTicketAssignmentCount(prev => ({
+        ...prev,
+        [participantId]: updatedTicketCount,
+      }));
 
       // Show success message
       setAssigningTickets(null);
-      setSuccessNotification(`✅ Successfully assigned ${count} tickets to ${participants.find(p => p.id === participantId)?.name}!`);
+      setSuccessNotification(`✅ Successfully assigned ${updatedTicketCount} tickets to ${participantName}!`);
       setTimeout(() => setSuccessNotification(null), 3000);
       
       // Reload to confirm update
@@ -246,8 +281,8 @@ export default function AdminEntriesPage() {
 
       const payload = {
         participants: toDelete.map(p => ({
-          competitionId: p.competitionId,
-          participantId: p.participantId,
+          competitionId: p.competitionId ?? undefined,
+          participantId: p.participantId ?? undefined,
           userId: p.id,
         })),
       };
@@ -287,6 +322,103 @@ export default function AdminEntriesPage() {
       setTimeout(() => setErrorNotification(null), 5000);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const resetNewEntryForm = () => {
+    setNewEntryName("");
+    setNewEntryPhone("");
+    setNewEntryEmail("");
+    setNewEntryTickets("0");
+    setNewEntryUserId("");
+    setCreateEntryError(null);
+  };
+
+  const handleCreateEntry = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (creatingEntry) {
+      return;
+    }
+
+    setCreateEntryError(null);
+
+    const trimmedName = newEntryName.trim();
+    const trimmedPhone = newEntryPhone.trim();
+    const trimmedEmail = newEntryEmail.trim();
+    const trimmedUserId = newEntryUserId.trim();
+
+    if (!trimmedName) {
+      setCreateEntryError('Name is required');
+      return;
+    }
+
+    if (!trimmedPhone) {
+      setCreateEntryError('Phone number is required');
+      return;
+    }
+
+    const rawTickets = Number.parseInt(newEntryTickets, 10);
+    if (Number.isNaN(rawTickets) || rawTickets < 0) {
+      setCreateEntryError('Initial tickets must be zero or a positive number');
+      return;
+    }
+
+    const limitedTickets = Math.min(rawTickets, maxTicketsPerParticipant);
+    if (limitedTickets !== rawTickets) {
+      setNewEntryTickets(String(limitedTickets));
+    }
+
+    setCreatingEntry(true);
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch('/api/v1/admin/participants', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          phone: trimmedPhone,
+          email: trimmedEmail || undefined,
+          initialTickets: limitedTickets,
+          userId: trimmedUserId || undefined,
+        }),
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || payload.status !== 'success') {
+        const message = payload?.message || 'Failed to create participant entry';
+        throw new Error(message);
+      }
+
+      const createdParticipant = payload.data as { id: string; name?: string; accessCode?: string };
+
+      resetNewEntryForm();
+
+      if (createdParticipant?.name) {
+        const parts = [`🎉 Created entry for ${createdParticipant.name}`];
+        if (createdParticipant.accessCode) {
+          parts.push(`Access code: ${createdParticipant.accessCode}`);
+        }
+        setSuccessNotification(parts.join(' - '));
+        setTimeout(() => setSuccessNotification(null), 4000);
+      }
+
+      await loadParticipants(true);
+    } catch (creationError) {
+      console.error('Error creating participant entry:', creationError);
+      const message = creationError instanceof Error ? creationError.message : 'Failed to create participant entry';
+      setCreateEntryError(message);
+    } finally {
+      setCreatingEntry(false);
     }
   };
 
@@ -357,28 +489,142 @@ export default function AdminEntriesPage() {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Search by name, phone, or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#055F3C] focus:ring-2 focus:ring-[#055F3C]/20 transition-all"
-                />
+        {/* Search + Manual Entry */}
+        <div className="mb-6 space-y-4">
+          <Card className="relative overflow-hidden border border-brand-primary/15 shadow-lg shadow-brand-primary/10">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-primary via-brand-accent to-brand-primary/70" />
+            <CardHeader className="pb-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg font-semibold">Create Manual Entry</CardTitle>
+                  <CardDescription>Register a participant and prepare their credentials</CardDescription>
+                </div>
+                <span className="rounded-full border border-brand-primary/30 bg-brand-primary/10 px-3 py-1 text-xs font-semibold text-brand-primary">Manual</span>
               </div>
-              <Button onClick={() => loadParticipants(false)} variant="outline">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            </CardHeader>
+            <CardContent className="pt-0">
+              <form onSubmit={handleCreateEntry} className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Name</label>
+                    <input
+                      value={newEntryName}
+                      onChange={(event) => setNewEntryName(event.target.value)}
+                      placeholder="Participant name"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Phone</label>
+                    <input
+                      value={newEntryPhone}
+                      onChange={(event) => setNewEntryPhone(event.target.value)}
+                      placeholder="Enter mobile number"
+                      inputMode="tel"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Email <span className="text-gray-400">(optional)</span></label>
+                    <input
+                      value={newEntryEmail}
+                      onChange={(event) => setNewEntryEmail(event.target.value)}
+                      placeholder="name@example.com"
+                      type="email"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Custom User ID <span className="text-gray-400">(optional)</span></label>
+                    <input
+                      value={newEntryUserId}
+                      onChange={(event) => setNewEntryUserId(event.target.value)}
+                      placeholder="Leave blank to auto-generate"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-600">Initial Tickets</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={maxTicketsPerParticipant}
+                      value={newEntryTickets}
+                      onChange={(event) => setNewEntryTickets(event.target.value)}
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                    />
+                    <p className="text-xs text-gray-500">Assign 0-{maxTicketsPerParticipant} tickets now, or adjust later.</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetNewEntryForm}
+                    disabled={creatingEntry}
+                    className="justify-self-end"
+                  >
+                    Clear
+                  </Button>
+                </div>
+
+                {createEntryError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {createEntryError}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3 rounded-lg border border-dashed border-brand-primary/20 bg-brand-primary/5 p-3 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+                  <p>We'll auto-generate an access code and keep the participant offline until they log in.</p>
+                  <Button type="submit" disabled={creatingEntry} className="sm:w-auto">
+                    {creatingEntry ? 'Creating...' : 'Create Entry'}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-gray-100/80 bg-white/70 shadow-sm backdrop-blur">
+            <CardHeader className="flex flex-col gap-3 pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold">Search Participants</CardTitle>
+                <CardDescription>Filter the list by name, phone, email, or access code</CardDescription>
+              </div>
+              <Button onClick={() => loadParticipants(false)} variant="outline" className="w-full sm:w-auto">
+                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Refresh
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Search Query
+              </label>
+              <div className="relative mt-2">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search by name, phone, email, or user ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm shadow-inner focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/40"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Error Display */}
         {error && (
@@ -388,7 +634,7 @@ export default function AdminEntriesPage() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"> 
           <Card>
             <CardHeader className="pb-3">
               <CardDescription>Total Participants</CardDescription>
@@ -478,156 +724,159 @@ export default function AdminEntriesPage() {
                       const isNewUser = newUserIds.has(participant.id);
                       const isSelected = selectedIds.has(participant.id);
                       return (
-                        <tr 
-                          key={participant.id} 
+                        <tr
+                          key={participant.id}
                           className={`transition-all duration-500 ${
-                            isSelected ? 'bg-blue-50 ring-2 ring-blue-300' :
-                            isNewUser 
-                              ? 'bg-green-50 border-l-4 border-l-green-500 animate-pulse' 
-                              : 'hover:bg-gray-50'
+                            isSelected
+                              ? 'bg-blue-50 ring-2 ring-blue-300'
+                              : isNewUser
+                                ? 'bg-green-50 border-l-4 border-l-green-500 animate-pulse'
+                                : 'hover:bg-gray-50'
                           }`}
                         >
-                        <td className="px-4 py-4 text-sm">
-                          <input
-                            type="checkbox"
-                            aria-label={`Select ${participant.name}`}
-                            checked={isSelected}
-                            onChange={() => toggleSelect(participant.id)}
-                            disabled={isDeleting}
-                          />
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded border border-gray-300 text-gray-700">
-                              {participant.id}
-                            </span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(participant.id);
-                                alert('User ID copied!');
-                              }}
-                              className="text-gray-400 hover:text-gray-600"
-                              title="Copy User ID"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm font-semibold">
-                          <div className="flex items-center gap-2">
-                            {isNewUser && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500 text-white animate-bounce">
-                                NEW
-                              </span>
-                            )}
-                            {participant.name}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          {participant.phone}
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-lg font-bold text-[#055F3C] bg-green-50 px-3 py-1 rounded border-2 border-[#055F3C] tracking-wider">
-                              {participant.accessCode}
-                            </span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(participant.accessCode);
-                                alert('Access code copied!');
-                              }}
-                              className="text-gray-400 hover:text-gray-600"
-                              title="Copy code"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                participant.isLoggedIn
-                                  ? 'bg-green-100 text-green-800 border border-green-200'
-                                  : 'bg-gray-100 text-gray-800 border border-gray-200'
-                              }`}>
-                                <span className={`w-2 h-2 rounded-full ${
-                                  participant.isLoggedIn ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
-                                }`}></span>
-                                {participant.isLoggedIn ? 'Online' : 'Offline'}
-                              </span>
-                            </div>
-                            {participant.lastLoginAt && (
-                              <div className="text-xs text-gray-500">
-                                Last: {formatDate(participant.lastLoginAt)}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          <div className="flex items-center gap-2">
+                          <td className="px-4 py-4 text-sm">
                             <input
-                              type="number"
-                              min="0"
-                              max={maxTicketsPerParticipant}
-                              value={ticketAssignmentCount[participant.id] ?? participant.assignedTickets}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 0;
-                                setTicketAssignmentCount(prev => ({
-                                  ...prev,
-                                  [participant.id]: val
-                                }));
-                              }}
-                              className="w-16 px-2 py-1 text-center border-2 border-gray-200 rounded focus:outline-none focus:border-brand-primary"
-                              disabled={assigningTickets === participant.id}
-                            />
-                            <span className="text-xs text-gray-500">/ {maxTicketsPerParticipant}</span>
-                            <Button
-                              size="sm"
-                              onClick={() => handleAssignTickets(
-                                participant.id, 
-                                ticketAssignmentCount[participant.id] ?? participant.assignedTickets
-                              )}
-                              disabled={assigningTickets === participant.id}
-                              className="text-xs px-2 py-1"
-                            >
-                              {assigningTickets === participant.id ? '...' : 'Assign'}
-                            </Button>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Current: {ticketAssignmentCount[participant.id] ?? participant.assignedTickets}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-600">
-                          {formatDate(participant.createdAt)}
-                        </td>
-                        <td className="px-4 py-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                router.push(`/admin/entries/${participant.id}/view`);
-                              }}
-                            >
-                              View
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => deleteParticipants([participant])}
+                              type="checkbox"
+                              aria-label={`Select ${participant.name}`}
+                              checked={isSelected}
+                              onChange={() => toggleSelect(participant.id)}
                               disabled={isDeleting}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
+                            />
+                          </td>
+                          <td className="px-4 py-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded border border-gray-300 text-gray-700">
+                                {participant.id}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(participant.id);
+                                  alert('User ID copied!');
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Copy User ID"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm font-semibold">
+                            <div className="flex items-center gap-2">
+                              {isNewUser && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500 text-white animate-bounce">
+                                  NEW
+                                </span>
+                              )}
+                              {participant.name}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm">{participant.phone}</td>
+                          <td className="px-4 py-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-lg font-bold text-[#055F3C] bg-green-50 px-3 py-1 rounded border-2 border-[#055F3C] tracking-wider">
+                                {participant.accessCode}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(participant.accessCode);
+                                  alert('Access code copied!');
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                                title="Copy code"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                    participant.isLoggedIn
+                                      ? 'bg-green-100 text-green-800 border border-green-200'
+                                      : 'bg-gray-100 text-gray-800 border border-gray-200'
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-2 h-2 rounded-full ${
+                                      participant.isLoggedIn ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                                    }`}
+                                  ></span>
+                                  {participant.isLoggedIn ? 'Online' : 'Offline'}
+                                </span>
+                              </div>
+                              {participant.lastLoginAt && (
+                                <div className="text-xs text-gray-500">
+                                  Last: {formatDate(participant.lastLoginAt)}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max={maxTicketsPerParticipant}
+                                value={ticketAssignmentCount[participant.id] ?? participant.assignedTickets}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value) || 0;
+                                  setTicketAssignmentCount((prev) => ({
+                                    ...prev,
+                                    [participant.id]: val,
+                                  }));
+                                }}
+                                className="w-16 px-2 py-1 text-center border-2 border-gray-200 rounded focus:outline-none focus:border-brand-primary"
+                                disabled={assigningTickets === participant.id}
+                              />
+                              <span className="text-xs text-gray-500">/ {maxTicketsPerParticipant}</span>
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  handleAssignTickets(
+                                    participant.id,
+                                    ticketAssignmentCount[participant.id] ?? participant.assignedTickets,
+                                  )
+                                }
+                                disabled={assigningTickets === participant.id}
+                                className="text-xs px-2 py-1"
+                              >
+                                {assigningTickets === participant.id ? '...' : 'Assign'}
+                              </Button>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Current: {ticketAssignmentCount[participant.id] ?? participant.assignedTickets}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-gray-600">{formatDate(participant.createdAt)}</td>
+                          <td className="px-4 py-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  router.push(`/admin/entries/${participant.id}/view`);
+                                }}
+                              >
+                                View
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => deleteParticipants([participant])}
+                                disabled={isDeleting}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
                     })}
                   </tbody>
                 </table>

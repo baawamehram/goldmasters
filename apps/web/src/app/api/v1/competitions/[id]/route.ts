@@ -19,6 +19,9 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
+    const defaultCompetitionId = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
+    const actualCompetitionId =
+      id.startsWith('user-') || id.startsWith('participant-') ? defaultCompetitionId : id;
 
     const authorization = req.headers.get('authorization');
     const token = extractBearerToken(authorization);
@@ -28,7 +31,7 @@ export async function GET(
       try {
         const decoded = verifyToken<CompetitionTokenPayload>(token);
 
-        if (decoded.competitionId !== id) {
+        if (decoded.competitionId !== actualCompetitionId) {
           throw new Error('Token competition mismatch');
         }
 
@@ -40,8 +43,8 @@ export async function GET(
       }
     }
 
-    const baseCompetition = getCompetitionById(id);
-    const ticketsSold = calculateTicketsSold(id);
+    const baseCompetition = getCompetitionById(actualCompetitionId);
+    const ticketsSold = calculateTicketsSold(actualCompetitionId);
     const remainingSlots = Math.max(0, baseCompetition.maxEntries - ticketsSold);
 
     const responseData: Record<string, unknown> = {
@@ -60,7 +63,7 @@ export async function GET(
     };
 
     if (participantId) {
-      const participant = findParticipantById(id, participantId);
+  const participant = findParticipantById(actualCompetitionId, participantId);
       if (participant) {
         const ticketsPurchased = participant.tickets.length;
         const entriesUsed = participant.tickets.reduce(

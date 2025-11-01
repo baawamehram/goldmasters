@@ -314,7 +314,7 @@ export default function CompetitionCheckoutPage() {
   }, [error, id, isHydrated, markers.length, router]);
 
   const groupedMarkers = useMemo(() => {
-    const groups = new Map<string, { ticketNumber: number; markers: StoredMarker[] }>();
+    const groups = new Map<string, { ticketId: string; ticketNumber: number; markers: StoredMarker[] }>();
 
     markers
       .slice()
@@ -325,16 +325,20 @@ export default function CompetitionCheckoutPage() {
           existing.markers.push(marker);
         } else {
           groups.set(marker.ticketId, {
+            ticketId: marker.ticketId,
             ticketNumber: marker.ticketNumber,
             markers: [marker],
           });
         }
       });
 
-    return Array.from(groups.values()).map((group) => ({
-      ticketNumber: group.ticketNumber,
-      markers: group.markers.sort((a, b) => a.label.localeCompare(b.label)),
-    }));
+    return Array.from(groups.values())
+      .map((group) => ({
+        ticketId: group.ticketId,
+        ticketNumber: group.ticketNumber,
+        markers: group.markers.sort((a, b) => a.label.localeCompare(b.label)),
+      }))
+      .sort((a, b) => a.ticketNumber - b.ticketNumber || a.ticketId.localeCompare(b.ticketId));
   }, [markers]);
 
   const totalMarkers = markers.length;
@@ -437,7 +441,7 @@ export default function CompetitionCheckoutPage() {
             <div className="space-y-5">
               {groupedMarkers.map((group) => (
                 <div
-                  key={`ticket-${group.ticketNumber}`}
+                  key={`ticket-${group.ticketId}`}
                   className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 shadow-lg"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -470,14 +474,6 @@ export default function CompetitionCheckoutPage() {
                           <div>
                             <dt className="text-xs uppercase tracking-wide text-slate-500">Y (normalized)</dt>
                             <dd className="font-medium text-white">{formatNormalized(marker.y)}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-xs uppercase tracking-wide text-slate-500">X (canvas)</dt>
-                            <dd className="text-emerald-200">{formatPercent(marker.x)}</dd>
-                          </div>
-                          <div>
-                            <dt className="text-xs uppercase tracking-wide text-slate-500">Y (canvas)</dt>
-                            <dd className="text-emerald-200">{formatPercent(marker.y)}</dd>
                           </div>
                         </dl>
                         <footer className="mt-auto text-xs text-slate-500">

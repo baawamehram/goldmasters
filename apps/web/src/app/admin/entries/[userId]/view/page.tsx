@@ -43,7 +43,7 @@ type CheckoutData = {
 
 type ParticipantData = {
   id: string;
-  participantId: string;
+  participantId: string | null;
   competitionId: string;
   name: string;
   phone: string;
@@ -54,6 +54,35 @@ type ParticipantData = {
 };
 
 const FALLBACK_COMPETITION_ID = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || "test-id";
+
+const truncateToDecimals = (value: number, decimals: number): number => {
+  const factor = 10 ** decimals;
+  return Math.trunc(value * factor) / factor;
+};
+
+const formatNormalizedCoordinate = (
+  value: number | null | undefined,
+  decimals = 4
+): string => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "";
+  }
+
+  const raw = value.toString();
+  if (!raw.includes("e") && !raw.includes("E")) {
+    const [integerPart, fractionalPart = ""] = raw.split(".");
+    if (fractionalPart.length === decimals) {
+      return `${integerPart}.${fractionalPart}`;
+    }
+    if (fractionalPart.length > decimals) {
+      return `${integerPart}.${fractionalPart.slice(0, decimals)}`;
+    }
+    return `${integerPart}.${fractionalPart.padEnd(decimals, "0")}`;
+  }
+
+  const truncated = truncateToDecimals(value, decimals);
+  return formatNormalizedCoordinate(truncated, decimals);
+};
 
 export default function UserViewPage({
   params,
@@ -441,16 +470,16 @@ export default function UserViewPage({
                                     <div className="flex gap-4 text-xs text-gray-600">
                                       <span>
                                         <span className="font-semibold">X:</span>{" "}
-                                        {marker.x.toFixed(2)}
+                                        {formatNormalizedCoordinate(marker.x, 4)}
                                       </span>
                                       <span>
                                         <span className="font-semibold">Y:</span>{" "}
-                                        {marker.y.toFixed(2)}
+                                        {formatNormalizedCoordinate(marker.y, 4)}
                                       </span>
                                     </div>
                                     <div className="text-xs text-gray-500 mt-1">
-                                      Position: {(marker.x * 100).toFixed(1)}%,{" "}
-                                      {(marker.y * 100).toFixed(1)}%
+                                      Position: {formatNormalizedCoordinate(marker.x * 100, 2)}%,{" "}
+                                      {formatNormalizedCoordinate(marker.y * 100, 2)}%
                                     </div>
                                   </div>
                                 ))}

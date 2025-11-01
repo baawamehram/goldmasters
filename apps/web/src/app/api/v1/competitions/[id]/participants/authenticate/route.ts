@@ -1,11 +1,10 @@
 import { NextRequest } from 'next/server';
 import { fieldError, success, fail, validationFailure, error } from '@/server/http';
-import { 
-  findParticipantByPhone, 
-  saveParticipant, 
-  MockParticipant,
-  getParticipants,
-  hasParticipantCompletedEntry
+import {
+  findParticipantByPhone,
+  hasParticipantCompletedEntry,
+  getUserEntryByPhone,
+  updateUserTickets,
 } from '@/server/data/mockDb';
 import { signToken } from '@/server/auth/jwt';
 
@@ -13,7 +12,10 @@ export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  const { id: competitionId } = await context.params;
+  const { id: rawCompetitionId } = await context.params;
+  const defaultCompetitionId = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
+  const isUserScopedId = rawCompetitionId.startsWith('user-') || rawCompetitionId.startsWith('participant-');
+  const competitionId = isUserScopedId ? defaultCompetitionId : rawCompetitionId;
 
   try {
     const body = await req.json();
@@ -36,44 +38,25 @@ export async function POST(
   const nameValue = name!.trim();
   const phoneValue = phone!.trim();
 
-  // First, try to find participant in the requested competition
+  // First, make sure the admin has assigned tickets for this user
+  const userEntry = getUserEntryByPhone(phoneValue);
+  const desiredTicketCount = userEntry?.assignedTickets ?? 0;
+
+  // Ensure we have a participant record for this competition
   let participant = findParticipantByPhone(competitionId, phoneValue);
-  
-  // If not found in this competition, check the default competition
-  if (!participant) {
-    const defaultCompetitionId = 'test-id';
-    const defaultParticipant = findParticipantByPhone(defaultCompetitionId, phoneValue);
-    
-    if (defaultParticipant && defaultParticipant.tickets.length > 0) {
-      // User has tickets in default competition, create participant for this competition
-      // Use the competitionId (which is the user's unique ID) as the participant ID
-      console.log('[authenticate] Creating participant from default competition:', {
-        sourceCompetition: defaultCompetitionId,
-        targetCompetition: competitionId,
-        participantId: competitionId, // Using competitionId as participant ID for consistency
-        ticketCount: defaultParticipant.tickets.length
-      });
-      
-      const newParticipant: MockParticipant = {
-        id: competitionId, // Use user's ID from URL (same as competitionId)
-        competitionId: competitionId,
-        name: defaultParticipant.name,
-        phone: defaultParticipant.phone,
-        email: defaultParticipant.email,
-        tickets: defaultParticipant.tickets.map((ticket, index) => ({
-          ...ticket,
-          id: `ticket-${competitionId}-${index}` // Use consistent ID pattern
-        })),
-        lastSubmissionAt: null,
-      };
-      
-      saveParticipant(newParticipant);
-      participant = newParticipant;
-    }
+
+  if (!participant && userEntry) {
+  updateUserTickets(userEntry.id, desiredTicketCount, competitionId);
+  participant = findParticipantByPhone(competitionId, phoneValue);
   }
-  
+
   if (!participant) {
     return fail('Participant not found. Please contact support.', 404);
+  }
+
+  if (userEntry && participant.tickets.length !== desiredTicketCount) {
+    updateUserTickets(userEntry.id, desiredTicketCount, competitionId);
+    participant = findParticipantByPhone(competitionId, phoneValue) ?? participant;
   }
 
   if (hasParticipantCompletedEntry(competitionId, participant.id)) {

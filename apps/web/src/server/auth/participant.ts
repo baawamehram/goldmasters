@@ -3,6 +3,20 @@ import { TokenExpiredError } from 'jsonwebtoken';
 import { extractBearerToken, verifyToken } from './jwt';
 import { fail } from '../http';
 
+const resolveCompetitionId = (competitionId: string): string => {
+  const defaultCompetitionId = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
+
+  if (!competitionId) {
+    return defaultCompetitionId;
+  }
+
+  if (competitionId.startsWith('user-') || competitionId.startsWith('participant-')) {
+    return defaultCompetitionId;
+  }
+
+  return competitionId;
+};
+
 export type ParticipantAccessPayload = {
   competitionId: string;
   participantId: string;
@@ -27,11 +41,16 @@ export const requireParticipantToken = (
       return fail('Invalid token type', 403);
     }
 
-    if (payload.competitionId !== competitionId) {
+    const expectedCompetitionId = resolveCompetitionId(competitionId);
+
+    if (payload.competitionId !== expectedCompetitionId) {
       return fail('Token not valid for this competition', 403);
     }
 
-    return payload;
+    return {
+      ...payload,
+      competitionId: expectedCompetitionId,
+    };
   } catch (err) {
     if (err instanceof TokenExpiredError) {
       return fail('Participant session expired. Please verify your details again.', 401);

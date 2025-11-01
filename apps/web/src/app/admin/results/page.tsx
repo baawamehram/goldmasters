@@ -97,6 +97,35 @@ const createCompetitionSummary = (overrides?: Partial<CompetitionSummary>): Comp
   ...overrides,
 });
 
+const truncateToDecimals = (value: number, decimals: number): number => {
+  const factor = 10 ** decimals;
+  return Math.trunc(value * factor) / factor;
+};
+
+const formatNormalizedCoordinate = (
+  value: number | null | undefined,
+  decimals = 4
+): string => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "";
+  }
+
+  const raw = value.toString();
+  if (!raw.includes("e") && !raw.includes("E")) {
+    const [integerPart, fractionalPart = ""] = raw.split(".");
+    if (fractionalPart.length === decimals) {
+      return `${integerPart}.${fractionalPart}`;
+    }
+    if (fractionalPart.length > decimals) {
+      return `${integerPart}.${fractionalPart.slice(0, decimals)}`;
+    }
+    return `${integerPart}.${fractionalPart.padEnd(decimals, "0")}`;
+  }
+
+  const truncated = truncateToDecimals(value, decimals);
+  return formatNormalizedCoordinate(truncated, decimals);
+};
+
 const PHASES: Array<{ id: PhaseId; name: string; accent: string; badge: string }> = [
   { id: 1, name: "Phase 1", accent: "from-green-50 via-white to-green-100", badge: "bg-green-100 text-green-700" },
   { id: 2, name: "Phase 2", accent: "from-blue-50 via-white to-blue-100", badge: "bg-blue-100 text-blue-700" },
@@ -225,16 +254,8 @@ export default function AdminResultsPage() {
 
   // Keep the coordinate inputs in sync with the competition summary
   useEffect(() => {
-    setFinalJudgeX(
-      typeof competition.finalJudgeX === "number" && Number.isFinite(competition.finalJudgeX)
-        ? competition.finalJudgeX.toFixed(3)
-        : ""
-    );
-    setFinalJudgeY(
-      typeof competition.finalJudgeY === "number" && Number.isFinite(competition.finalJudgeY)
-        ? competition.finalJudgeY.toFixed(3)
-        : ""
-    );
+    setFinalJudgeX(formatNormalizedCoordinate(competition.finalJudgeX, 4));
+    setFinalJudgeY(formatNormalizedCoordinate(competition.finalJudgeY, 4));
   }, [competition.finalJudgeX, competition.finalJudgeY]);
 
   const formatTimestamp = (value: string | null) => {
@@ -516,11 +537,9 @@ export default function AdminResultsPage() {
 
       try {
         const phaseStatus = phaseStatuses[phase];
-        if (phaseStatus !== "ACTIVE") {
-          const message = phaseStatus === "CLOSED"
-            ? `${PHASES.find((definition) => definition.id === phase)?.name ?? "Phase"} is closed.`
-            : `${PHASES.find((definition) => definition.id === phase)?.name ?? "Phase"} is not active yet.`;
-          throw new Error(message);
+        if (phaseStatus === "NOT_STARTED") {
+          const label = PHASES.find((definition) => definition.id === phase)?.name ?? "Phase";
+          throw new Error(`${label} is not active yet. Start or close it before computing results.`);
         }
 
         // 1) Validate coordinates first
@@ -535,7 +554,7 @@ export default function AdminResultsPage() {
           if (num < 0 || num > 1) {
             throw new Error(`${label} must be between 0 and 1`);
           }
-          return Number(num.toFixed(6));
+          return truncateToDecimals(num, 6);
         };
 
         const x = parseCoord("Final judge X", finalJudgeX);
@@ -639,8 +658,10 @@ export default function AdminResultsPage() {
     const parts: string[] = [];
     parts.push(`${competition.ticketsSold}/${competition.maxEntries} tickets used`);
     parts.push(`${competition.markersPerTicket} markers per ticket`);
-    if (typeof competition.finalJudgeX === "number" && typeof competition.finalJudgeY === "number") {
-      parts.push(`Final judge (${competition.finalJudgeX.toFixed(3)}, ${competition.finalJudgeY.toFixed(3)})`);
+    const judgeX = formatNormalizedCoordinate(competition.finalJudgeX, 4);
+    const judgeY = formatNormalizedCoordinate(competition.finalJudgeY, 4);
+    if (judgeX && judgeY) {
+      parts.push(`Final judge (${judgeX}, ${judgeY})`);
     }
     return parts.join(" • ");
   }, [competition]);
@@ -868,11 +889,14 @@ export default function AdminResultsPage() {
                     </div>
                   )}
 
-                  {status !== "ACTIVE" && (
+                  {status === "NOT_STARTED" && (
                     <div className="px-4 py-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
-                      {status === "CLOSED"
-                        ? `${name} is closed. Winners are locked.`
-                        : `${name} is not active yet. Activate this phase before declaring results.`}
+                      {`${name} is not active yet. Activate this phase before declaring results.`}
+                    </div>
+                  )}
+                  {status === "CLOSED" && (
+                    <div className="px-4 py-3 rounded-lg border border-sky-200 bg-sky-50 text-sm text-sky-900">
+                      {`${name} is closed for new submissions. Continue below to declare results.`}
                     </div>
                   )}
 
@@ -980,10 +1004,10 @@ export default function AdminResultsPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      disabled={busy || status !== "ACTIVE"}
+                      disabled={busy || status === "NOT_STARTED"}
                       onClick={() => handleComputeAndFill(id)}
                     >
-                      {busy ? "Computing…" : status === "ACTIVE" ? "Compute & fill" : "Compute unavailable"}
+                      {busy ? "Computing…" : status === "NOT_STARTED" ? "Compute unavailable" : "Compute & fill"}
                     </Button>
                     <Button
                       type="button"
@@ -1048,13 +1072,10 @@ const mapWinnersToForm = (winners: BackendWinner[] | undefined): WinnerForm[] =>
     ticketNumber: winner.ticketNumber != null ? String(winner.ticketNumber) : "",
   userId: winner.userId ?? winner.participantId ?? "",
     phone: winner.participantPhone ?? "",
-    distance:
-      typeof winner.distance === "number" && Number.isFinite(winner.distance)
-        ? winner.distance.toFixed(4)
-        : "",
+    distance: formatNormalizedCoordinate(winner.distance, 4),
     marker:
       winner.marker && Number.isFinite(winner.marker.x) && Number.isFinite(winner.marker.y)
-        ? `${winner.marker.x.toFixed(3)}, ${winner.marker.y.toFixed(3)}`
+        ? `${formatNormalizedCoordinate(winner.marker.x, 4)}, ${formatNormalizedCoordinate(winner.marker.y, 4)}`
         : "",
   }));
 

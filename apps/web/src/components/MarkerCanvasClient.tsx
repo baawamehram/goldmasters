@@ -65,15 +65,15 @@ const TARGET_HEIGHT = 1280;
 const TARGET_RATIO = TARGET_HEIGHT / TARGET_WIDTH;
 
 // Color palette for different tickets
-const MARKER_COLORS = [
-  '#FF6B6B', // Red
-  '#4ECDC4', // Teal
-  '#45B7D1', // Blue
-  '#FFA07A', // Orange
-  '#98D8C8', // Mint
-  '#F7DC6F', // Yellow
-  '#BB8FCE', // Purple
-  '#85C1E2', // Light Blue
+export const MARKER_COLORS = [
+  '#FF3B30', // Vivid red
+  '#0A84FF', // Bright blue
+  '#30D158', // Signal green
+  '#FF9500', // Modern orange
+  '#AF52DE', // Refined purple
+  '#64D2FF', // Icy cyan
+  '#FFD60A', // Highlight gold
+  '#FF2D55', // Punchy pink
 ];
 
 function MarkerCanvasClient(
@@ -469,7 +469,18 @@ function MarkerCanvasClient(
             const left = toPixels(marker.x, 'x');
             const top = toPixels(marker.y, 'y');
             const isActive = marker.state === 'active';
-            const displayColor = isActive ? marker.color : `${marker.color}CC`;
+            const isPlaced = marker.state === 'placed';
+            const displayColor = marker.color;
+            const accentBorder = isActive ? displayColor : `${displayColor}CC`;
+            const accentSoft = `${displayColor}14`;
+            const accentOutline = `${displayColor}44`;
+            const restingOutline = `${displayColor}26`;
+            const size = isActive ? 48 : isPlaced ? 24 : 38;
+            const boxShadow = isActive
+              ? `0 16px 36px ${displayColor}28, 0 0 0 1px ${displayColor}55`
+              : isPlaced
+                ? `0 6px 14px rgba(15,23,42,0.25), 0 0 0 1px ${restingOutline}`
+                : `0 12px 26px rgba(15,23,42,0.18), 0 0 0 1px ${restingOutline}`;
             const coordX = Math.round(marker.x * 1000) / 10;
             const coordY = Math.round(marker.y * 1000) / 10;
             return (
@@ -485,31 +496,89 @@ function MarkerCanvasClient(
               >
                 <button
                   type="button"
-                  className="relative flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-                  style={{ cursor: isActive ? 'grab' : 'default' }}
+                  className="relative flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full transition-transform duration-150"
+                  style={{
+                    cursor: isActive ? 'grab' : 'default',
+                    background: isPlaced ? '#0f172a' : accentSoft,
+                    border: `1.5px solid ${accentBorder}`,
+                    boxShadow,
+                    backdropFilter: 'blur(4px)',
+                    width: `${size}px`,
+                    height: `${size}px`,
+                  }}
                   onPointerDown={(event) => {
                     event.preventDefault();
                     handlePointerDown(marker.id);
                   }}
                   onClick={(event) => event.preventDefault()}
                 >
-                  <span
-                    className="absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2"
-                    style={{ backgroundColor: displayColor, opacity: marker.locked && !isActive ? 0.7 : 1 }}
-                  ></span>
-                  <span
-                    className="absolute left-0 top-1/2 h-[2px] w-full -translate-y-1/2"
-                    style={{ backgroundColor: displayColor, opacity: marker.locked && !isActive ? 0.7 : 1 }}
-                  ></span>
+                  {isPlaced ? (
+                    <span
+                      className="text-base font-semibold leading-none text-white"
+                      style={{ textShadow: `0 0 6px ${displayColor}80` }}
+                    >
+                      +
+                    </span>
+                  ) : (
+                    <>
+                      <span
+                        className="absolute rounded-full"
+                        style={{
+                          inset: '20%',
+                          boxShadow: `inset 0 0 0 1px ${accentOutline}`,
+                          background: `radial-gradient(circle at center, ${displayColor}18, transparent 70%)`,
+                        }}
+                      />
+                      <span
+                        className="absolute left-1/2 -translate-x-1/2 rounded-full"
+                        style={{
+                          top: '18%',
+                          height: '64%',
+                          width: '2px',
+                          backgroundColor: displayColor,
+                          boxShadow: `0 0 12px ${displayColor}33`,
+                        }}
+                      />
+                      <span
+                        className="absolute top-1/2 -translate-y-1/2 rounded-full"
+                        style={{
+                          left: '18%',
+                          width: '64%',
+                          height: '2px',
+                          backgroundColor: displayColor,
+                          boxShadow: `0 0 12px ${displayColor}33`,
+                        }}
+                      />
+                      <span
+                        className="absolute h-2.5 w-2.5 rounded-full"
+                        style={{
+                          backgroundColor: displayColor,
+                          boxShadow: `0 0 10px ${displayColor}55`,
+                        }}
+                      />
+                    </>
+                  )}
                   {showPanels && (
-                    <span className="absolute -top-5 text-[10px] font-semibold text-white drop-shadow-sm">
+                    <span
+                      className="absolute -top-6 rounded-full px-2 py-[2px] text-[10px] font-semibold uppercase tracking-wide"
+                      style={{
+                        backgroundColor: `${displayColor}12`,
+                        color: displayColor,
+                        border: `1px solid ${displayColor}33`,
+                      }}
+                    >
                       {marker.label}
                     </span>
                   )}
                 </button>
                 {showPanels && (
                   <div
-                    className="absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded bg-black/70 px-2 py-[2px] text-[10px] font-medium text-white"
+                    className="absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded px-2 py-[2px] text-[10px] font-medium"
+                    style={{
+                      backgroundColor: 'rgba(15,23,42,0.92)',
+                      border: `1px solid ${displayColor}33`,
+                      color: '#F8FAFC',
+                    }}
                   >
                     X {coordX.toFixed(1)} • Y {coordY.toFixed(1)}
                   </div>

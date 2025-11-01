@@ -76,6 +76,7 @@ export default function EnterCompetitionPage() {
   const [hasAccess, setHasAccess] = useState(false);
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshingCompetition, setIsRefreshingCompetition] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [participantToken, setParticipantToken] = useState<string | null>(null);
@@ -93,6 +94,8 @@ export default function EnterCompetitionPage() {
   const [phaseStatus, setPhaseStatus] = useState<string>('ACTIVE');
 
   const markerCanvasRef = useRef<MarkerCanvasHandle | null>(null);
+  const lastFetchedTokenRef = useRef<string | null>(null);
+  const hasLoadedCompetitionRef = useRef(false);
 
   const persistParticipantSession = useCallback(
     (participantData: ParticipantSummary, participantAccessToken: string, ticketData: Ticket[]) => {
@@ -110,6 +113,7 @@ export default function EnterCompetitionPage() {
           submittedAt: ticket.submittedAt ?? null,
         }))
       );
+      lastFetchedTokenRef.current = participantAccessToken;
       localStorage.setItem(participantTokenKey, participantAccessToken);
       localStorage.setItem(
         participantInfoKey,
@@ -257,8 +261,15 @@ export default function EnterCompetitionPage() {
   const fetchCompetitionData = useCallback(async () => {
     if (!hasAccess) return;
 
-    try {
+    const isInitialLoad = !hasLoadedCompetitionRef.current;
+
+    if (isInitialLoad) {
       setIsLoading(true);
+    } else {
+      setIsRefreshingCompetition(true);
+    }
+
+    try {
       const storedCompetitionToken = localStorage.getItem(competitionTokenKey);
       const authToken = participantToken ?? storedCompetitionToken;
 
@@ -277,12 +288,17 @@ export default function EnterCompetitionPage() {
       }
 
       setCompetition(data.data.competition);
+      hasLoadedCompetitionRef.current = true;
       setError(null);
     } catch (err) {
       console.error("Error fetching competition:", err);
       setError(err instanceof Error ? err.message : "Failed to load competition");
     } finally {
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      } else {
+        setIsRefreshingCompetition(false);
+      }
     }
   }, [competitionTokenKey, hasAccess, id, participantToken]);
 
@@ -344,9 +360,15 @@ export default function EnterCompetitionPage() {
   useEffect(() => {
     if (!participantToken) {
       setTickets([]);
+      lastFetchedTokenRef.current = null;
       return;
     }
 
+    if (participantToken === lastFetchedTokenRef.current) {
+      return;
+    }
+
+    lastFetchedTokenRef.current = participantToken;
     fetchParticipantTickets();
   }, [fetchParticipantTickets, participantToken]);
 
@@ -474,6 +496,7 @@ export default function EnterCompetitionPage() {
     setMarkers([]);
     setSubmissionMessage(null);
     setParticipantError(null);
+    lastFetchedTokenRef.current = null;
     localStorage.removeItem(participantTokenKey);
     localStorage.removeItem(participantInfoKey);
     localStorage.removeItem(checkoutMarkersKey);
@@ -611,8 +634,14 @@ export default function EnterCompetitionPage() {
         {/* Header with logo */}
         <div className="bg-[#00563F] text-white p-4 flex items-center justify-between flex-shrink-0">
           <div className="font-bold text-lg tracking-wider">GOLDMASTERS</div>
-          <div className="text-xs opacity-75">
-            Phase {currentPhase} - {phaseStatus}
+          <div className="text-xs opacity-75 flex items-center gap-3">
+            <span>Phase {currentPhase} - {phaseStatus}</span>
+            {isRefreshingCompetition && (
+              <span className="flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-200 animate-pulse" />
+                Syncing
+              </span>
+            )}
           </div>
         </div>
 

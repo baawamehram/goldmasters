@@ -71,6 +71,35 @@ interface ViewEntryDetailsModalProps {
   onClose: () => void;
 }
 
+const truncateToDecimals = (value: number, decimals: number): number => {
+  const factor = 10 ** decimals;
+  return Math.trunc(value * factor) / factor;
+};
+
+const formatNormalizedCoordinate = (
+  value: number | null | undefined,
+  decimals = 4
+): string => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "";
+  }
+
+  const raw = value.toString();
+  if (!raw.includes("e") && !raw.includes("E")) {
+    const [integerPart, fractionalPart = ""] = raw.split(".");
+    if (fractionalPart.length === decimals) {
+      return `${integerPart}.${fractionalPart}`;
+    }
+    if (fractionalPart.length > decimals) {
+      return `${integerPart}.${fractionalPart.slice(0, decimals)}`;
+    }
+    return `${integerPart}.${fractionalPart.padEnd(decimals, "0")}`;
+  }
+
+  const truncated = truncateToDecimals(value, decimals);
+  return formatNormalizedCoordinate(truncated, decimals);
+};
+
 export default function ViewEntryDetailsModal({
   competitionId,
   participantId,
@@ -322,19 +351,11 @@ export default function ViewEntryDetailsModal({
                                 <dl className="space-y-1 text-xs">
                                   <div className="flex justify-between">
                                     <dt className="text-gray-600">X (norm):</dt>
-                                    <dd className="font-mono font-semibold">{marker.x.toFixed(4)}</dd>
+                                    <dd className="font-mono font-semibold">{formatNormalizedCoordinate(marker.x, 4)}</dd>
                                   </div>
                                   <div className="flex justify-between">
                                     <dt className="text-gray-600">Y (norm):</dt>
-                                    <dd className="font-mono font-semibold">{marker.y.toFixed(4)}</dd>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <dt className="text-gray-600">X (%):</dt>
-                                    <dd className="font-mono text-gray-700">{(marker.x * 100).toFixed(2)}%</dd>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <dt className="text-gray-600">Y (%):</dt>
-                                    <dd className="font-mono text-gray-700">{(marker.y * 100).toFixed(2)}%</dd>
+                                    <dd className="font-mono font-semibold">{formatNormalizedCoordinate(marker.y, 4)}</dd>
                                   </div>
                                 </dl>
                               </div>
@@ -417,19 +438,13 @@ export default function ViewEntryDetailsModal({
                       <div>
                         <p className="text-sm text-blue-800">X Coordinate</p>
                         <p className="text-2xl font-bold text-blue-900">
-                          {(competition.finalJudgeX as number).toFixed(4)}
-                        </p>
-                        <p className="text-xs text-blue-700 mt-1">
-                          {((competition.finalJudgeX as number) * 100).toFixed(2)}%
+                          {formatNormalizedCoordinate(competition.finalJudgeX ?? null, 4)}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-blue-800">Y Coordinate</p>
                         <p className="text-2xl font-bold text-blue-900">
-                          {(competition.finalJudgeY as number).toFixed(4)}
-                        </p>
-                        <p className="text-xs text-blue-700 mt-1">
-                          {((competition.finalJudgeY as number) * 100).toFixed(2)}%
+                          {formatNormalizedCoordinate(competition.finalJudgeY ?? null, 4)}
                         </p>
                       </div>
                     </div>
@@ -443,12 +458,12 @@ export default function ViewEntryDetailsModal({
                           </div>
                           <div>
                             <span className="text-blue-700">
-                              Marker: ({(closestMarker as any).marker.x.toFixed(4)}, {(closestMarker as any).marker.y.toFixed(4)})
+                              Marker: ({formatNormalizedCoordinate((closestMarker as any).marker.x, 4)}, {formatNormalizedCoordinate((closestMarker as any).marker.y, 4)})
                             </span>
                           </div>
                           <div>
                             <span className="font-semibold text-green-700">
-                              Distance: {(closestMarker as any).distance.toFixed(4)}
+                              Distance: {formatNormalizedCoordinate((closestMarker as any).distance, 4)}
                             </span>
                           </div>
                         </div>
@@ -498,25 +513,13 @@ export default function ViewEntryDetailsModal({
                                   <div className="flex justify-between">
                                     <dt className="text-gray-600">X (Normalized):</dt>
                                     <dd className="font-mono font-semibold text-gray-900">
-                                      {marker.x.toFixed(4)}
+                                      {formatNormalizedCoordinate(marker.x, 4)}
                                     </dd>
                                   </div>
                                   <div className="flex justify-between">
                                     <dt className="text-gray-600">Y (Normalized):</dt>
                                     <dd className="font-mono font-semibold text-gray-900">
-                                      {marker.y.toFixed(4)}
-                                    </dd>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <dt className="text-gray-600">X (%):</dt>
-                                    <dd className="font-mono text-gray-700">
-                                      {(marker.x * 100).toFixed(2)}%
-                                    </dd>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <dt className="text-gray-600">Y (%):</dt>
-                                    <dd className="font-mono text-gray-700">
-                                      {(marker.y * 100).toFixed(2)}%
+                                      {formatNormalizedCoordinate(marker.y, 4)}
                                     </dd>
                                   </div>
                                 </dl>
@@ -532,12 +535,15 @@ export default function ViewEntryDetailsModal({
                                       Distance
                                     </p>
                                     <p className="text-lg font-bold text-gray-900 mt-1">
-                                      {calculateDistance(
-                                        marker.x,
-                                        marker.y,
-                                        competition.finalJudgeX as number,
-                                        competition.finalJudgeY as number
-                                      ).toFixed(4)}
+                                      {formatNormalizedCoordinate(
+                                        calculateDistance(
+                                          marker.x,
+                                          marker.y,
+                                          competition.finalJudgeX as number,
+                                          competition.finalJudgeY as number
+                                        ),
+                                        4
+                                      )}
                                     </p>
                                   </div>
                                 )}

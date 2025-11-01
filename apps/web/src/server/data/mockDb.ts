@@ -9,6 +9,21 @@ const PARTICIPANTS_FILE = path.join(DATA_DIR, 'participants.json');
 const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
 const COMPLETED_ENTRIES_FILE = path.join(DATA_DIR, 'completed-entries.json');
 
+const DEFAULT_COMPETITION_ID =
+  process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
+
+const normalizeCompetitionId = (competitionId: string | null | undefined): string => {
+  if (!competitionId) {
+    return DEFAULT_COMPETITION_ID;
+  }
+
+  if (competitionId.startsWith('user-') || competitionId.startsWith('participant-')) {
+    return DEFAULT_COMPETITION_ID;
+  }
+
+  return competitionId;
+};
+
 // Ensure data directory exists (server-side only)
 const ensureDataDir = () => {
   if (typeof window === 'undefined') {
@@ -85,11 +100,17 @@ export type MockCompetitionResult = {
 const DEFAULT_INVITE_PASSWORD = 'competition123';
 const DEFAULT_INVITE_PASSWORD_HASH = bcrypt.hashSync(DEFAULT_INVITE_PASSWORD, 10);
 
-export const sanitizePhone = (phone: string): string => phone.replace(/[^0-9+]/g, '');
+export const sanitizePhone = (phone: string): string => {
+  const digitsOnly = phone.replace(/\D+/g, '');
+  if (digitsOnly.length > 10) {
+    return digitsOnly.slice(-10);
+  }
+  return digitsOnly;
+};
 
 let mockCompetitions: MockCompetition[] = [
   {
-    id: 'test-id',
+    id: DEFAULT_COMPETITION_ID,
     title: 'Gold Coin',
     imageUrl: '/images/gold-coin.svg',
     maxEntries: 100,
@@ -116,11 +137,15 @@ const loadParticipantsFromStorage = (): MockParticipant[] => {
         // Convert date strings back to Date objects
         return parsed.map((participant: any) => ({
           ...participant,
+          competitionId: normalizeCompetitionId(participant?.competitionId),
+          phone: sanitizePhone(participant?.phone ?? ''),
           lastSubmissionAt: participant.lastSubmissionAt ? new Date(participant.lastSubmissionAt) : null,
-          tickets: participant.tickets.map((ticket: any) => ({
-            ...ticket,
-            submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
-          })),
+          tickets: Array.isArray(participant.tickets)
+            ? participant.tickets.map((ticket: any) => ({
+                ...ticket,
+                submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
+              }))
+            : [],
         }));
       }
     } catch (error) {
@@ -136,11 +161,15 @@ const loadParticipantsFromStorage = (): MockParticipant[] => {
         const parsed = JSON.parse(data);
         return parsed.map((participant: any) => ({
           ...participant,
+          competitionId: normalizeCompetitionId(participant?.competitionId),
+          phone: sanitizePhone(participant?.phone ?? ''),
           lastSubmissionAt: participant.lastSubmissionAt ? new Date(participant.lastSubmissionAt) : null,
-          tickets: participant.tickets.map((ticket: any) => ({
-            ...ticket,
-            submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
-          })),
+          tickets: Array.isArray(participant.tickets)
+            ? participant.tickets.map((ticket: any) => ({
+                ...ticket,
+                submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
+              }))
+            : [],
         }));
       }
     } catch (error) {
@@ -151,7 +180,7 @@ const loadParticipantsFromStorage = (): MockParticipant[] => {
   return [
     {
       id: 'participant-1',
-      competitionId: 'test-id',
+      competitionId: DEFAULT_COMPETITION_ID,
       name: 'Priya Sharma',
       phone: sanitizePhone('+91 98765 43210'),
       email: 'priya.sharma@example.com',
@@ -176,7 +205,7 @@ const loadParticipantsFromStorage = (): MockParticipant[] => {
     },
     {
       id: 'participant-2',
-      competitionId: 'test-id',
+      competitionId: DEFAULT_COMPETITION_ID,
       name: 'Arjun Mehta',
       phone: sanitizePhone('+91 91234 56789'),
       email: 'arjun.mehta@example.com',
@@ -221,6 +250,118 @@ const saveParticipantsToStorage = () => {
   }
 };
 
+const cloneTicket = (ticket: MockTicket): MockTicket => ({
+  ...ticket,
+  markers: ticket.markers.map((marker) => ({ ...marker })),
+  submittedAt: ticket.submittedAt ? new Date(ticket.submittedAt) : null,
+});
+
+const mergeTickets = (primaryTickets: MockTicket[], incomingTickets: MockTicket[]): MockTicket[] => {
+  const ticketsByNumber = new Map<number, MockTicket>();
+
+  const selectPreferredTicket = (existing: MockTicket, candidate: MockTicket): MockTicket => {
+    const existingStatusScore = existing.status === 'USED' ? 2 : 1;
+    const candidateStatusScore = candidate.status === 'USED' ? 2 : 1;
+
+    if (candidateStatusScore > existingStatusScore) {
+      return cloneTicket(candidate);
+    }
+
+    if (candidateStatusScore < existingStatusScore) {
+      return existing;
+    }
+
+    const existingSubmittedAt = existing.submittedAt instanceof Date ? existing.submittedAt.getTime() : 0;
+    const candidateSubmittedAt = candidate.submittedAt instanceof Date ? candidate.submittedAt.getTime() : 0;
+
+    if (candidateSubmittedAt > existingSubmittedAt) {
+      return cloneTicket(candidate);
+    }
+
+    if (candidateSubmittedAt < existingSubmittedAt) {
+      return existing;
+    }
+
+    if (candidate.markers.length > existing.markers.length) {
+      return cloneTicket(candidate);
+    }
+
+    return existing;
+  };
+
+  const ingestTicket = (ticket: MockTicket) => {
+    const ticketNumber = ticket.ticketNumber ?? 0;
+    const existing = ticketsByNumber.get(ticketNumber);
+
+    if (!existing) {
+      ticketsByNumber.set(ticketNumber, cloneTicket(ticket));
+      return;
+    }
+
+    ticketsByNumber.set(ticketNumber, selectPreferredTicket(existing, ticket));
+  };
+
+  primaryTickets.forEach(ingestTicket);
+  incomingTickets.forEach(ingestTicket);
+
+  return Array.from(ticketsByNumber.values()).sort((a, b) => (a.ticketNumber ?? 0) - (b.ticketNumber ?? 0));
+};
+
+const mergeDuplicateParticipants = (): boolean => {
+  const participantsByKey = new Map<string, MockParticipant>();
+  const duplicateIds = new Set<string>();
+  let mutated = false;
+
+  for (const participant of mockParticipants) {
+    const normalizedCompetitionId = normalizeCompetitionId(participant.competitionId);
+    if (participant.competitionId !== normalizedCompetitionId) {
+      participant.competitionId = normalizedCompetitionId;
+      mutated = true;
+    }
+
+    const normalizedPhone = sanitizePhone(participant.phone ?? '');
+    if (participant.phone !== normalizedPhone) {
+      participant.phone = normalizedPhone;
+      mutated = true;
+    }
+
+    const key = `${participant.competitionId}:${participant.phone}`;
+    const existing = participantsByKey.get(key);
+
+    if (!existing) {
+      participantsByKey.set(key, participant);
+      continue;
+    }
+
+    existing.tickets = mergeTickets(existing.tickets, participant.tickets);
+
+    const existingSubmission = existing.lastSubmissionAt instanceof Date ? existing.lastSubmissionAt.getTime() : 0;
+    const candidateSubmission = participant.lastSubmissionAt instanceof Date ? participant.lastSubmissionAt.getTime() : 0;
+
+    if (candidateSubmission > existingSubmission) {
+      existing.lastSubmissionAt = participant.lastSubmissionAt ? new Date(participant.lastSubmissionAt) : null;
+    }
+
+    if (!existing.email && participant.email) {
+      existing.email = participant.email;
+    }
+
+    duplicateIds.add(participant.id);
+    mutated = true;
+  }
+
+  if (duplicateIds.size > 0) {
+    mockParticipants = mockParticipants.filter((participant) => !duplicateIds.has(participant.id));
+    mutated = true;
+  }
+
+  if (mutated) {
+    saveParticipantsToStorage();
+  }
+
+  return mutated;
+};
+
 const COMPLETED_ENTRIES_STORAGE_KEY = 'completed_entries_db';
 
 const loadCompletedEntriesFromStorage = (): Set<string> => {
@@ -230,7 +371,17 @@ const loadCompletedEntriesFromStorage = (): Set<string> => {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          return new Set(parsed.filter((value): value is string => typeof value === 'string'));
+          const normalized = parsed
+            .filter((value): value is string => typeof value === 'string')
+            .map((value) => {
+              const [competitionId, participantId] = value.split(':');
+              if (!competitionId || !participantId) {
+                return null;
+              }
+              return buildCompletionKey(competitionId, participantId);
+            })
+            .filter((value): value is string => typeof value === 'string' && value.length > 0);
+          return new Set(normalized);
         }
       }
     } catch (error) {
@@ -243,7 +394,17 @@ const loadCompletedEntriesFromStorage = (): Set<string> => {
         const data = fs.readFileSync(COMPLETED_ENTRIES_FILE, 'utf-8');
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed)) {
-          return new Set(parsed.filter((value: unknown): value is string => typeof value === 'string'));
+          const normalized = parsed
+            .filter((value: unknown): value is string => typeof value === 'string')
+            .map((value) => {
+              const [competitionId, participantId] = value.split(':');
+              if (!competitionId || !participantId) {
+                return null;
+              }
+              return buildCompletionKey(competitionId, participantId);
+            })
+            .filter((value): value is string => typeof value === 'string' && value.length > 0);
+          return new Set(normalized);
         }
       }
     } catch (error) {
@@ -274,16 +435,24 @@ const saveCompletedEntriesToStorage = (entries: Set<string>) => {
 };
 
 let mockParticipants: MockParticipant[] = loadParticipantsFromStorage();
+mergeDuplicateParticipants();
 
 let mockCompetitionResults: MockCompetitionResult[] = [];
 let completedEntries: Set<string> = loadCompletedEntriesFromStorage();
 
 export const getCompetitions = (): MockCompetition[] => mockCompetitions;
 
-export const getParticipants = (): MockParticipant[] => mockParticipants;
+export const getParticipants = (): MockParticipant[] => {
+  refreshParticipants();
+  return mockParticipants;
+};
 
-export const getParticipantsByCompetition = (competitionId: string): MockParticipant[] =>
-  mockParticipants.filter((participant) => participant.competitionId === competitionId);
+export const getParticipantsByCompetition = (competitionId: string): MockParticipant[] => {
+  refreshParticipants();
+  return mockParticipants.filter(
+    (participant) => participant.competitionId === normalizeCompetitionId(competitionId)
+  );
+};
 
 export const calculateTicketsSold = (competitionId: string): number =>
   mockParticipants
@@ -385,20 +554,29 @@ export const closeCompetition = (id: string): MockCompetition | null => {
   return updated;
 };
 
-export const findParticipantByPhone = (competitionId: string, phone: string) =>
-  mockParticipants.find(
-    (participant) =>
-      participant.competitionId === competitionId &&
-      sanitizePhone(participant.phone) === sanitizePhone(phone)
-  );
+export const findParticipantByPhone = (competitionId: string, phone: string) => {
+  refreshParticipants();
+  const normalizedCompetitionId = normalizeCompetitionId(competitionId);
+  const sanitized = sanitizePhone(phone);
 
-export const findParticipantById = (competitionId: string, participantId: string) =>
-  mockParticipants.find(
+  return mockParticipants.find(
     (participant) =>
-      participant.competitionId === competitionId && participant.id === participantId
+      participant.competitionId === normalizedCompetitionId &&
+      sanitizePhone(participant.phone) === sanitized
   );
+};
+
+export const findParticipantById = (competitionId: string, participantId: string) => {
+  refreshParticipants();
+  const normalizedCompetitionId = normalizeCompetitionId(competitionId);
+  return mockParticipants.find(
+    (participant) =>
+      participant.competitionId === normalizedCompetitionId && participant.id === participantId
+  );
+};
 
 export const findParticipantsByPhone = (phone: string): MockParticipant[] => {
+  refreshParticipants();
   const sanitized = sanitizePhone(phone);
   return mockParticipants.filter(
     (participant) => sanitizePhone(participant.phone) === sanitized
@@ -411,17 +589,25 @@ export const getCompetitionsByIds = (ids: string[]): MockCompetition[] => {
 };
 
 export const saveParticipant = (updatedParticipant: MockParticipant) => {
+  const normalizedParticipant: MockParticipant = {
+    ...updatedParticipant,
+    phone: sanitizePhone(updatedParticipant.phone ?? ''),
+    competitionId: normalizeCompetitionId(updatedParticipant.competitionId),
+  };
+
   const exists = mockParticipants.some(
-    (participant) => participant.id === updatedParticipant.id
+    (participant) => participant.id === normalizedParticipant.id
   );
 
   if (exists) {
     mockParticipants = mockParticipants.map((participant) =>
-      participant.id === updatedParticipant.id ? updatedParticipant : participant
+      participant.id === normalizedParticipant.id ? normalizedParticipant : participant
     );
   } else {
-    mockParticipants = [...mockParticipants, updatedParticipant];
+    mockParticipants = [...mockParticipants, normalizedParticipant];
   }
+
+  mergeDuplicateParticipants();
 };
 
 export const getCompetitionsWithStats = () =>
@@ -475,7 +661,7 @@ export const getCompetitionResult = (competitionId: string): MockCompetitionResu
   mockCompetitionResults.find((entry) => entry.competitionId === competitionId) ?? null;
 
 const buildCompletionKey = (competitionId: string, participantId: string) =>
-  `${competitionId}:${participantId}`;
+  `${normalizeCompetitionId(competitionId)}:${participantId}`;
 
 export const hasParticipantCompletedEntry = (
   competitionId: string,
@@ -618,6 +804,7 @@ const loadUserEntriesFromStorage = (): UserEntry[] => {
         const parsed = JSON.parse(stored);
         return parsed.map((entry: any) => ({
           ...entry,
+          phone: sanitizePhone(entry?.phone ?? ''),
           createdAt: new Date(entry.createdAt),
           lastLoginAt: entry.lastLoginAt ? new Date(entry.lastLoginAt) : null,
           lastLogoutAt: entry.lastLogoutAt ? new Date(entry.lastLogoutAt) : null,
@@ -636,6 +823,7 @@ const loadUserEntriesFromStorage = (): UserEntry[] => {
         const parsed = JSON.parse(data);
         return parsed.map((entry: any) => ({
           ...entry,
+          phone: sanitizePhone(entry?.phone ?? ''),
           createdAt: new Date(entry.createdAt),
           lastLoginAt: entry.lastLoginAt ? new Date(entry.lastLoginAt) : null,
           lastLogoutAt: entry.lastLogoutAt ? new Date(entry.lastLogoutAt) : null,
@@ -669,8 +857,87 @@ const saveUserEntriesToStorage = () => {
   }
 };
 
+const mergeDuplicateUserEntries = (): boolean => {
+  const entriesByPhone = new Map<string, UserEntry[]>();
+  const duplicateIds = new Set<string>();
+  let mutated = false;
+
+  for (const entry of userEntries) {
+    const normalizedPhone = sanitizePhone(entry.phone ?? '');
+    if (entry.phone !== normalizedPhone) {
+      entry.phone = normalizedPhone;
+      mutated = true;
+    }
+
+    const key = normalizedPhone;
+    if (!key) {
+      continue;
+    }
+
+    const bucket = entriesByPhone.get(key) ?? [];
+    bucket.push(entry);
+    entriesByPhone.set(key, bucket);
+  }
+
+  entriesByPhone.forEach((entries) => {
+    if (!entries || entries.length <= 1) {
+      return;
+    }
+
+    entries.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    const primary = entries[0];
+
+    for (let index = 1; index < entries.length; index += 1) {
+      const duplicate = entries[index];
+      duplicateIds.add(duplicate.id);
+      mutated = true;
+
+      if (!primary.email && duplicate.email) {
+        primary.email = duplicate.email;
+      }
+
+      primary.assignedTickets = Math.max(primary.assignedTickets, duplicate.assignedTickets);
+      primary.isLoggedIn = primary.isLoggedIn || duplicate.isLoggedIn;
+
+      if (duplicate.lastLoginAt && (!primary.lastLoginAt || duplicate.lastLoginAt > primary.lastLoginAt)) {
+        primary.lastLoginAt = duplicate.lastLoginAt;
+      }
+
+      if (duplicate.lastLogoutAt && (!primary.lastLogoutAt || duplicate.lastLogoutAt > primary.lastLogoutAt)) {
+        primary.lastLogoutAt = duplicate.lastLogoutAt;
+      }
+
+      if (duplicate.currentPhase !== null && duplicate.currentPhase !== undefined) {
+        primary.currentPhase = duplicate.currentPhase;
+      }
+    }
+  });
+
+  if (duplicateIds.size > 0) {
+    userEntries = userEntries.filter((entry) => !duplicateIds.has(entry.id));
+    mutated = true;
+  }
+
+  return mutated;
+};
+
+const refreshUserEntries = () => {
+  userEntries = loadUserEntriesFromStorage();
+  if (mergeDuplicateUserEntries()) {
+    saveUserEntriesToStorage();
+  }
+};
+
+const refreshParticipants = () => {
+  mockParticipants = loadParticipantsFromStorage();
+  mergeDuplicateParticipants();
+};
+
 // Initialize user entries array
 let userEntries: UserEntry[] = loadUserEntriesFromStorage();
+if (mergeDuplicateUserEntries()) {
+  saveUserEntriesToStorage();
+}
 
 // Generate unique 6-digit access code
 const generateAccessCode = (): string => {
@@ -689,8 +956,8 @@ const generateAccessCode = (): string => {
 export const createOrUpdateUserEntry = (name: string, phone: string, existingId?: string): UserEntry => {
   const sanitized = sanitizePhone(phone);
   
-  // Reload from storage to get latest data
-  userEntries = loadUserEntriesFromStorage();
+  // Reload from storage to get latest data and merge duplicates
+  refreshUserEntries();
   
   // Check if user already exists by phone
   const existing = userEntries.find((entry) => entry.phone === sanitized);
@@ -699,6 +966,9 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
     // Update name if changed
     if (existing.name !== name) {
       existing.name = name;
+    }
+    if (existing.phone !== sanitized) {
+      existing.phone = sanitized;
     }
     // Update login status
     existing.isLoggedIn = true;
@@ -741,13 +1011,71 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
   return newEntry;
 };
 
+type ManualUserEntryPayload = {
+  name: string;
+  phone: string;
+  email?: string | null;
+  id?: string | null;
+};
+
+export const createManualUserEntry = ({
+  name,
+  phone,
+  email,
+  id,
+}: ManualUserEntryPayload): UserEntry => {
+  const trimmedName = typeof name === 'string' ? name.trim() : '';
+  const sanitizedPhone = sanitizePhone(typeof phone === 'string' ? phone : '');
+
+  if (!trimmedName) {
+    throw new Error('Name is required');
+  }
+
+  if (!sanitizedPhone) {
+    throw new Error('Phone number is required');
+  }
+
+  refreshUserEntries();
+
+  const duplicateByPhone = userEntries.find((entry) => entry.phone === sanitizedPhone);
+  if (duplicateByPhone) {
+    throw new Error('A participant with this phone number already exists.');
+  }
+
+  const requestedId = typeof id === 'string' && id.trim().length > 0 ? id.trim() : undefined;
+  if (requestedId && userEntries.some((entry) => entry.id === requestedId)) {
+    throw new Error('A participant with this user ID already exists.');
+  }
+
+  const normalizedEmail = typeof email === 'string' && email.trim().length > 0 ? email.trim() : null;
+
+  const newEntry: UserEntry = {
+    id: requestedId || `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    name: trimmedName,
+    phone: sanitizedPhone,
+    email: normalizedEmail,
+    createdAt: new Date(),
+    assignedTickets: 0,
+    isLoggedIn: false,
+    lastLoginAt: null,
+    lastLogoutAt: null,
+    accessCode: generateAccessCode(),
+    currentPhase: null,
+  };
+
+  userEntries.push(newEntry);
+  saveUserEntriesToStorage();
+  return newEntry;
+};
+
 export const getAllUserEntries = (): UserEntry[] => {
-  const defaultCompetitionId = 'test-id';
+  const defaultCompetitionId = DEFAULT_COMPETITION_ID;
   
   // Reload from storage to get latest data (including users added by other processes)
-  const latestEntries = loadUserEntriesFromStorage();
+  refreshUserEntries();
+  refreshParticipants();
   
-  return latestEntries.map((entry) => {
+  return userEntries.map((entry) => {
     // Only count tickets from the default competition to match admin assignment logic
     // This prevents checkout/gameplay tickets in other competitions from affecting the count
     const participants = mockParticipants.filter(
@@ -764,14 +1092,18 @@ export const getAllUserEntries = (): UserEntry[] => {
 
 export const getUserEntryByPhone = (phone: string): UserEntry | null => {
   const sanitized = sanitizePhone(phone);
+  refreshUserEntries();
   return userEntries.find((entry) => entry.phone === sanitized) ?? null;
 };
 
 export const getUserEntryById = (id: string): UserEntry | null => {
+  refreshUserEntries();
+  refreshParticipants();
   return userEntries.find((entry) => entry.id === id) ?? null;
 };
 
 export const getUserEntryByNameAndPhone = (name: string, phone: string): UserEntry | null => {
+  refreshUserEntries();
   const sanitized = sanitizePhone(phone);
   return userEntries.find((entry) => 
     entry.phone === sanitized && 
@@ -780,6 +1112,7 @@ export const getUserEntryByNameAndPhone = (name: string, phone: string): UserEnt
 };
 
 export const logoutUserEntry = (phone: string): UserEntry | null => {
+  refreshUserEntries();
   const sanitized = sanitizePhone(phone);
   const entry = userEntries.find((e) => e.phone === sanitized);
   
@@ -793,10 +1126,12 @@ export const logoutUserEntry = (phone: string): UserEntry | null => {
 };
 
 export const verifyAccessCode = (code: string): UserEntry | null => {
-  return userEntries.find((entry) => entry.accessCode === code) ?? null;
+  refreshUserEntries();
+  return userEntries.find((entry) => entry.accessCode === code.trim()) ?? null;
 };
 
 export const assignUserToPhase = (userId: string, phase: number): UserEntry | null => {
+  refreshUserEntries();
   const entry = userEntries.find((e) => e.id === userId);
   
   if (entry) {
@@ -808,37 +1143,42 @@ export const assignUserToPhase = (userId: string, phase: number): UserEntry | nu
 };
 
 export const getUsersByPhase = (phase: number): UserEntry[] => {
+  refreshUserEntries();
   return userEntries.filter((entry) => entry.currentPhase === phase);
 };
 
-export const updateUserTickets = (userId: string, ticketCount: number): UserEntry | null => {
+export const updateUserTickets = (
+  userId: string,
+  ticketCount: number,
+  competitionId = DEFAULT_COMPETITION_ID
+): UserEntry | null => {
+  // Always work against the latest state from disk to avoid stale reads between requests
+  refreshUserEntries();
+  refreshParticipants();
+
   const user = userEntries.find((entry) => entry.id === userId);
   if (!user) {
     return null;
   }
 
-  // Get or create participant for this user in the default competition ONLY
-  const defaultCompetitionId = 'test-id';
-  
-  // CLEANUP: Remove any participants for this user in OTHER competitions
-  // We only want one competition per user
+  const targetCompetitionId = normalizeCompetitionId(competitionId);
+  const defaultCompetitionId = DEFAULT_COMPETITION_ID;
   const userPhone = sanitizePhone(user.phone);
-  mockParticipants = mockParticipants.filter(
-    (p) => !(sanitizePhone(p.phone) === userPhone && p.competitionId !== defaultCompetitionId)
+  const targetCompetition = getCompetitionById(targetCompetitionId);
+  const markersPerTicket = targetCompetition.markersPerTicket ?? 3;
+
+  // Find or merge all participants in the target competition for this user
+  const participantsInTarget = mockParticipants.filter(
+    (p) => sanitizePhone(p.phone) === userPhone && p.competitionId === targetCompetitionId
   );
-  
-  // Find or merge all participants in the default competition for this user
-  const participantsInDefault = mockParticipants.filter(
-    (p) => sanitizePhone(p.phone) === userPhone && p.competitionId === defaultCompetitionId
-  );
-  
+
   let participant: MockParticipant;
-  
-  if (participantsInDefault.length === 0) {
-    // Create new participant entry
+
+  if (participantsInTarget.length === 0) {
+    // Create new participant entry for the target competition
     const newParticipant: MockParticipant = {
       id: `participant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      competitionId: defaultCompetitionId,
+      competitionId: targetCompetitionId,
       name: user.name,
       phone: user.phone,
       email: user.email || undefined,
@@ -847,32 +1187,53 @@ export const updateUserTickets = (userId: string, ticketCount: number): UserEntr
     };
     mockParticipants.push(newParticipant);
     participant = newParticipant;
-  } else if (participantsInDefault.length === 1) {
-    // Use the existing participant
-    participant = participantsInDefault[0];
+  } else if (participantsInTarget.length === 1) {
+    participant = participantsInTarget[0];
   } else {
-    // Multiple participants found - merge them into one
-    participant = participantsInDefault[0];
-    
-    // Merge tickets from duplicates
-    for (let i = 1; i < participantsInDefault.length; i++) {
-      const duplicate = participantsInDefault[i];
+    // Multiple participant records for the same user/competition – merge them
+    participant = participantsInTarget[0];
+
+    for (let i = 1; i < participantsInTarget.length; i++) {
+      const duplicate = participantsInTarget[i];
       participant.tickets = [...participant.tickets, ...duplicate.tickets];
-      
-      // Update last submission time if newer
-      if (duplicate.lastSubmissionAt && 
-          (!participant.lastSubmissionAt || duplicate.lastSubmissionAt > participant.lastSubmissionAt)) {
+
+      if (
+        duplicate.lastSubmissionAt &&
+        (!participant.lastSubmissionAt || duplicate.lastSubmissionAt > participant.lastSubmissionAt)
+      ) {
         participant.lastSubmissionAt = duplicate.lastSubmissionAt;
       }
     }
-    
-    // Remove duplicates from the array
-    const duplicateIds = participantsInDefault.slice(1).map(p => p.id);
-    mockParticipants = mockParticipants.filter(p => !duplicateIds.includes(p.id));
+
+    const duplicateIds = new Set(participantsInTarget.slice(1).map((p) => p.id));
+    mockParticipants = mockParticipants.filter(
+      (p) => !(duplicateIds.has(p.id) && p.competitionId === targetCompetitionId)
+    );
   }
 
   // Calculate current ticket count for this specific participant
   const currentTicketCount = participant.tickets.length;
+
+  // Prepare a ticket number allocator that guarantees uniqueness across the latest dataset
+  const usedTicketNumbers = new Set<number>();
+  for (const entry of mockParticipants) {
+    for (const ticket of entry.tickets) {
+      usedTicketNumbers.add(ticket.ticketNumber);
+    }
+  }
+
+  let nextTicketNumber = usedTicketNumbers.size
+    ? Math.max(...usedTicketNumbers)
+    : 999;
+
+  const reserveNextTicketNumber = () => {
+    do {
+      nextTicketNumber += 1;
+    } while (usedTicketNumbers.has(nextTicketNumber));
+
+    usedTicketNumbers.add(nextTicketNumber);
+    return nextTicketNumber;
+  };
   
   // Adjust tickets to match the desired count
   if (ticketCount > currentTicketCount) {
@@ -881,9 +1242,9 @@ export const updateUserTickets = (userId: string, ticketCount: number): UserEntr
     for (let i = 0; i < ticketsToAdd; i++) {
       const newTicket: MockTicket = {
         id: `ticket-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        ticketNumber: 1000 + mockParticipants.reduce((total, p) => total + p.tickets.length, 0) + i,
+        ticketNumber: reserveNextTicketNumber(),
         status: 'ASSIGNED',
-        markersAllowed: 3, // Each ticket allows 3 markers
+        markersAllowed: markersPerTicket,
         markersUsed: 0,
         markers: [],
         submittedAt: null,
@@ -911,10 +1272,13 @@ export const updateUserTickets = (userId: string, ticketCount: number): UserEntr
 
   // Update user's assigned tickets count to match ONLY the default competition
   // Not the sum of all competitions
-  user.assignedTickets = participant.tickets.length;
+  if (targetCompetitionId === defaultCompetitionId) {
+    user.assignedTickets = participant.tickets.length;
+  }
   
   // Save both participants and user entries to storage
   saveParticipantsToStorage();
+  mergeDuplicateParticipants();
   saveUserEntriesToStorage();
   
   return user;
@@ -931,8 +1295,8 @@ export const deleteUserEntriesByIds = (ids: string[]): { deleted: number; failed
 
   try {
     // Reload latest data from storage to ensure we have the latest state
-    userEntries = loadUserEntriesFromStorage();
-    mockParticipants = loadParticipantsFromStorage();
+    refreshUserEntries();
+    refreshParticipants();
 
     console.log(`[deleteUserEntriesByIds] Before deletion: ${userEntries.length} users, ${mockParticipants.length} participants`);
 
@@ -956,9 +1320,10 @@ export const deleteUserEntriesByIds = (ids: string[]): { deleted: number; failed
       return !shouldDelete;
     });
 
-    // Persist changes to storage
-    saveUserEntriesToStorage();
-    saveParticipantsToStorage();
+  // Persist changes to storage
+  saveUserEntriesToStorage();
+  saveParticipantsToStorage();
+  mergeDuplicateParticipants();
 
     const participantsDeleted = participantsBeforeDelete - mockParticipants.length;
     console.log(`[deleteUserEntriesByIds] Deleted ${deletedCount} users, ${participantsDeleted} participants`);

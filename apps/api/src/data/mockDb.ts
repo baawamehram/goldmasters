@@ -9,6 +9,20 @@ const CHECKOUT_SUMMARIES_FILE = path.join(DATA_DIR, 'checkout-summaries.json');
 const USER_ENTRIES_FILE = path.join(DATA_DIR, 'user-entries.json');
 const COMPETITION_RESULTS_FILE = path.join(DATA_DIR, 'competition-results.json');
 
+const DEFAULT_COMPETITION_ID = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
+
+const normalizeCompetitionId = (competitionId: string | null | undefined): string => {
+  if (!competitionId) {
+    return DEFAULT_COMPETITION_ID;
+  }
+
+  if (competitionId.startsWith('user-') || competitionId.startsWith('participant-')) {
+    return DEFAULT_COMPETITION_ID;
+  }
+
+  return competitionId;
+};
+
 // Ensure data directory exists
 const ensureDataDir = () => {
   try {
@@ -129,11 +143,17 @@ export type UserEntry = {
 const DEFAULT_INVITE_PASSWORD = 'competition123';
 const DEFAULT_INVITE_PASSWORD_HASH = bcrypt.hashSync(DEFAULT_INVITE_PASSWORD, 10);
 
-export const sanitizePhone = (phone: string): string => phone.replace(/[^0-9+]/g, '');
+export const sanitizePhone = (phone: string): string => {
+  const digitsOnly = phone.replace(/\D+/g, '');
+  if (digitsOnly.length > 10) {
+    return digitsOnly.slice(-10);
+  }
+  return digitsOnly;
+};
 
 let mockCompetitions: MockCompetition[] = [
   {
-    id: 'test-id',
+    id: DEFAULT_COMPETITION_ID,
     title: 'Gold Coin',
     imageUrl: '/images/gold-coin.svg',
     maxEntries: 100,
@@ -265,6 +285,7 @@ const loadUserEntries = (): UserEntry[] => {
       const parsed = JSON.parse(data);
       return parsed.map((entry: any) => ({
         ...entry,
+        phone: sanitizePhone(entry?.phone ?? ''),
         createdAt: new Date(entry.createdAt),
         lastLoginAt: entry.lastLoginAt ? new Date(entry.lastLoginAt) : null,
         lastLogoutAt: entry.lastLogoutAt ? new Date(entry.lastLogoutAt) : null,
@@ -290,6 +311,120 @@ const checkoutSummaries = loadCheckoutSummaries();
 mockCompetitionResults = loadCompetitionResults();
 let userEntries: UserEntry[] = loadUserEntries();
 
+const mergeDuplicateUserEntries = () => {
+  const entriesByPhone = new Map<string, UserEntry[]>();
+  let mutated = false;
+
+  for (const entry of userEntries) {
+    const normalizedPhone = sanitizePhone(entry.phone ?? '');
+    if (entry.phone !== normalizedPhone) {
+      entry.phone = normalizedPhone;
+      mutated = true;
+    }
+
+    const key = normalizedPhone;
+    if (!key) {
+      continue;
+    }
+    const bucket = entriesByPhone.get(key) ?? [];
+    bucket.push(entry);
+    entriesByPhone.set(key, bucket);
+  }
+
+  const idsToRemove = new Set<string>();
+
+  entriesByPhone.forEach((entries) => {
+    if (!entries || entries.length <= 1) {
+      return;
+    }
+
+    entries.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    const primary = entries[0];
+
+    for (let index = 1; index < entries.length; index += 1) {
+      const duplicate = entries[index];
+      idsToRemove.add(duplicate.id);
+      mutated = true;
+
+      if (!primary.email && duplicate.email) {
+        primary.email = duplicate.email;
+      }
+
+      primary.assignedTickets = Math.max(primary.assignedTickets, duplicate.assignedTickets);
+      primary.isLoggedIn = primary.isLoggedIn || duplicate.isLoggedIn;
+
+      if (duplicate.lastLoginAt && (!primary.lastLoginAt || duplicate.lastLoginAt > primary.lastLoginAt)) {
+        primary.lastLoginAt = duplicate.lastLoginAt;
+      }
+
+      if (duplicate.lastLogoutAt && (!primary.lastLogoutAt || duplicate.lastLogoutAt > primary.lastLogoutAt)) {
+        primary.lastLogoutAt = duplicate.lastLogoutAt;
+      }
+
+      if (duplicate.currentPhase !== null && duplicate.currentPhase !== undefined) {
+        primary.currentPhase = duplicate.currentPhase;
+      }
+
+      const rekeys: Array<{ oldKey: string; newKey: string }> = [];
+
+      checkoutSummaries.forEach((summary, key) => {
+        const checkout = summary as CheckoutSummary;
+        if (checkout && checkout.userId === duplicate.id) {
+          checkout.userId = primary.id;
+        }
+
+        if (key.endsWith(`:user:${duplicate.id}`)) {
+          rekeys.push({
+            oldKey: key,
+            newKey: key.replace(`:user:${duplicate.id}`, `:user:${primary.id}`),
+          });
+        }
+      });
+
+      rekeys.forEach(({ oldKey, newKey }) => {
+        const checkout = checkoutSummaries.get(oldKey) as CheckoutSummary | undefined;
+        if (!checkout) {
+          return;
+        }
+
+        const existing = checkoutSummaries.get(newKey) as CheckoutSummary | undefined;
+        checkoutSummaries.delete(oldKey);
+
+        if (!existing) {
+          checkoutSummaries.set(newKey, checkout);
+          return;
+        }
+
+        const currentTime = checkout.checkoutTime ? Date.parse(checkout.checkoutTime) : 0;
+        const existingTime = existing.checkoutTime ? Date.parse(existing.checkoutTime) : 0;
+
+        if (currentTime >= existingTime) {
+          checkoutSummaries.set(newKey, checkout);
+        } else {
+          checkoutSummaries.set(newKey, existing);
+        }
+      });
+    }
+  });
+
+  if (idsToRemove.size > 0) {
+    userEntries = userEntries.filter((entry) => !idsToRemove.has(entry.id));
+    saveUserEntriesToFile(userEntries);
+    saveCheckoutSummariesToFile(checkoutSummaries);
+  } else if (mutated) {
+    saveUserEntriesToFile(userEntries);
+  }
+
+  return mutated;
+};
+
+const refreshUserEntries = () => {
+  userEntries = loadUserEntries();
+  mergeDuplicateUserEntries();
+};
+
+mergeDuplicateUserEntries();
+
 // Generate unique 6-digit access code
 const generateAccessCode = (): string => {
   const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -301,6 +436,7 @@ const generateAccessCode = (): string => {
 };
 
 export const createOrUpdateUserEntry = (name: string, phone: string, existingId?: string): UserEntry => {
+  refreshUserEntries();
   const sanitized = sanitizePhone(phone);
   
   // Check if user already exists by phone
@@ -310,6 +446,9 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
     // Update name if changed
     if (existing.name !== name) {
       existing.name = name;
+    }
+    if (existing.phone !== sanitized) {
+      existing.phone = sanitized;
     }
     // Update login status
     existing.isLoggedIn = true;
@@ -353,6 +492,7 @@ export const createOrUpdateUserEntry = (name: string, phone: string, existingId?
 };
 
 export const getUserEntryById = (id: string): UserEntry | null => {
+  refreshUserEntries();
   return userEntries.find((entry) => entry.id === id) ?? null;
 };
 
@@ -360,13 +500,17 @@ export const getCompetitions = (): MockCompetition[] => mockCompetitions;
 
 export const getParticipants = (): MockParticipant[] => mockParticipants;
 
-export const getParticipantsByCompetition = (competitionId: string): MockParticipant[] =>
-  mockParticipants.filter((participant) => participant.competitionId === competitionId);
+export const getParticipantsByCompetition = (competitionId: string): MockParticipant[] => {
+  const normalizedCompetitionId = normalizeCompetitionId(competitionId);
+  return mockParticipants.filter((participant) => participant.competitionId === normalizedCompetitionId);
+};
 
-export const calculateTicketsSold = (competitionId: string): number =>
-  mockParticipants
-    .filter((participant) => participant.competitionId === competitionId)
+export const calculateTicketsSold = (competitionId: string): number => {
+  const normalizedCompetitionId = normalizeCompetitionId(competitionId);
+  return mockParticipants
+    .filter((participant) => participant.competitionId === normalizedCompetitionId)
     .reduce((total, participant) => total + participant.tickets.length, 0);
+};
 
 export const findCompetitionById = (id: string): MockCompetition | null =>
   mockCompetitions.find((competition) => competition.id === id) ?? null;
@@ -463,18 +607,24 @@ export const closeCompetition = (id: string): MockCompetition | null => {
   return updated;
 };
 
-export const findParticipantByPhone = (competitionId: string, phone: string) =>
-  mockParticipants.find(
-    (participant) =>
-      participant.competitionId === competitionId &&
-      sanitizePhone(participant.phone) === sanitizePhone(phone)
-  );
+export const findParticipantByPhone = (competitionId: string, phone: string) => {
+  const normalizedCompetitionId = normalizeCompetitionId(competitionId);
+  const sanitized = sanitizePhone(phone);
 
-export const findParticipantById = (competitionId: string, participantId: string) =>
-  mockParticipants.find(
+  return mockParticipants.find(
     (participant) =>
-      participant.competitionId === competitionId && participant.id === participantId
+      participant.competitionId === normalizedCompetitionId &&
+      sanitizePhone(participant.phone) === sanitized
   );
+};
+
+export const findParticipantById = (competitionId: string, participantId: string) => {
+  const normalizedCompetitionId = normalizeCompetitionId(competitionId);
+  return mockParticipants.find(
+    (participant) =>
+      participant.competitionId === normalizedCompetitionId && participant.id === participantId
+  );
+};
 
 export const findParticipantsByPhone = (phone: string): MockParticipant[] => {
   const sanitized = sanitizePhone(phone);
@@ -489,16 +639,22 @@ export const getCompetitionsByIds = (ids: string[]): MockCompetition[] => {
 };
 
 export const saveParticipant = (updatedParticipant: MockParticipant) => {
+  const normalizedParticipant: MockParticipant = {
+    ...updatedParticipant,
+    competitionId: normalizeCompetitionId(updatedParticipant.competitionId),
+    phone: sanitizePhone(updatedParticipant.phone ?? ''),
+  };
+
   const exists = mockParticipants.some(
-    (participant) => participant.id === updatedParticipant.id
+    (participant) => participant.id === normalizedParticipant.id
   );
 
   if (exists) {
     mockParticipants = mockParticipants.map((participant) =>
-      participant.id === updatedParticipant.id ? updatedParticipant : participant
+      participant.id === normalizedParticipant.id ? normalizedParticipant : participant
     );
   } else {
-    mockParticipants = [...mockParticipants, updatedParticipant];
+    mockParticipants = [...mockParticipants, normalizedParticipant];
   }
 };
 

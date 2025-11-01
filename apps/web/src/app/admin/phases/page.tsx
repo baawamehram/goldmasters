@@ -191,6 +191,23 @@ export default function PhaseManagementPage() {
     }
   };
 
+  const getJudgementRoute = (phaseId: number) => {
+    switch (phaseId) {
+      case 1:
+        return '/admin/phases/phase-1/judgement-round';
+      case 2:
+        return '/admin/phases/phase-2/judgement-round';
+      case 3:
+        return '/admin/phases/phase-3/judgement-round';
+      default:
+        return '/admin/phases';
+    }
+  };
+
+  const handleJudgementRound = (phaseId: number) => {
+    router.push(getJudgementRoute(phaseId));
+  };
+
   const handleImageUpload = (phaseId: number, imageUrl: string) => {
     try {
       localStorage.setItem(`admin_phase${phaseId}_image_url`, imageUrl);
@@ -312,7 +329,6 @@ export default function PhaseManagementPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {phases.map((phase) => {
             const color = getPhaseColor(phase.id);
-            const progress = (phase.currentMembers / phase.maxMembers) * 100;
             
             return (
               <Card key={phase.id} className="border-2">
@@ -326,25 +342,6 @@ export default function PhaseManagementPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Member Count */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">Participants</span>
-                      <span className="font-semibold">
-                        {phase.currentMembers} / {phase.maxMembers}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`bg-${color}-500 h-2 rounded-full transition-all`}
-                        style={{ width: `${Math.min(progress, 100)}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {phase.maxMembers - phase.currentMembers} slots remaining
-                    </p>
-                  </div>
-
                   {/* Timestamps */}
                   <div className="space-y-2 text-sm border-t pt-3">
                     <div className="flex justify-between">
@@ -447,6 +444,13 @@ export default function PhaseManagementPage() {
                     )}
                     {phase.status === 'CLOSED' && (
                       <>
+                        <Button
+                          onClick={() => handleJudgementRound(phase.id)}
+                          className="flex-1"
+                          size="sm"
+                        >
+                          Judgement Round
+                        </Button>
                         <Button
                           onClick={() => handleReopenPhase(phase.id)}
                           variant="outline"
