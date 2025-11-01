@@ -7169,5 +7169,209 @@
       "totalMarkers": 6,
       "checkoutTime": "2025-11-01T18:03:50.669Z"
     }
+  ],
+  [
+    "test-id:participant-1762021148478-aekod2i1n",
+    {
+      "competitionId": "test-id",
+      "participantId": "participant-1762021148478-aekod2i1n",
+      "userId": "user-1762021148473-d9pbmwa6h",
+      "competition": {
+        "id": "test-id",
+        "title": "Gold Coin",
+        "imageUrl": "/images/gold-coin.svg",
+        "pricePerTicket": 500,
+        "markersPerTicket": 3,
+        "status": "ACTIVE"
+      },
+      "participant": {
+        "id": "participant-1762021148478-aekod2i1n",
+        "name": "ten",
+        "phone": "1010101011",
+        "email": "ee@mail.com",
+        "ticketsPurchased": 3
+      },
+      "contactEmail": "ee@mail.com",
+      "completed": true,
+      "completedAt": "2025-11-01T18:29:14.616Z",
+      "tickets": [
+        {
+          "ticketNumber": 1160,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-1762021148478-tc8y381xa-marker-1",
+              "x": 0.601,
+              "y": 0.6951,
+              "label": "T1160M1"
+            },
+            {
+              "id": "ticket-1762021148478-tc8y381xa-marker-2",
+              "x": 0.46,
+              "y": 0.56,
+              "label": "T1160M2"
+            },
+            {
+              "id": "ticket-1762021148478-tc8y381xa-marker-3",
+              "x": 0.42,
+              "y": 0.62,
+              "label": "T1160M3"
+            }
+          ]
+        },
+        {
+          "ticketNumber": 1161,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-1762021148478-omgytm75u-marker-1",
+              "x": 0.58,
+              "y": 0.5,
+              "label": "T1161M1"
+            },
+            {
+              "id": "ticket-1762021148478-omgytm75u-marker-2",
+              "x": 0.54,
+              "y": 0.56,
+              "label": "T1161M2"
+            },
+            {
+              "id": "ticket-1762021148478-omgytm75u-marker-3",
+              "x": 0.5,
+              "y": 0.62,
+              "label": "T1161M3"
+            }
+          ]
+        },
+        {
+          "ticketNumber": 1162,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-1762021148478-jvu3jpqgi-marker-1",
+              "x": 0.66,
+              "y": 0.5,
+              "label": "T1162M1"
+            },
+            {
+              "id": "ticket-1762021148478-jvu3jpqgi-marker-2",
+              "x": 0.62,
+              "y": 0.56,
+              "label": "T1162M2"
+            },
+            {
+              "id": "ticket-1762021148478-jvu3jpqgi-marker-3",
+              "x": 0.58,
+              "y": 0.62,
+              "label": "T1162M3"
+            }
+          ]
+        }
+      ],
+      "totalMarkers": 9,
+      "checkoutTime": "2025-11-01T18:29:00.342Z"
+    }
+  ],
+  [
+    "test-id:user:user-1762021148473-d9pbmwa6h",
+    {
+      "competitionId": "test-id",
+      "participantId": "participant-1762021148478-aekod2i1n",
+      "userId": "user-1762021148473-d9pbmwa6h",
+      "competition": {
+        "id": "test-id",
+        "title": "Gold Coin",
+        "imageUrl": "/images/gold-coin.svg",
+        "pricePerTicket": 500,
+        "markersPerTicket": 3,
+        "status": "ACTIVE"
+      },
+      "participant": {
+        "id": "participant-1762021148478-aekod2i1n",
+        "name": "ten",
+        "phone": "1010101011",
+        "email": "ee@mail.com",
+        "ticketsPurchased": 3
+      },
+      "contactEmail": "ee@mail.com",
+      "completed": true,
+      "completedAt": "2025-11-01T18:29:14.616Z",
+      "tickets": [
+        {
+          "ticketNumber": 1160,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-1762021148478-tc8y381xa-marker-1",
+              "x": 0.601,
+              "y": 0.6951,
+              "label": "T1160M1"
+            },
+            {
+              "id": "ticket-1762021148478-tc8y381xa-marker-2",
+              "x": 0.46,
+              "y": 0.56,
+              "label": "T1160M2"
+            },
+            {
+              "id": "ticket-1762021148478-tc8y381xa-marker-3",
+              "x": 0.42,
+              "y": 0.62,
+              "label": "T1160M3"
+            }
+          ]
+        },
+        {
+          "ticketNumber": 1161,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-1762021148478-omgytm75u-marker-1",
+              "x": 0.58,
+              "y": 0.5,
+              "label": "T1161M1"
+            },
+            {
+              "id": "ticket-1762021148478-omgytm75u-marker-2",
+              "x": 0.54,
+              "y": 0.56,
+              "label": "T1161M2"
+            },
+            {
+              "id": "ticket-1762021148478-omgytm75u-marker-3",
+              "x": 0.5,
+              "y": 0.62,
+              "label": "T1161M3"
+            }
+          ]
+        },
+        {
+          "ticketNumber": 1162,
+          "markerCount": 3,
+          "markers": [
+            {
+              "id": "ticket-1762021148478-jvu3jpqgi-marker-1",
+              "x": 0.66,
+              "y": 0.5,
+              "label": "T1162M1"
+            },
+            {
+              "id": "ticket-1762021148478-jvu3jpqgi-marker-2",
+              "x": 0.62,
+              "y": 0.56,
+              "label": "T1162M2"
+            },
+            {
+              "id": "ticket-1762021148478-jvu3jpqgi-marker-3",
+              "x": 0.58,
+              "y": 0.62,
+              "label": "T1162M3"
+            }
+          ]
+        }
+      ],
+      "totalMarkers": 9,
+      "checkoutTime": "2025-11-01T18:29:00.342Z"
+    }
   ]
 ]

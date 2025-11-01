@@ -58,6 +58,7 @@ interface MarkerCanvasClientProps {
   markersPerTicket?: number;
   onMarkersChange: (markers: Marker[]) => void;
   showPanels?: boolean;
+  fitViewport?: boolean;
 }
 
 const TARGET_WIDTH = 960;
@@ -78,11 +79,12 @@ export const MARKER_COLORS = [
 
 function MarkerCanvasClient(
   {
-  imageUrl,
-  tickets,
-  markersPerTicket = 3,
-  onMarkersChange,
-  showPanels = true,
+    imageUrl,
+    tickets,
+    markersPerTicket = 3,
+    onMarkersChange,
+    showPanels = true,
+    fitViewport = false,
   }: MarkerCanvasClientProps,
   ref: ForwardedRef<MarkerCanvasHandle>
 ) {
@@ -231,7 +233,9 @@ function MarkerCanvasClient(
     const minWidth = 280;
     let nextWidth = Math.min(TARGET_WIDTH, Math.max(minWidth, viewportWidth - gutter));
 
-    if (!showPanels) {
+    const shouldFitViewport = !showPanels && fitViewport;
+
+    if (shouldFitViewport) {
       const viewportHeight = window.innerHeight || TARGET_HEIGHT;
       const containerTop = containerRef.current
         ? containerRef.current.getBoundingClientRect().top
@@ -249,10 +253,21 @@ function MarkerCanvasClient(
         );
         nextWidth = Math.min(nextWidth, widthFromHeight);
       }
+    } else if (!showPanels) {
+      const parentHeight = containerRef.current?.parentElement?.clientHeight ?? window.innerHeight;
+      const reservedSpace = 0; // use full height in fullscreen mode
+      const maxHeight = parentHeight - reservedSpace;
+      if (maxHeight > 0) {
+        const widthFromHeight = Math.min(
+          TARGET_WIDTH,
+          Math.max(minWidth, maxHeight / TARGET_RATIO)
+        );
+        nextWidth = Math.min(nextWidth, widthFromHeight);
+      }
     }
 
     setContainerWidth(nextWidth);
-  }, [showPanels]);
+  }, [fitViewport, showPanels]);
 
   useEffect(() => {
     updateDimensions();

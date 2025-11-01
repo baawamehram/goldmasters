@@ -434,6 +434,7 @@ export default function JudgementRoundView({
                 markersPerTicket={1}
                 onMarkersChange={handleMarkersChange}
                 showPanels={false}
+                fitViewport
               />
               {submittedSummary && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl bg-slate-950/70 text-center text-sm font-semibold text-emerald-100">
