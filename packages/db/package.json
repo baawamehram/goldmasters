@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-  "build": "tsc && node -e \"require('fs').cpSync('prisma', 'dist/prisma', { recursive: true });\"",
+  "build": "pnpm run generate && tsc && node -e \"require('fs').cpSync('prisma', 'dist/prisma', { recursive: true });\"",
     "generate": "prisma generate",
     "push": "prisma db push",
     "migrate": "prisma migrate dev",
