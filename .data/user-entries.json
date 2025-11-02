@@ -583,5 +583,18 @@
     "lastLogoutAt": null,
     "accessCode": "927814",
     "currentPhase": null
+  },
+  {
+    "id": "user-1762078640431-8wf9frds8",
+    "name": "brt",
+    "phone": "6718299098",
+    "email": null,
+    "createdAt": "2025-11-02T10:17:20.431Z",
+    "assignedTickets": 2,
+    "isLoggedIn": false,
+    "lastLoginAt": null,
+    "lastLogoutAt": null,
+    "accessCode": "173365",
+    "currentPhase": null
   }
 ]

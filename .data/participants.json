@@ -2206,5 +2206,32 @@
     ],
     "lastSubmissionAt": "2025-11-02T05:21:54.442Z",
     "email": "se@mail.com"
+  },
+  {
+    "id": "participant-1762078640438-awampjm37",
+    "competitionId": "test-id",
+    "name": "brt",
+    "phone": "6718299098",
+    "tickets": [
+      {
+        "id": "ticket-1762078640438-a5hnntcqs",
+        "ticketNumber": 1169,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      },
+      {
+        "id": "ticket-1762078640438-wp40039d7",
+        "ticketNumber": 1170,
+        "status": "ASSIGNED",
+        "markersAllowed": 3,
+        "markersUsed": 0,
+        "markers": [],
+        "submittedAt": null
+      }
+    ],
+    "lastSubmissionAt": null
   }
 ]
