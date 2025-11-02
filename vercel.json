@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm install --no-frozen-lockfile && pnpm run db:generate && pnpm run build",
+  "buildCommand": "pnpm install --no-frozen-lockfile && pnpm -w run db:generate && pnpm -w run build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": "nextjs"
