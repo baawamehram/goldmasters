@@ -1,13 +1,4 @@
 {
-  "version": 2,
   "buildCommand": "pnpm build",
-  "outputDirectory": "public/.next",
-  "builds": [
-    { "src": "apps/web/package.json", "use": "@vercel/next" },
-    { "src": "apps/api/package.json", "use": "@vercel/node" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/apps/api/$1" },
-    { "src": "/(.*)", "dest": "/apps/web/$1" }
-  ]
+  "outputDirectory": "public/.next"
 }
