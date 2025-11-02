@@ -1,15 +1,14 @@
 [build]
   base = "apps/web"
   command = "pnpm build"
-  # ❌ Remove the publish line entirely (let the plugin detect it)
-  # publish = "apps/web/.next"
+  publish = "apps/web/.next"
 
 [build.environment]
   NODE_VERSION = "20.10.0"
   PNPM_VERSION = "8"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+  NEXT_PUBLIC_API_URL = "https://goldmasters-api.onrender.com/api/v1"
+  NEXT_PUBLIC_DEFAULT_COMPETITION_ID = "test-id"
+  NEXT_PUBLIC_DEFAULT_COMPETITION_TITLE = "Gold Coin"
 
 [[redirects]]
   from = "/api/v1/*"

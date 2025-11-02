@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
+/* ---------------------------
+   Figma Design Tokens
+--------------------------- */
 :root {
-  /* Figma Design Tokens - CSS Variables */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
@@ -22,6 +24,8 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
   --radius: 0.5rem;
+
+  /* Chart colors */
   --chart-1: 12 76% 61%;
   --chart-2: 173 58% 39%;
   --chart-3: 197 37% 24%;
@@ -29,13 +33,21 @@
   --chart-5: 27 87% 67%;
 }
 
-@theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ---------------------------
+   Inline Theme Layer (Tailwind v4 syntax)
+--------------------------- */
+@layer theme {
+  :root {
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
+  }
 }
 
+/* ---------------------------
+   Dark Mode Tokens
+--------------------------- */
 .dark {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;
@@ -58,6 +70,9 @@
   --ring: 224.3 76.3% 48%;
 }
 
+/* ---------------------------
+   Base Styles
+--------------------------- */
 * {
   border-color: hsl(var(--border));
 }
@@ -69,7 +84,9 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Custom utility classes for Figma compliance */
+/* ---------------------------
+   Utility Classes
+--------------------------- */
 .text-gradient {
   background: linear-gradient(to right, #1E40AF, #F59E0B);
   -webkit-background-clip: text;
@@ -99,7 +116,9 @@ body {
   }
 }
 
-/* Animation for new user notification */
+/* ---------------------------
+   Animations
+--------------------------- */
 @keyframes slide-in-right {
   from {
     transform: translateX(100%);

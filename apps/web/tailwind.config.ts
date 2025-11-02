@@ -3,22 +3,18 @@ import type { Config } from "tailwindcss";
 const config: Config = {
   darkMode: "class",
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        // Figma Design Tokens - Brand Colors
         brand: {
-          primary: "#1E40AF", // Primary brand color (placeholder)
-          secondary: "#10B981", // Secondary brand color (placeholder)
-          accent: "#F59E0B", // Accent color (placeholder)
+          primary: "#1E40AF",
+          secondary: "#10B981",
+          accent: "#F59E0B",
           dark: "#111827",
           light: "#F9FAFB",
         },
-        // UI Colors
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -60,31 +56,27 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
       },
-      // Figma Typography Tokens
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         heading: ["var(--font-poppins)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },
       fontSize: {
-        // Figma text styles (placeholder values)
-        "heading-1": ["3.75rem", { lineHeight: "1.2", fontWeight: "700" }], // 60px
-        "heading-2": ["3rem", { lineHeight: "1.2", fontWeight: "700" }], // 48px
-        "heading-3": ["2.25rem", { lineHeight: "1.3", fontWeight: "600" }], // 36px
-        "heading-4": ["1.875rem", { lineHeight: "1.3", fontWeight: "600" }], // 30px
-        "heading-5": ["1.5rem", { lineHeight: "1.4", fontWeight: "600" }], // 24px
-        "body-lg": ["1.125rem", { lineHeight: "1.6", fontWeight: "400" }], // 18px
-        "body-base": ["1rem", { lineHeight: "1.6", fontWeight: "400" }], // 16px
-        "body-sm": ["0.875rem", { lineHeight: "1.5", fontWeight: "400" }], // 14px
-        "caption": ["0.75rem", { lineHeight: "1.4", fontWeight: "400" }], // 12px
+        "heading-1": ["3.75rem", { lineHeight: "1.2", fontWeight: "700" }],
+        "heading-2": ["3rem", { lineHeight: "1.2", fontWeight: "700" }],
+        "heading-3": ["2.25rem", { lineHeight: "1.3", fontWeight: "600" }],
+        "heading-4": ["1.875rem", { lineHeight: "1.3", fontWeight: "600" }],
+        "heading-5": ["1.5rem", { lineHeight: "1.4", fontWeight: "600" }],
+        "body-lg": ["1.125rem", { lineHeight: "1.6", fontWeight: "400" }],
+        "body-base": ["1rem", { lineHeight: "1.6", fontWeight: "400" }],
+        "body-sm": ["0.875rem", { lineHeight: "1.5", fontWeight: "400" }],
+        caption: ["0.75rem", { lineHeight: "1.4", fontWeight: "400" }],
       },
-      // Figma Spacing Tokens
       spacing: {
-        "18": "4.5rem",
-        "22": "5.5rem",
-        "30": "7.5rem",
+        18: "4.5rem",
+        22: "5.5rem",
+        30: "7.5rem",
       },
-      // Figma Border Radius Tokens
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -92,13 +84,11 @@ const config: Config = {
         "2xl": "1rem",
         "3xl": "1.5rem",
       },
-      // Figma Shadows
       boxShadow: {
-        "card": "0 2px 8px rgba(0, 0, 0, 0.08)",
+        card: "0 2px 8px rgba(0, 0, 0, 0.08)",
         "card-hover": "0 4px 16px rgba(0, 0, 0, 0.12)",
-        "modal": "0 8px 32px rgba(0, 0, 0, 0.16)",
+        modal: "0 8px 32px rgba(0, 0, 0, 0.16)",
       },
-      // Animations
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
