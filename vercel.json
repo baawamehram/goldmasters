@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "pnpm build",
+  "outputDirectory": "apps/web/.next",
   "builds": [
     { "src": "apps/web/package.json", "use": "@vercel/next" },
     { "src": "apps/api/package.json", "use": "@vercel/node" }
