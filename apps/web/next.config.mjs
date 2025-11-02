@@ -4,7 +4,8 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Produce a standalone server output (good for Netlify/Vercel and Docker)
-  output: 'standalone',
+  // Only enable on CI/CD or when not on Windows to avoid symlink permission issues
+  output: process.env.CI || process.platform !== 'win32' ? 'standalone' : undefined,
 
   experimental: {
     // Enable Server Actions in production
