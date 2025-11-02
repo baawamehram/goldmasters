@@ -1,0 +1,17 @@
+[build]
+  base = "apps/web"
+  command = "pnpm build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+  PNPM_VERSION = "8"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/api/v1/*"
+  to = "https://goldmasters-api.onrender.com/api/v1/:splat"
+  status = 200
+  force = true
