@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  distDir: '../../public/.next',
+  output: "standalone", // needed for Netlify + modern Next.js
   typescript: {
     ignoreBuildErrors: true,
   },

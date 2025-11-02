@@ -1,17 +1,18 @@
 [build]
-base = "apps/web"
-command = "pnpm build"
-publish = ".next"
+  base = "apps/web"
+  command = "pnpm build"
+  # ❌ Remove the publish line entirely (let the plugin detect it)
+  # publish = "apps/web/.next"
 
 [build.environment]
-NODE_VERSION = "20.10.0"
-PNPM_VERSION = "8"
+  NODE_VERSION = "20.10.0"
+  PNPM_VERSION = "8"
 
 [[plugins]]
-package = "@netlify/plugin-nextjs"
+  package = "@netlify/plugin-nextjs"
 
 [[redirects]]
-from = "/api/v1/*"
-to = "https://goldmasters-api.onrender.com/api/v1/:splat"
-status = 200
-force = true
+  from = "/api/v1/*"
+  to = "https://goldmasters-api.onrender.com/api/v1/:splat"
+  status = 200
+  force = true
