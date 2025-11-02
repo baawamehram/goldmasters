@@ -557,5 +557,18 @@
     "lastLogoutAt": null,
     "accessCode": "917392",
     "currentPhase": null
+  },
+  {
+    "id": "user-1762060668326-0ygq274rt",
+    "name": "vall",
+    "phone": "7878765433",
+    "email": null,
+    "createdAt": "2025-11-02T05:17:48.326Z",
+    "assignedTickets": 4,
+    "isLoggedIn": true,
+    "lastLoginAt": "2025-11-02T05:21:01.993Z",
+    "lastLogoutAt": null,
+    "accessCode": "914876",
+    "currentPhase": null
   }
 ]
