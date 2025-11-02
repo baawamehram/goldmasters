@@ -27,7 +27,7 @@ import {
   hasParticipantCompletedEntry,
 } from '../data/mockDb';
 // Prisma client (workspace package)
-import prisma, { type Competition as PrismaCompetition } from 'db';
+import prisma from 'db';
 
 const router: Router = Router();
 
@@ -46,7 +46,7 @@ router.get('/', async (_req: Request, res: Response) => {
       orderBy: { createdAt: 'desc' },
     });
 
-  const mapped = dbCompetitions.map((c: PrismaCompetition) => {
+  const mapped = dbCompetitions.map((c) => {
       const total = c.totalTickets ?? 0;
       const available = c.availableTickets ?? 0;
       const ticketsSold = Math.max(0, total - available);
