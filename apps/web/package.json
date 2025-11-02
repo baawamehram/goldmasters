@@ -11,7 +11,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "clean": "rm -rf .next node_modules"
+    "clean": "rm -rf .next node_modules",
+    "postinstall": "echo 'Dependencies installed successfully'"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -24,23 +25,23 @@
     "konva": "^9.3.16",
     "lucide-react": "^0.462.0",
     "next": "16.0.0",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-konva": "^18.2.10",
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.16",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^20",
+    "@types/node": "^20.10.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.0.0",
     "eslint-config-next": "16.0.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.16",
-    "typescript": "^5"
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.6.3"
   }
 }
