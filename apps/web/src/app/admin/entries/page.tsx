@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -24,7 +24,6 @@ interface Participant {
 
 export default function AdminEntriesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +67,7 @@ export default function AdminEntriesPage() {
     }, 2000);
 
     return () => clearInterval(pollInterval);
-  }, [router, searchParams]);
+  }, [router]);
 
   const loadParticipants = async (silent = false) => {
     try {
@@ -422,19 +421,22 @@ export default function AdminEntriesPage() {
     }
   };
 
+  const loadingView = (
+    <main className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Loading entries...</p>
+      </div>
+    </main>
+  );
+
   if (isLoading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading entries...</p>
-        </div>
-      </main>
-    );
+    return loadingView;
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-brand-primary/5 via-white to-brand-accent/5 py-8 px-4">
+    <Suspense fallback={loadingView}>
+      <main className="min-h-screen bg-gradient-to-br from-brand-primary/5 via-white to-brand-accent/5 py-8 px-4">
       {/* New User Notification Toast */}
       {newUserNotification && (
         <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
@@ -908,6 +910,7 @@ export default function AdminEntriesPage() {
           <span>{newUserNotification}</span>
         </div>
       )}
-    </main>
+      </main>
+    </Suspense>
   );
 }
