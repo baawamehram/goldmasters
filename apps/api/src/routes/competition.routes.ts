@@ -46,7 +46,7 @@ router.get('/', async (_req: Request, res: Response) => {
       orderBy: { createdAt: 'desc' },
     });
 
-  const mapped = dbCompetitions.map((c) => {
+  const mapped = dbCompetitions.map((c: any) => {
       const total = c.totalTickets ?? 0;
       const available = c.availableTickets ?? 0;
       const ticketsSold = Math.max(0, total - available);
