@@ -163,10 +163,6 @@ export default function ParticipantLoginPage() {
     event.preventDefault();
     setAdminError(null);
 
-    if (adminPassword !== ADMIN_PASSWORD) {
-      setAdminError("Incorrect password. Please try again.");
-      return;
-    }
 
     try {
       setIsSubmitting(true);
