@@ -23,6 +23,67 @@ import {
 const router: Router = Router();
 
 /**
+ * @route   POST /api/v1/admin/participants
+ * @desc    Create a new participant manually
+ * @access  Protected (Admin only)
+ */
+router.post(
+  '/participants',
+  authenticateToken,
+  requireAdmin,
+  [
+    body('name').notEmpty().withMessage('Name is required'),
+    body('phone').notEmpty().withMessage('Phone number is required'),
+    body('email').optional().isEmail().withMessage('Valid email is required'),
+    body('initialTickets').optional().isInt({ min: 0, max: 100 }).withMessage('Initial tickets must be between 0 and 100'),
+  ],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        status: 'fail',
+        errors: errors.array(),
+      });
+      return;
+    }
+
+    try {
+      const { name, phone, email, initialTickets = 0 } = req.body;
+
+      // TODO: Create participant in database
+      // For now, return mock response
+      const mockParticipant = {
+        id: `participant-${Date.now()}`,
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email ? email.trim() : null,
+        createdAt: new Date().toISOString(),
+        assignedTickets: initialTickets,
+        isLoggedIn: false,
+        lastLoginAt: null,
+        lastLogoutAt: null,
+        accessCode: Math.floor(100000 + Math.random() * 900000).toString(),
+        currentPhase: null,
+        ticketsPurchased: initialTickets,
+      };
+
+      console.log(`Created participant manually: ${mockParticipant.id} - ${name}`);
+
+      res.status(201).json({
+        status: 'success',
+        data: mockParticipant,
+      });
+    } catch (error) {
+      console.error('Error creating participant:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to create participant',
+      });
+    }
+  }
+);
+
+/**
  * @route   GET /api/v1/admin/participants
  * @desc    Get all participants across all competitions
  * @access  Protected (Admin only)
@@ -120,6 +181,61 @@ router.get(
       res.status(500).json({
         status: 'error',
         message: 'Failed to fetch participants',
+      });
+    }
+  }
+);
+
+/**
+ * @route   DELETE /api/v1/admin/participants
+ * @desc    Delete participants
+ * @access  Protected (Admin only)
+ */
+router.delete(
+  '/participants',
+  authenticateToken,
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const { participants } = req.body;
+
+      if (!Array.isArray(participants) || participants.length === 0) {
+        res.status(400).json({
+          status: 'fail',
+          message: 'No participants provided for deletion',
+        });
+        return;
+      }
+
+      const userIds = participants
+        .map((p: { userId?: string; id?: string }) => p.userId || p.id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+
+      if (!userIds.length) {
+        res.status(400).json({
+          status: 'fail',
+          message: 'No valid user IDs provided',
+        });
+        return;
+      }
+
+      console.log(`Deleting participants: ${userIds.join(', ')}`);
+
+      // TODO: Delete from database
+      // For now, return mock response
+      res.status(200).json({
+        status: 'success',
+        data: {
+          deleted: userIds.length,
+          attempted: participants.length,
+          message: `Successfully deleted ${userIds.length} participant(s)`,
+        },
+      });
+    } catch (error) {
+      console.error('Error deleting participants:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to delete participants',
       });
     }
   }
@@ -759,6 +875,61 @@ router.get(
       res.status(500).json({
         status: 'error',
         message: 'Failed to retrieve submissions',
+      });
+    }
+  }
+);
+
+/**
+ * @route   POST /api/v1/admin/users/:id/assign-tickets
+ * @desc    Assign tickets to a user
+ * @access  Protected (Admin only)
+ */
+router.post(
+  '/users/:id/assign-tickets',
+  authenticateToken,
+  requireAdmin,
+  [
+    body('ticketCount').isInt({ min: 0, max: 100 }).withMessage('Ticket count must be between 0 and 100'),
+  ],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        status: 'fail',
+        errors: errors.array(),
+      });
+      return;
+    }
+
+    try {
+      const { id: userId } = req.params;
+      const { ticketCount } = req.body;
+
+      // TODO: Update user tickets in database
+      // For now, return mock response
+      const mockUser = {
+        id: userId,
+        name: 'Mock User',
+        phone: '1234567890',
+        email: null,
+        assignedTickets: ticketCount,
+        isLoggedIn: false,
+        currentPhase: null,
+        accessCode: Math.floor(100000 + Math.random() * 900000).toString(),
+      };
+
+      console.log(`Assigned ${ticketCount} tickets to user ${userId}`);
+
+      res.status(200).json({
+        status: 'success',
+        data: mockUser,
+      });
+    } catch (error) {
+      console.error('Error assigning tickets:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Failed to assign tickets',
       });
     }
   }
