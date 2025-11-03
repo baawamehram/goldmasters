@@ -28,7 +28,7 @@ const PHONE_REGEX = /^[0-9]{10}$/;
 // Admin credentials
 const ADMIN_PHONE = "9464742314";
 const ADMIN_NAME = "manan";
-const ADMIN_PASSWORD = "goldenbull";
+const ADMIN_PASSWORD = "yourStrongAdminPassword123";
 
 const createLocalId = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {

@@ -12,6 +12,16 @@ export default function HomePage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [participantName, setParticipantName] = useState<string>("");
 
+  // Redirect to login page if not authenticated
+  useEffect(() => {
+    const token = localStorage.getItem('participant_login_token');
+    const adminToken = localStorage.getItem('admin_token');
+    
+    if (!token && !adminToken) {
+      router.push('/login');
+    }
+  }, [router]);
+
   const clearStoredSession = () => {
     try {
       const explicitKeys = [
