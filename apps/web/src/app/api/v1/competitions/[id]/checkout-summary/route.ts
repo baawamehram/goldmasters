@@ -6,6 +6,18 @@ import {
   clearParticipantCompletion,
 } from '@/server/data/mockDb';
 
+// Add OPTIONS handler for CORS preflight
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
+
 /**
  * POST /api/v1/competitions/[id]/checkout-summary
  * Save checkout summary with proper user identification

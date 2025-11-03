@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminToken } from '@/server/auth/admin';
 import {
   getCompetitionsWithStats,
@@ -11,6 +11,18 @@ import {
   fieldError,
   ValidationError,
 } from '@/server/http';
+
+// Add OPTIONS handler for CORS preflight
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
 
 export async function GET(req: NextRequest) {
   const tokenOrResponse = requireAdminToken(req);
