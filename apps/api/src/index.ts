@@ -19,8 +19,8 @@ const PORT = process.env.PORT || 4000;
 const API_VERSION = process.env.API_VERSION || 'v1';
 
 // Security middleware
-app.use(helmet());
-app.use(compression());
+//app.use(helmet());
+//app.use(compression());
 
 // CORS configuration
 app.use(cors());
