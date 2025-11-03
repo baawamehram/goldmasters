@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Goldmasters Spot-the-Ball Competition Platform",
+  "packageManager": "pnpm@8.15.9",
   "scripts": {
     "dev": "pnpm --parallel dev:web dev:api",
     "dev:web": "pnpm --filter web dev",
