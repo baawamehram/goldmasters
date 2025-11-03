@@ -11,6 +11,7 @@
     "build:web": "pnpm --filter web build",
     "build:api": "pnpm --filter api build",
     "start": "pnpm --filter web start",
+    "start:api": "pnpm --filter api start",
     "test": "pnpm --recursive run test",
     "lint": "pnpm --recursive run lint",
     "db:generate": "pnpm --filter db generate",
