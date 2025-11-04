@@ -5,7 +5,7 @@ import {
   createManualUserEntry,
   updateUserTickets,
   findParticipantsByPhone,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import { success, error, fail } from '@/server/http';
 import { authenticateAdmin } from '@/lib/auth';
 
@@ -31,12 +31,12 @@ export async function GET(req: NextRequest) {
     }
 
     // Get all user entries
-    const userEntries = getAllUserEntries();
+    const userEntries = await getAllUserEntries();
     const defaultCompetitionId = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
 
     // Map to response format
-    const participants = userEntries.map((entry) => {
-      const linkedParticipants = findParticipantsByPhone(entry.phone);
+    const participants = await Promise.all(userEntries.map(async (entry) => {
+      const linkedParticipants = await findParticipantsByPhone(entry.phone);
       const primaryParticipant =
         linkedParticipants.find((participant) => participant.competitionId === defaultCompetitionId) ??
         linkedParticipants[0] ??
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
         participantId: primaryParticipant?.id ?? null,
         ticketsPurchased: primaryParticipant?.tickets.length ?? entry.assignedTickets,
       };
-    });
+    }));
 
     return success(participants);
   } catch (err) {
@@ -99,7 +99,7 @@ export async function DELETE(req: NextRequest) {
 
     console.log(`[DELETE /admin/participants] Attempting to delete users: ${userIds.join(', ')}`);
 
-    const result = deleteUserEntriesByIds(userIds);
+    const result = await deleteUserEntriesByIds(userIds);
 
     if (result.deleted === 0) {
       return fail('No participants were deleted', 404);
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
 
     let newEntry;
     try {
-      newEntry = createManualUserEntry({
+      newEntry = await createManualUserEntry({
         name: trimmedName,
         phone: trimmedPhone,
         email: trimmedEmail || null,
@@ -174,12 +174,13 @@ export async function POST(req: NextRequest) {
       return fail(message, 400);
     }
 
-  const desiredTicketCount = Math.min(parsedTickets, 100);
+    const defaultCompetitionId = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID?.trim() || 'test-id';
+    const desiredTicketCount = Math.min(parsedTickets, 100);
     if (desiredTicketCount > 0) {
-      updateUserTickets(newEntry.id, desiredTicketCount);
+      await updateUserTickets(newEntry.id, desiredTicketCount, defaultCompetitionId);
     }
 
-    const refreshedEntries = getAllUserEntries();
+    const refreshedEntries = await getAllUserEntries();
     const hydrated = refreshedEntries.find((entry) => entry.id === newEntry.id) ?? newEntry;
 
     return success(hydrated, 201);

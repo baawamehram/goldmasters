@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getCompetitionsWithStats } from '@/server/data/mockDb';
+import { getCompetitionsWithStats } from '@/server/data/db.service';
 import { error, fail } from '@/server/http';
 import { extractBearerToken, verifyToken } from '@/server/auth/jwt';
 

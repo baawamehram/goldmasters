@@ -4,7 +4,7 @@ import {
   getCompetitionById,
   closeCompetition,
   calculateTicketsSold,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import { success, fail, error } from '@/server/http';
 
 export async function PATCH(
@@ -19,18 +19,18 @@ export async function PATCH(
   try {
     const { id } = await context.params;
 
-    const competition = getCompetitionById(id);
+    const competition = await getCompetitionById(id);
 
     if (competition.status === 'CLOSED') {
       return fail('Competition already closed', 409);
     }
 
-    const updated = closeCompetition(id);
+    const updated = await closeCompetition(id);
     if (!updated) {
       return error('Failed to close competition');
     }
 
-    const ticketsSold = calculateTicketsSold(id);
+    const ticketsSold = await calculateTicketsSold(id);
 
     return success({
       competition: {

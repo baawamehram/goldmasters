@@ -16,7 +16,7 @@ import {
   saveParticipant,
   sanitizePhone,
   hasParticipantCompletedEntry,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 
 let mockTicketCounter = 200;
 
@@ -97,7 +97,7 @@ export async function POST(
     }
 
     const sanitizedPhone = sanitizePhone(phone!);
-    const baseCompetition = getCompetitionById(id);
+    const baseCompetition = await getCompetitionById(id);
     const markersPerTicket = baseCompetition.markersPerTicket;
 
     const markerGroups = new Map<
@@ -135,8 +135,8 @@ export async function POST(
       }
     }
 
-    const existingParticipant = findParticipantByPhone(id, sanitizedPhone);
-    if (existingParticipant && hasParticipantCompletedEntry(id, existingParticipant.id)) {
+    const existingParticipant = await findParticipantByPhone(id, sanitizedPhone);
+    if (existingParticipant && await hasParticipantCompletedEntry(id, existingParticipant.id)) {
       return fail('This participant has already completed their entry and cannot submit another checkout.', 403);
     }
     const participantId = existingParticipant?.id || `participant-${Date.now()}`;
@@ -193,7 +193,7 @@ export async function POST(
     participantRecord.tickets = updatedTickets;
     participantRecord.lastSubmissionAt = new Date();
 
-    saveParticipant(participantRecord);
+    await saveParticipant(participantRecord);
 
     const responseTickets = participantRecord.tickets.map((ticket) => ({
       id: ticket.id,

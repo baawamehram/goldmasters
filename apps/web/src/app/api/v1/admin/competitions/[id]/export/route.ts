@@ -4,7 +4,7 @@ import {
   findCompetitionById,
   getCompetitionResult,
   getParticipantsByCompetition,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import { fail, error } from '@/server/http';
 
 const formatNumber = (value: number | null, fractionDigits = 6) => {
@@ -41,13 +41,13 @@ export async function GET(
   try {
     const { id } = await context.params;
 
-    const competition = findCompetitionById(id);
+    const competition = await findCompetitionById(id);
     if (!competition) {
       return fail('Competition not found', 404);
     }
 
-    const participants = getParticipantsByCompetition(id);
-    const result = getCompetitionResult(id);
+    const participants = await getParticipantsByCompetition(id);
+    const result = await getCompetitionResult(id);
 
     const finalJudgeX = typeof competition.finalJudgeX === 'number' ? competition.finalJudgeX : null;
     const finalJudgeY = typeof competition.finalJudgeY === 'number' ? competition.finalJudgeY : null;

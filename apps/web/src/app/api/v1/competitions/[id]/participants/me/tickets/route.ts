@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { findParticipantById, hasParticipantCompletedEntry } from '@/server/data/mockDb';
+import { findParticipantById, hasParticipantCompletedEntry } from '@/server/data/db.service';
 import { fail, success, error } from '@/server/http';
 import { requireParticipantToken } from '@/server/auth/participant';
 
@@ -15,12 +15,12 @@ export async function GET(
       return tokenOrResponse;
     }
 
-    const participant = findParticipantById(id, tokenOrResponse.participantId);
+    const participant = await findParticipantById(id, tokenOrResponse.participantId);
     if (!participant) {
       return fail('Participant record not found', 404);
     }
 
-    if (hasParticipantCompletedEntry(id, participant.id)) {
+    if (await hasParticipantCompletedEntry(id, participant.id)) {
       return fail('This entry is already completed. Further gameplay is not permitted.', 403);
     }
 

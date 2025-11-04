@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateUserTickets, getUserEntryById } from '@/server/data/mockDb';
+import { updateUserTickets, getUserEntryById } from '@/server/data/db.service';
 import { success, error, fail } from '@/server/http';
 import { authenticateAdmin } from '@/lib/auth';
 
@@ -38,13 +38,13 @@ export async function POST(
     }
 
     // Check if user exists
-    const user = getUserEntryById(userId);
+    const user = await getUserEntryById(userId);
     if (!user) {
       return fail('User not found', 404);
     }
 
     // Update tickets - works regardless of login status
-    const updatedUser = updateUserTickets(userId, ticketCount);
+    const updatedUser = await updateUserTickets(userId, ticketCount);
 
     if (!updatedUser) {
       return error('Failed to update tickets');

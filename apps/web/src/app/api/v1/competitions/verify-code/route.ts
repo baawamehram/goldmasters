@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { verifyAccessCode } from '@/server/data/mockDb';
+import { verifyAccessCode } from '@/server/data/db.service';
 import { fieldError, validationFailure, success, fail, error, ValidationError } from '@/server/http';
 
 // Admin universal access code (works for all competitions)

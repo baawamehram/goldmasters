@@ -1,4 +1,4 @@
-import { getCompetitionsWithStats } from '@/server/data/mockDb';
+import { getCompetitionsWithStats } from '@/server/data/db.service';
 import { success, error } from '@/server/http';
 
 export async function GET() {

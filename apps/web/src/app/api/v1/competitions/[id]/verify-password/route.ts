@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { fieldError, validationFailure, fail, success, error } from '@/server/http';
-import { findCompetitionById, getCompetitionById } from '@/server/data/mockDb';
+import { findCompetitionById, getCompetitionById } from '@/server/data/db.service';
 import { signToken } from '@/server/auth/jwt';
 
 export async function POST(
@@ -17,7 +17,7 @@ export async function POST(
       return validationFailure([fieldError('password', 'Password is required', password)]);
     }
 
-    const competition = findCompetitionById(id);
+    const competition = await findCompetitionById(id);
     if (!competition) {
       return fail('Competition not found', 404);
     }
@@ -36,7 +36,7 @@ export async function POST(
     }
 
     if (!isPasswordValid) {
-      const fallbackCompetition = getCompetitionById(id);
+      const fallbackCompetition = await getCompetitionById(id);
       const fallbackPassword = 'competition123';
       isPasswordValid =
         passwordValue === fallbackPassword || passwordValue === fallbackCompetition.invitePasswordHash;

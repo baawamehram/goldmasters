@@ -4,7 +4,7 @@ import {
   createOrUpdateUserEntry,
   markParticipantCompletedEntry,
   clearParticipantCompletion,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 
 // Add OPTIONS handler for CORS preflight
 export async function OPTIONS(req: NextRequest) {
@@ -52,11 +52,11 @@ export async function POST(
     // Use it directly to ensure data is stored under the correct user
     if (participantName && participantPhone) {
       // Ensure user entry exists for this participant, using the URL ID
-      let userEntry = getUserEntryByNameAndPhone(participantName, participantPhone);
+      let userEntry = await getUserEntryByNameAndPhone(participantName, participantPhone);
       
       if (!userEntry) {
         // Create user entry with the URL ID (user's unique ID from localStorage)
-        userEntry = createOrUpdateUserEntry(participantName, participantPhone, id);
+        userEntry = await createOrUpdateUserEntry(participantName, participantPhone, id);
       }
       
       // Update the checkout data to use the URL's ID (which is the user's unique ID)
@@ -101,9 +101,9 @@ export async function POST(
         ?? (typeof resolvedSummary?.participant?.id === 'string' ? resolvedSummary.participant.id : null);
 
       if (completionFlag) {
-        markParticipantCompletedEntry(id, participantIdForCompletion ?? originalParticipantId);
+        await markParticipantCompletedEntry(id, participantIdForCompletion ?? originalParticipantId);
       } else {
-        clearParticipantCompletion(id, participantIdForCompletion ?? originalParticipantId);
+        await clearParticipantCompletion(id, participantIdForCompletion ?? originalParticipantId);
       }
     }
 

@@ -25,7 +25,7 @@ import {
   saveParticipant,
   createOrUpdateUserEntry,
   hasParticipantCompletedEntry,
-} from '../data/mockDb';
+} from '../data/db.service';
 // Prisma client (workspace package)
 import prisma from 'db';
 
@@ -73,7 +73,7 @@ router.get('/', async (_req: Request, res: Response) => {
 
   // Fallback: mock data (preserves current behavior if DB is unavailable)
   try {
-    const competitions = getCompetitionsWithStats();
+    const competitions = await getCompetitionsWithStats();
     res.status(200).json({ status: 'success', data: { competitions } });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Failed to fetch competitions' });
@@ -109,7 +109,7 @@ router.get('/active', async (req: Request, res: Response) => {
       return;
     }
 
-    const competitions = getCompetitionsWithStats();
+    const competitions = await getCompetitionsWithStats();
     const activeCompetition = competitions.find(c => c.status === 'ACTIVE');
 
     if (!activeCompetition) {
@@ -175,8 +175,8 @@ router.get('/:id', async (req: Request, res: Response) => {
       }
     }
 
-  const baseCompetition = getCompetitionById(actualCompetitionId);
-  const ticketsSold = calculateTicketsSold(actualCompetitionId);
+  const baseCompetition = await getCompetitionById(actualCompetitionId);
+  const ticketsSold = await calculateTicketsSold(actualCompetitionId);
   const remainingSlots = Math.max(0, baseCompetition.maxEntries - ticketsSold);
 
     const responseData: any = {
@@ -195,7 +195,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     };
 
     if (participantId) {
-      const participant = findParticipantById(actualCompetitionId, participantId);
+      const participant = await findParticipantById(actualCompetitionId, participantId);
       if (participant) {
         const ticketsPurchased = participant.tickets.length;
         const entriesUsed = participant.tickets.reduce(
@@ -268,7 +268,7 @@ router.post(
         phone: phone.substring(0, 5) + '...' 
       });
 
-      const participant = findParticipantByPhone(actualCompetitionId, phone);
+      const participant = await findParticipantByPhone(actualCompetitionId, phone);
       if (!participant) {
         console.log('[POST authenticate] Participant not found:', { actualCompetitionId, phone });
         res.status(404).json({
@@ -289,7 +289,7 @@ router.post(
         return;
       }
 
-      const participantCompleted = hasParticipantCompletedEntry(actualCompetitionId, participant.id);
+      const participantCompleted = await hasParticipantCompletedEntry(actualCompetitionId, participant.id);
       if (participantCompleted) {
         console.log('[POST authenticate] Participant already completed entry:', { participantId: participant.id });
         res.status(403).json({
@@ -370,7 +370,7 @@ router.get(
         return;
       }
 
-      const participant = findParticipantById(actualCompetitionId, participantId);
+      const participant = await findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
         console.log('[GET me/tickets] Participant not found:', { actualCompetitionId, participantId });
         res.status(404).json({
@@ -380,7 +380,7 @@ router.get(
         return;
       }
 
-      if (hasParticipantCompletedEntry(actualCompetitionId, participant.id)) {
+      if (await hasParticipantCompletedEntry(actualCompetitionId, participant.id)) {
         console.log('[GET me/tickets] Participant already completed entry:', { participantId: participant.id });
         res.status(403).json({
           status: 'fail',
@@ -576,7 +576,7 @@ router.post(
       const actualCompetitionId = isUserId ? 'test-id' : id;
       const requestedUserId = isUserId ? id : null;
       
-      const baseCompetition = getCompetitionById(actualCompetitionId);
+      const baseCompetition = await getCompetitionById(actualCompetitionId);
       const markersPerTicket = baseCompetition.markersPerTicket;      const markerGroups = new Map<
         string,
         {
@@ -616,8 +616,8 @@ router.post(
         }
       }
 
-      const existingParticipant = findParticipantByPhone(actualCompetitionId, sanitizedPhone);
-      if (existingParticipant && hasParticipantCompletedEntry(actualCompetitionId, existingParticipant.id)) {
+      const existingParticipant = await findParticipantByPhone(actualCompetitionId, sanitizedPhone);
+      if (existingParticipant && await hasParticipantCompletedEntry(actualCompetitionId, existingParticipant.id)) {
         console.log('[POST checkout] Participant already completed entry:', { participantId: existingParticipant.id });
         res.status(403).json({
           status: 'fail',
@@ -629,7 +629,7 @@ router.post(
 
       // Create or update user entry to get/create a userId
       // If a userId was provided in the URL, use it; otherwise create new one
-      const userEntry = createOrUpdateUserEntry(name.trim(), sanitizedPhone, requestedUserId || undefined);
+      const userEntry = await createOrUpdateUserEntry(name.trim(), sanitizedPhone, requestedUserId || undefined);
       const userId = userEntry.id;
 
       const participantRecord: MockParticipant = existingParticipant
@@ -684,7 +684,7 @@ router.post(
       participantRecord.tickets = updatedTickets;
       participantRecord.lastSubmissionAt = new Date();
 
-      saveParticipant(participantRecord);
+      await saveParticipant(participantRecord);
 
       // Save checkout summary with userId for admin view
       console.log('[POST checkout] Saving checkout summary:', {
@@ -727,7 +727,7 @@ router.post(
         checkoutTime: new Date().toISOString(),
       };
 
-      saveCheckoutSummary(actualCompetitionId, participantRecord.id, checkoutSummary);
+      await saveCheckoutSummary(actualCompetitionId, participantRecord.id, checkoutSummary);
       console.log('[POST checkout] Checkout summary saved with keys:', {
         participantKey: `${actualCompetitionId}:${participantRecord.id}`,
         userKey: `${actualCompetitionId}:user:${userId}`
@@ -812,7 +812,7 @@ router.post(
         return;
       }
 
-      const participant = findParticipantById(actualCompetitionId, participantId);
+      const participant = await findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
         console.log('[POST entries] Participant not found:', { actualCompetitionId, participantId });
         res.status(404).json({
@@ -822,7 +822,7 @@ router.post(
         return;
       }
 
-      if (hasParticipantCompletedEntry(actualCompetitionId, participant.id)) {
+      if (await hasParticipantCompletedEntry(actualCompetitionId, participant.id)) {
         console.log('[POST entries] Participant already completed entry:', { participantId: participant.id });
         res.status(403).json({
           status: 'fail',
@@ -884,7 +884,7 @@ router.post(
         lastSubmissionAt: new Date(),
       };
 
-      saveParticipant(updatedParticipant);
+      await saveParticipant(updatedParticipant);
 
       const responseTickets = updatedParticipant.tickets.map((ticket) => ({
         id: ticket.id,
@@ -948,7 +948,7 @@ router.get(
         return;
       }
 
-      const participant = findParticipantById(actualCompetitionId, participantId);
+      const participant = await findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
         console.log('[GET submissions] Participant not found:', { actualCompetitionId, participantId });
         res.status(404).json({
@@ -971,7 +971,7 @@ router.get(
           submittedAt: ticket.submittedAt?.toISOString(),
         }));
 
-      const competition = getCompetitionById(id);
+      const competition = await getCompetitionById(id);
 
       res.status(200).json({
         status: 'success',
@@ -1044,12 +1044,12 @@ router.get(
         return;
       }
 
-      let participant = findParticipantById(actualCompetitionId, participantId);
+      let participant = await findParticipantById(actualCompetitionId, participantId);
       
       // If participant not found with exact ID, try to get first participant from competition
       // This handles cases where frontend uses different ID schemes (user-1 vs participant-1)
       if (!participant) {
-        const allParticipants = getParticipantsByCompetition(actualCompetitionId);
+        const allParticipants = await getParticipantsByCompetition(actualCompetitionId);
         if (allParticipants.length === 0) {
           console.log('[GET admin submissions] No participants found:', { actualCompetitionId });
           res.status(404).json({
@@ -1074,7 +1074,7 @@ router.get(
           submittedAt: ticket.submittedAt?.toISOString(),
         }));
 
-      const competition = getCompetitionById(id);
+      const competition = await getCompetitionById(id);
 
       res.status(200).json({
         status: 'success',
@@ -1140,10 +1140,10 @@ router.post(
         participantId
       });
 
-      let participant = findParticipantById(actualCompetitionId, participantId);
+      let participant = await findParticipantById(actualCompetitionId, participantId);
       if (!participant) {
         // Fallback: check if participant exists in any competition and clone
-        const allParticipants = getParticipants();
+        const allParticipants = await getParticipants();
         let existingParticipant = allParticipants.find(p => p.id === participantId);
         
         if (existingParticipant) {
@@ -1160,7 +1160,7 @@ router.post(
             })),
             lastSubmissionAt: null,
           };
-          saveParticipant(clonedParticipant);
+          await saveParticipant(clonedParticipant);
           participant = clonedParticipant;
         } else {
           // Last resort: Create a minimal participant entry for new users with local IDs
@@ -1185,7 +1185,7 @@ router.post(
             lastSubmissionAt: null,
           };
           
-          saveParticipant(newParticipant);
+          await saveParticipant(newParticipant);
           participant = newParticipant;
         }
       }
@@ -1198,7 +1198,7 @@ router.post(
         return;
       }
 
-      const competition = getCompetitionById(actualCompetitionId);
+      const competition = await getCompetitionById(actualCompetitionId);
 
       const rawParticipantEmail = typeof payload?.participant?.email === 'string'
         ? payload.participant.email.trim().toLowerCase()
@@ -1210,7 +1210,7 @@ router.post(
 
       if (resolvedEmail && participant.email !== resolvedEmail) {
         participant.email = resolvedEmail;
-        saveParticipant(participant);
+        await saveParticipant(participant);
       }
 
       const completedFlag = payload?.completed === true || payload?.isCompleted === true;
@@ -1222,7 +1222,7 @@ router.post(
 
       if (completedFlag && completedAtValue) {
         participant.lastSubmissionAt = new Date(completedAtValue);
-        saveParticipant(participant);
+        await saveParticipant(participant);
       }
 
       const tickets = ticketsInput.map((ticket: any) => {
@@ -1281,7 +1281,7 @@ router.post(
         userKey: userId ? `${actualCompetitionId}:user:${userId}` : 'none'
       });
 
-      saveCheckoutSummary(actualCompetitionId, participantId, summary);
+      await saveCheckoutSummary(actualCompetitionId, participantId, summary);
 
       res.status(201).json({ message: 'Checkout saved', summary });
     } catch (error) {
@@ -1314,12 +1314,12 @@ router.get(
       console.log('[GET checkout-summary] Resolved:', { isUserId, actualCompetitionId });
       
       // Try to get by participantId first (with actual competition ID)
-      let summary = getCheckoutSummary(actualCompetitionId, participantId);
+      let summary = await getCheckoutSummary(actualCompetitionId, participantId);
       console.log('[GET checkout-summary] By participantId:', summary ? 'found' : 'not found');
       
       // If not found, try to get by userId (in case participantId is actually a userId)
       if (!summary) {
-        summary = getCheckoutSummaryByUserId(actualCompetitionId, participantId);
+        summary = await getCheckoutSummaryByUserId(actualCompetitionId, participantId);
         console.log('[GET checkout-summary] By userId:', summary ? 'found' : 'not found');
       }
 

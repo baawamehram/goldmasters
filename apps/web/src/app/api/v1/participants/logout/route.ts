@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { logoutUserEntry } from '@/server/data/mockDb';
+import { logoutUserEntry } from '@/server/data/db.service';
 import { fieldError, validationFailure, success, error, ValidationError } from '@/server/http';
 
 export async function POST(req: NextRequest) {

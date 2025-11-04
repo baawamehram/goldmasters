@@ -5,7 +5,7 @@ import {
   hasParticipantCompletedEntry,
   getUserEntryByPhone,
   updateUserTickets,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import { signToken } from '@/server/auth/jwt';
 
 export async function POST(
@@ -39,15 +39,15 @@ export async function POST(
   const phoneValue = phone!.trim();
 
   // First, make sure the admin has assigned tickets for this user
-  const userEntry = getUserEntryByPhone(phoneValue);
+  const userEntry = await getUserEntryByPhone(phoneValue);
   const desiredTicketCount = userEntry?.assignedTickets ?? 0;
 
   // Ensure we have a participant record for this competition
-  let participant = findParticipantByPhone(competitionId, phoneValue);
+  let participant = await findParticipantByPhone(competitionId, phoneValue);
 
   if (!participant && userEntry) {
-  updateUserTickets(userEntry.id, desiredTicketCount, competitionId);
-  participant = findParticipantByPhone(competitionId, phoneValue);
+  await updateUserTickets(userEntry.id, desiredTicketCount, competitionId);
+  participant = await findParticipantByPhone(competitionId, phoneValue);
   }
 
   if (!participant) {
@@ -55,11 +55,11 @@ export async function POST(
   }
 
   if (userEntry && participant.tickets.length !== desiredTicketCount) {
-    updateUserTickets(userEntry.id, desiredTicketCount, competitionId);
-    participant = findParticipantByPhone(competitionId, phoneValue) ?? participant;
+    await updateUserTickets(userEntry.id, desiredTicketCount, competitionId);
+    participant = await findParticipantByPhone(competitionId, phoneValue) ?? participant;
   }
 
-  if (hasParticipantCompletedEntry(competitionId, participant.id)) {
+  if (await hasParticipantCompletedEntry(competitionId, participant.id)) {
     return fail('This participant has already completed their entry and cannot play again.', 403);
   }
 

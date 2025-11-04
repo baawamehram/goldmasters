@@ -327,3 +327,52 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+model UserEntry {
+  id              String       @id @default(cuid())
+  name            String
+  phone           String       @unique
+  email           String?
+  createdAt       DateTime     @default(now())
+  assignedTickets Int          @default(0)
+  isLoggedIn      Boolean      @default(false)
+  lastLoginAt     DateTime?
+  lastLogoutAt    DateTime?
+  accessCode      String       @unique
+  currentPhase    Int?
+
+  @@index([phone])
+  @@index([accessCode])
+  @@map("user_entries")
+}
+
+model CheckoutSummary {
+  id              String       @id @default(cuid())
+  competitionId   String
+  participantId   String
+  userId          String?
+  summaryData     Json         // Store the entire CheckoutSummary object
+  completed       Boolean      @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([competitionId, participantId])
+  @@index([competitionId])
+  @@index([participantId])
+  @@index([userId])
+  @@map("checkout_summaries")
+}
+
+model CompetitionResult {
+  id              String       @id @default(cuid())
+  competitionId   String       @unique
+  finalJudgeX     Float
+  finalJudgeY     Float
+  winners         Json         // Store array of winners
+  computedAt      DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([competitionId])
+  @@map("competition_results")
+}

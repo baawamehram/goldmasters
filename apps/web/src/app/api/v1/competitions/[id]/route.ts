@@ -3,7 +3,7 @@ import {
   calculateTicketsSold,
   findParticipantById,
   getCompetitionById,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import { success, error } from '@/server/http';
 import { extractBearerToken, verifyToken } from '@/server/auth/jwt';
 
@@ -43,8 +43,8 @@ export async function GET(
       }
     }
 
-    const baseCompetition = getCompetitionById(actualCompetitionId);
-    const ticketsSold = calculateTicketsSold(actualCompetitionId);
+    const baseCompetition = await getCompetitionById(actualCompetitionId);
+    const ticketsSold = await calculateTicketsSold(actualCompetitionId);
     const remainingSlots = Math.max(0, baseCompetition.maxEntries - ticketsSold);
 
     const responseData: Record<string, unknown> = {
@@ -63,7 +63,7 @@ export async function GET(
     };
 
     if (participantId) {
-  const participant = findParticipantById(actualCompetitionId, participantId);
+  const participant = await findParticipantById(actualCompetitionId, participantId);
       if (participant) {
         const ticketsPurchased = participant.tickets.length;
         const entriesUsed = participant.tickets.reduce(

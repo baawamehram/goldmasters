@@ -4,7 +4,7 @@ import {
   getCompetitionsByIds,
   sanitizePhone,
   createOrUpdateUserEntry,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import { fieldError, validationFailure, fail, success, error, ValidationError } from '@/server/http';
 import { signToken } from '@/server/auth/jwt';
 

@@ -3,7 +3,7 @@ import { requireAdminToken } from '@/server/auth/admin';
 import {
   getCompetitionsWithStats,
   createCompetition,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import {
   success,
   error,
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const competitions = getCompetitionsWithStats();
+    const competitions = await getCompetitionsWithStats();
     return success({ competitions });
   } catch (err) {
     console.error('Error fetching competitions', err);

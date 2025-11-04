@@ -5,7 +5,7 @@ import {
   findParticipantsByPhone,
   getCompetitionsByIds,
   sanitizePhone,
-} from '../data/mockDb';
+} from '../data/db.service';
 
 const router: Router = Router();
 
@@ -38,7 +38,7 @@ router.post(
 
     try {
       const { phone } = req.body as { phone: string };
-      const participants = findParticipantsByPhone(phone);
+      const participants = await findParticipantsByPhone(phone);
 
       if (participants.length === 0) {
         res.status(404).json({
@@ -66,7 +66,8 @@ router.post(
         new Set(participants.map((participant) => participant.competitionId))
       );
 
-      const competitions = getCompetitionsByIds(competitionIds).map((competition) => ({
+      const competitionsData = await getCompetitionsByIds(competitionIds);
+      const competitions = competitionsData.map((competition) => ({
         id: competition.id,
         title: competition.title,
         status: competition.status,

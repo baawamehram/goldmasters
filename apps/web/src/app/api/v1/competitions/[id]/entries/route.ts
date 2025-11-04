@@ -6,7 +6,7 @@ import {
   MockTicket,
   saveParticipant,
   hasParticipantCompletedEntry,
-} from '@/server/data/mockDb';
+} from '@/server/data/db.service';
 import { fieldError, validationFailure, fail, success, error, ValidationError } from '@/server/http';
 
 export async function POST(
@@ -59,12 +59,12 @@ export async function POST(
       return validationFailure(errors, 400);
     }
 
-    const participant = findParticipantById(id, tokenOrResponse.participantId);
+    const participant = await findParticipantById(id, tokenOrResponse.participantId);
     if (!participant) {
       return fail('Participant not found', 404);
     }
 
-    if (hasParticipantCompletedEntry(id, participant.id)) {
+    if (await hasParticipantCompletedEntry(id, participant.id)) {
       return fail('This entry is already completed. Additional markers cannot be submitted.', 403);
     }
 
@@ -112,7 +112,7 @@ export async function POST(
       lastSubmissionAt: new Date(),
     };
 
-    saveParticipant(updatedParticipant);
+    await saveParticipant(updatedParticipant);
 
     const responseTickets = updatedParticipant.tickets.map((ticket) => ({
       id: ticket.id,

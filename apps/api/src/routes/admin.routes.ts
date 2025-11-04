@@ -18,7 +18,7 @@ import {
   findParticipantById,
   getCheckoutSummary,
   getCheckoutSummariesByCompetition,
-} from '../data/mockDb';
+} from '../data/db.service';
 
 const router: Router = Router();
 
@@ -95,37 +95,44 @@ router.get(
   async (_req: Request, res: Response) => {
     try {
       // Get all competitions
-      const competitions = getCompetitionsWithStats();
+      const competitions = await getCompetitionsWithStats();
 
       // Aggregate only participants that completed checkout (have a summary)
-      const allParticipants = competitions.flatMap((comp) =>
-        getParticipantsByCompetition(comp.id)
-          .map((participant) => {
-            const summary = getCheckoutSummary(comp.id, participant.id);
-            if (!summary) {
-              return null;
-            }
+      const allParticipantsNested = await Promise.all(
+        competitions.map(async (comp) => {
+          const participants = await getParticipantsByCompetition(comp.id);
+          return Promise.all(
+            participants.map(async (participant) => {
+              const summary = await getCheckoutSummary(comp.id, participant.id);
+              if (!summary) {
+                return null;
+              }
 
-            const resolvedId = summary.userId ?? participant.id;
-            return {
-              id: resolvedId,
-              participantId: summary.participant?.id ?? participant.id,
-              competitionId: summary.competition?.id ?? comp.id,
-              name: summary.participant?.name ?? participant.name,
-              phone: summary.participant?.phone ?? participant.phone,
-              email: summary.participant?.email ?? summary.contactEmail ?? participant.email ?? null,
-              createdAt: summary.checkoutTime,
-              assignedTickets: summary.participant?.ticketsPurchased ?? participant.tickets.length,
-              ticketsPurchased: summary.participant?.ticketsPurchased ?? participant.tickets.length,
-              isLoggedIn: false, // Mock: assume offline
-              lastLoginAt: summary.checkoutTime,
-              lastLogoutAt: null,
-              accessCode: resolvedId.slice(-4).toUpperCase(),
-              currentPhase: null, // Mock phase
-            };
-          })
-          .filter((participant): participant is NonNullable<typeof participant> => Boolean(participant))
+              const resolvedId = summary.userId ?? participant.id;
+              return {
+                id: resolvedId,
+                participantId: summary.participant?.id ?? participant.id,
+                competitionId: summary.competition?.id ?? comp.id,
+                name: summary.participant?.name ?? participant.name,
+                phone: summary.participant?.phone ?? participant.phone,
+                email: summary.participant?.email ?? summary.contactEmail ?? participant.email ?? null,
+                createdAt: summary.checkoutTime,
+                assignedTickets: summary.participant?.ticketsPurchased ?? participant.tickets.length,
+                ticketsPurchased: summary.participant?.ticketsPurchased ?? participant.tickets.length,
+                isLoggedIn: false, // Mock: assume offline
+                lastLoginAt: summary.checkoutTime,
+                lastLogoutAt: null,
+                accessCode: resolvedId.slice(-4).toUpperCase(),
+                currentPhase: null, // Mock phase
+              };
+            })
+          );
+        })
       );
+      
+      const allParticipants = allParticipantsNested
+        .flat()
+        .filter((participant): participant is NonNullable<typeof participant> => Boolean(participant));
 
       // Deduplicate participants by their resolved user id, keeping the latest details
       const participantsById = new Map<string, (typeof allParticipants)[number]>();
@@ -252,7 +259,7 @@ router.get(
   requireAdmin,
   async (_req: Request, res: Response) => {
     try {
-      const competitions = getCompetitionsWithStats();
+      const competitions = await getCompetitionsWithStats();
 
       res.status(200).json({
         status: 'success',
@@ -358,7 +365,7 @@ router.patch(
     try {
       const { id } = req.params;
 
-      const competition = getCompetitionById(id);
+      const competition = await getCompetitionById(id);
 
       if (competition.status === 'CLOSED') {
         res.status(409).json({
@@ -368,7 +375,7 @@ router.patch(
         return;
       }
 
-      const updated: MockCompetition | null = closeCompetition(id);
+      const updated: MockCompetition | null = await closeCompetition(id);
       if (!updated) {
         res.status(500).json({
           status: 'error',
@@ -377,7 +384,7 @@ router.patch(
         return;
       }
 
-      const ticketsSold = calculateTicketsSold(id);
+      const ticketsSold = await calculateTicketsSold(id);
 
       res.status(200).json({
         status: 'success',
@@ -440,7 +447,7 @@ router.patch(
       const finalJudgeXValue = Number(finalJudgeX);
       const finalJudgeYValue = Number(finalJudgeY);
 
-      const updatedCompetition = setCompetitionFinalResult(
+      const updatedCompetition = await setCompetitionFinalResult(
         id,
         finalJudgeXValue,
         finalJudgeYValue
@@ -454,7 +461,7 @@ router.patch(
         return;
       }
 
-      const ticketsSold = calculateTicketsSold(id);
+      const ticketsSold = await calculateTicketsSold(id);
 
       res.status(200).json({
         status: 'success',
@@ -537,7 +544,7 @@ router.get(
     try {
       const { id } = req.params;
 
-      const competition = findCompetitionById(id);
+      const competition = await findCompetitionById(id);
       if (!competition) {
         res.status(404).json({
           status: 'fail',
@@ -546,7 +553,7 @@ router.get(
         return;
       }
 
-      const result = getCompetitionResult(id);
+      const result = await getCompetitionResult(id);
       console.log(`[GET-RESULTS] Fetching result for competition ID: "${id}"`);
       console.log(`[GET-RESULTS] Retrieved result for competition ${id}:`, result);
 
@@ -618,7 +625,7 @@ router.post(
       const { id } = req.params;
       console.log(`[COMPUTE-WINNER] Starting compute for competition ID: "${id}"`);
 
-      const competition = findCompetitionById(id);
+      const competition = await findCompetitionById(id);
       if (!competition) {
         res.status(404).json({
           status: 'fail',
@@ -639,7 +646,7 @@ router.post(
       const finalJudgeY = competition.finalJudgeY as number;
 
       // Get all checkout summaries for this competition instead of mock participants
-      const checkoutSummaries = getCheckoutSummariesByCompetition(id);
+      const checkoutSummaries = await getCheckoutSummariesByCompetition(id);
       console.log(`[COMPUTE-WINNER] Found ${checkoutSummaries.length} checkout summaries for competition ${id}`);
 
       const ticketScores: MockCompetitionWinner[] = [];
@@ -735,7 +742,7 @@ router.post(
           winners: [],
           computedAt: new Date(),
         };
-        saveCompetitionResult(emptyResult);
+        await saveCompetitionResult(emptyResult);
 
         res.status(200).json({
           status: 'success',
@@ -776,7 +783,7 @@ router.post(
       };
 
       console.log(`[COMPUTE-WINNER] Saving ${sortedWinners.length} winners for competition ${id}:`, sortedWinners);
-      saveCompetitionResult(result);
+      await saveCompetitionResult(result);
       console.log(`[COMPUTE-WINNER] Result saved for competition ${id}`);
 
       res.status(200).json({
@@ -818,7 +825,7 @@ router.get(
     try {
       const { id, participantId } = req.params;
 
-      const participant = findParticipantById(id, participantId);
+      const participant = await findParticipantById(id, participantId);
       if (!participant) {
         res.status(404).json({
           status: 'fail',
@@ -827,7 +834,7 @@ router.get(
         return;
       }
 
-      const competition = findCompetitionById(id);
+      const competition = await findCompetitionById(id);
       if (!competition) {
         res.status(404).json({
           status: 'fail',
@@ -1118,7 +1125,7 @@ router.get(
     try {
       const { id } = req.params;
 
-      const competition = findCompetitionById(id);
+      const competition = await findCompetitionById(id);
       if (!competition) {
         res.status(404).json({
           status: 'fail',
@@ -1127,8 +1134,8 @@ router.get(
         return;
       }
 
-      const participants = getParticipantsByCompetition(id);
-      const result = getCompetitionResult(id);
+      const participants = await getParticipantsByCompetition(id);
+      const result = await getCompetitionResult(id);
 
       const finalJudgeX =
         typeof competition.finalJudgeX === 'number' ? competition.finalJudgeX : null;
