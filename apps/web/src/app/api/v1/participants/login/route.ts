@@ -46,9 +46,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Auto-create or update user entry
-    const userEntry = createOrUpdateUserEntry(name!.trim(), phone!.trim());
+    const userEntry = await createOrUpdateUserEntry(name!.trim(), phone!.trim());
 
-    const participants = findParticipantsByPhone(phone!);
+    const participants = await findParticipantsByPhone(phone!);
 
     // If no participant found, return the user entry data anyway (for new users)
     if (participants.length === 0) {
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       new Set(participants.map((participant) => participant.competitionId))
     );
 
-    const competitions = getCompetitionsByIds(competitionIds).map((competition) => ({
+    const competitions = (await getCompetitionsByIds(competitionIds)).map((competition) => ({
       id: competition.id,
       title: competition.title,
       status: competition.status,
