@@ -4,6 +4,7 @@ import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { buildApiUrl } from "@/lib/api";
 
 interface Participant {
   id: string;
@@ -61,10 +62,10 @@ export default function AdminEntriesPage() {
 
     loadParticipants();
 
-    // Set up real-time polling every 2 seconds
+    // Set up polling every 30 seconds
     const pollInterval = setInterval(() => {
       loadParticipants(true); // Silent reload
-    }, 2000);
+    }, 30000);
 
     return () => clearInterval(pollInterval);
   }, [router]);
@@ -77,7 +78,7 @@ export default function AdminEntriesPage() {
       setError(null);
 
       const token = localStorage.getItem('admin_token');
-      const response = await fetch('/api/v1/admin/participants', {
+      const response = await fetch(buildApiUrl('admin/participants'), {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -150,7 +151,7 @@ export default function AdminEntriesPage() {
     
     try {
       const token = localStorage.getItem('admin_token');
-      const response = await fetch(`/api/v1/admin/users/${participantId}/assign-tickets`, {
+      const response = await fetch(buildApiUrl(`admin/users/${participantId}/assign-tickets`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -288,7 +289,7 @@ export default function AdminEntriesPage() {
 
       console.log(`[Entries Page] Attempting to delete ${toDelete.length} participants:`, toDelete.map(p => p.id));
 
-      const response = await fetch('/api/v1/admin/participants', {
+      const response = await fetch(buildApiUrl('admin/participants'), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -376,7 +377,7 @@ export default function AdminEntriesPage() {
         return;
       }
 
-      const response = await fetch('/api/v1/admin/participants', {
+      const response = await fetch(buildApiUrl('admin/participants'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
