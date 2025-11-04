@@ -1,7 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-//import helmet from 'helmet';
-//import compression from 'compression';
+import helmet from 'helmet';
+import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import competitionRoutes from './routes/competition.routes';
@@ -19,9 +19,12 @@ const PORT = process.env.PORT || 4000;
 const API_VERSION = process.env.API_VERSION || 'v1';
 
 // Security middleware
-//app.use(helmet());
-//app.use(compression());
-
+app.use(helmet());
+app.use(compression());
+app.use((_, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 // CORS configuration
 app.use(cors());
 

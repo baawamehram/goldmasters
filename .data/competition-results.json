@@ -1,52 +1,52 @@
 [
   {
     "competitionId": "test-id",
-    "finalJudgeX": 0.0413,
-    "finalJudgeY": 0.9765,
+    "finalJudgeX": 0.669,
+    "finalJudgeY": 0.9486,
     "winners": [
       {
-        "ticketId": "participant-1762177838481-zb4ieuegw:1171",
-        "ticketNumber": 1171,
+        "ticketId": "participant-1762267991738-3519piyul:1187",
+        "ticketNumber": 1187,
+        "participantId": "participant-1762267991738-3519piyul",
+        "userId": "user-1762267991724-egucdq13e",
+        "participantName": "rty",
+        "participantPhone": "8976523456",
+        "distance": 0,
+        "marker": {
+          "id": "ticket-1762267991738-qpzspomkt-marker-1",
+          "x": 0.669,
+          "y": 0.9486
+        }
+      },
+      {
+        "ticketId": "participant-1762177838481-zb4ieuegw:1172",
+        "ticketNumber": 1172,
         "participantId": "participant-1762177838481-zb4ieuegw",
         "userId": "user-1762177838467-u54an4xlu",
         "participantName": "nenw",
         "participantPhone": "8976542345",
-        "distance": 0,
+        "distance": 0.03878066528568067,
         "marker": {
-          "id": "ticket-1762177838482-w6lqclhgv-marker-2",
-          "x": 0.0413,
-          "y": 0.9765
+          "id": "ticket-1762177838482-bk7xnu4ie-marker-2",
+          "x": 0.6975,
+          "y": 0.9749
         }
       },
       {
-        "ticketId": "participant-1761990990838-ut3sbp1oi:1149",
-        "ticketNumber": 1149,
+        "ticketId": "participant-1761990990838-ut3sbp1oi:1150",
+        "ticketNumber": 1150,
         "participantId": "participant-1761990990838-ut3sbp1oi",
         "userId": "user-1761990990836-u6o97vqs9",
         "participantName": "ninezero",
         "participantPhone": "9090909090",
-        "distance": 0.047023930078205906,
+        "distance": 0.08348652585896722,
         "marker": {
-          "id": "ticket-1761990990838-dccc5fofs-marker-1",
-          "x": 0.0827,
-          "y": 0.9542
-        }
-      },
-      {
-        "ticketId": "participant-1761991210512-inmhfj9qn:1152",
-        "ticketNumber": 1152,
-        "participantId": "participant-1761991210512-inmhfj9qn",
-        "userId": "user-1761991180757-8koyavp67",
-        "participantName": "eighttwo",
-        "participantPhone": "8282828282",
-        "distance": 0.08024394058120529,
-        "marker": {
-          "id": "ticket-1761991210512-i0y84ldbb-marker-3",
-          "x": 0.091,
-          "y": 0.9135
+          "id": "ticket-1761990990838-lb0pseseo-marker-3",
+          "x": 0.5856,
+          "y": 0.9448
         }
       }
     ],
-    "computedAt": "2025-11-03T13:55:21.381Z"
+    "computedAt": "2025-11-04T14:57:50.298Z"
   }
 ]
