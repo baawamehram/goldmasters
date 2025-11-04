@@ -21,8 +21,12 @@ const API_VERSION = process.env.API_VERSION || 'v1';
 // Security middleware
 app.use(helmet());
 app.use(compression());
+app.disable('etag'); // disables ETag generation
+
 app.use((_, res, next) => {
-  res.set('Cache-Control', 'no-store');
+  res.removeHeader('Etag');
+  res.removeHeader('Last-Modified');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   next();
 });
 // CORS configuration
