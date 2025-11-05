@@ -15,7 +15,7 @@ Goldmasters Spot-the-Ball Competition Platform - A password-protected spot-the-b
 - **Frontend**: Tailwind CSS, shadcn/ui, Framer Motion, Konva.js (canvas manipulation)
 - **Backend**: Express, JWT auth, bcrypt password hashing
 - **Database**: PostgreSQL with Prisma ORM
-- **Deployment**: Vercel (frontend), AWS S3 (storage)
+- **Deployment**: Netlify (frontend), Render (backend), AWS S3 (storage)
 
 ## Common Commands
 
@@ -117,10 +117,12 @@ Next.js App Router structure:
 - `app/page.tsx`: Landing page
 - `app/competition/[id]/`: Competition entry flow (password, registration, marker placement)
 - `app/admin/`: Admin dashboard (competitions, judging, results)
-- `app/api/`: Next.js API routes (proxy to Express backend)
+- `app/api/v1/`: Next.js API routes that directly access database via Prisma
 - `components/`: Reusable UI components (shadcn/ui)
-- `server/`: Server-side utilities and actions
+- `server/`: Server-side utilities and actions (including db.service.ts for database operations)
 - `lib/`: Client utilities (Konva canvas helpers, API clients)
+
+**Architecture Note**: The frontend uses Next.js API routes (`/app/api/v1/*`) that directly connect to PostgreSQL via Prisma. The Express backend (`apps/api`) exists separately but is deployed on Render for alternative/legacy access patterns.
 
 ### Marker Placement (Konva.js)
 
@@ -166,19 +168,27 @@ Each app requires `.env` file:
 
 ## Deployment
 
-### Vercel (Frontend)
+### Production Environment
+- **Frontend**: Hosted on Netlify
+- **Backend**: Hosted on Render
+- **Database**: PostgreSQL on Neon (managed PostgreSQL)
+
+### Netlify (Frontend)
 - Connected to main branch for auto-deploy
 - Build command: `pnpm install --no-frozen-lockfile && pnpm -w run db:generate && pnpm run build`
-- Environment variables configured in Vercel dashboard
-- API routes proxied to backend via `vercel.json` rewrites
+- Environment variables configured in Netlify dashboard (`.env.netlify`)
+- Frontend uses Next.js API routes that connect directly to the database
 
-### Backend API
-- Deploy to AWS EC2 or Render
+### Render (Backend)
+- Express API hosted on Render
 - Requires DATABASE_URL, JWT_SECRET, AWS credentials
+- Environment variables configured in Render dashboard (`.env.render`)
 - Run: `pnpm install && pnpm build && pnpm start`
+- CORS configured to allow requests from Netlify frontend
 
 ### Database
-- PostgreSQL on AWS RDS or Supabase
+- PostgreSQL on Neon (ep-fancy-rice-a1koy6k4-pooler.ap-southeast-1.aws.neon.tech)
+- Connection pooling enabled with sslmode=require
 - Run migrations before deploy: `pnpm --filter db migrate:deploy`
 
 ## Important Constraints
