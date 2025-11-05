@@ -9,8 +9,6 @@
   NEXT_PUBLIC_API_URL = "https://api.goldmasters.world/api/v1"
   NEXT_PUBLIC_DEFAULT_COMPETITION_ID = "test-id"
   NEXT_PUBLIC_DEFAULT_COMPETITION_TITLE = "Gold Coin"
-  # Ensure Prisma generates binaries for Netlify/AWS Lambda runtime
-  PRISMA_CLI_BINARY_TARGETS = "native,rhel-openssl-3.0.x"
 
 # Include Prisma binaries in functions
 [functions]
