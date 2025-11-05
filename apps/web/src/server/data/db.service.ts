@@ -1106,7 +1106,7 @@ export const updateUserTickets = async (
     participant = participants[0];
   }
 
-  // Count existing tickets
+  // Count existing tickets for this participant
   const existingTickets = await prisma.ticket.count({
     where: {
       participantId: participant.id,
@@ -1116,15 +1116,25 @@ export const updateUserTickets = async (
 
   const ticketsToAdd = ticketCount - existingTickets;
 
-  // Add new tickets if needed
+  // Handle ticket changes
   if (ticketsToAdd > 0) {
+    // Find the highest ticket number in the competition to avoid conflicts
+    const maxTicket = await prisma.ticket.findFirst({
+      where: { competitionId: targetCompetitionId },
+      orderBy: { ticketNumber: 'desc' },
+      select: { ticketNumber: true }
+    });
+
+    const startingTicketNumber = (maxTicket?.ticketNumber || 0) + 1;
+
+    // Add new tickets
     for (let i = 0; i < ticketsToAdd; i++) {
       await prisma.ticket.create({
         data: {
           id: `ticket-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`,
           competitionId: targetCompetitionId,
           participantId: participant.id,
-          ticketNumber: existingTickets + i + 1,
+          ticketNumber: startingTicketNumber + i,
           markersAllowed: markersPerTicket,
           markersUsed: 0,
           status: TicketStatus.ASSIGNED,
@@ -1132,16 +1142,36 @@ export const updateUserTickets = async (
         }
       });
     }
-
-    // Update participant ticket count
-    await prisma.participant.update({
-      where: { id: participant.id },
-      data: {
-        ticketsPurchased: ticketCount,
-        totalMarkers: ticketCount * markersPerTicket
-      }
+  } else if (ticketsToAdd < 0) {
+    // Remove excess tickets (delete the last ones without markers)
+    const ticketsToRemove = Math.abs(ticketsToAdd);
+    const removableTickets = await prisma.ticket.findMany({
+      where: {
+        participantId: participant.id,
+        competitionId: targetCompetitionId,
+        markersUsed: 0
+      },
+      orderBy: { ticketNumber: 'desc' },
+      take: ticketsToRemove
     });
+
+    if (removableTickets.length > 0) {
+      await prisma.ticket.deleteMany({
+        where: {
+          id: { in: removableTickets.map(t => t.id) }
+        }
+      });
+    }
   }
+
+  // Always update participant ticket count
+  await prisma.participant.update({
+    where: { id: participant.id },
+    data: {
+      ticketsPurchased: ticketCount,
+      totalMarkers: ticketCount * markersPerTicket
+    }
+  });
 
   // Update user entry assigned tickets
   await prisma.userEntry.update({

@@ -2,12 +2,19 @@ module.exports = {
   apps: [
     {
       name: 'goldmasters-web',
-      cwd: './apps/web',
-      script: 'node_modules/next/dist/bin/next',
-      args: 'start -p 3000',
+      cwd: './apps/web/.next/standalone',
+      script: 'apps/web/server.js',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000
+        PORT: 3000,
+        HOSTNAME: '0.0.0.0',
+        DATABASE_URL: 'postgresql://neondb_owner:npg_MCVEblsQt5x3@ep-fancy-rice-a1koy6k4-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require',
+        JWT_SECRET: 'your-super-secret-jwt-key-change-this-in-production-min-32-chars',
+        NEXT_PUBLIC_API_URL: '/api/v1',
+        NEXT_PUBLIC_DEFAULT_COMPETITION_ID: 'test-id',
+        NEXT_PUBLIC_DEFAULT_COMPETITION_TITLE: 'Gold Coin',
+        ADMIN_USERNAME: 'wish-admin',
+        ADMIN_PASSWORD: 'yourStrongAdminPassword123'
       },
       instances: 1,
       exec_mode: 'cluster',

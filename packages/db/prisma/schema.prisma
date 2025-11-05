@@ -150,9 +150,9 @@ model Participant {
   results         Result[]
   winners         Winner[]
 
-  @@unique([competitionId, email])
+  @@unique([competitionId, phone])
   @@index([competitionId])
-  @@index([email])
+  @@index([phone])
   @@map("participants")
 }
 

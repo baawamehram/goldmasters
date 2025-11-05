@@ -43,8 +43,11 @@ export async function POST(
       return fail('User not found', 404);
     }
 
+    // Get default competition ID from environment
+    const defaultCompetitionId = process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_ID || 'test-id';
+
     // Update tickets - works regardless of login status
-    const updatedUser = await updateUserTickets(userId, ticketCount);
+    const updatedUser = await updateUserTickets(userId, ticketCount, defaultCompetitionId);
 
     if (!updatedUser) {
       return error('Failed to update tickets');
