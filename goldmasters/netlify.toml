@@ -1,0 +1,17 @@
+[build]
+  base = "."
+  command = "pnpm install --prod=false && pnpm --filter web... build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "20.10.0"
+  PNPM_VERSION = "8"
+  NEXT_PUBLIC_API_URL = "https://goldmasters-api.onrender.com/api/v1"
+  NEXT_PUBLIC_DEFAULT_COMPETITION_ID = "test-id"
+  NEXT_PUBLIC_DEFAULT_COMPETITION_TITLE = "Gold Coin"
+
+[[redirects]]
+  from = "/api/v1/*"
+  to = "https://goldmasters-api.onrender.com/api/v1/:splat"
+  status = 200
+  force = true

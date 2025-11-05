@@ -1,0 +1,329 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum CompetitionStatus {
+  DRAFT       // Created but not published
+  ACTIVE      // Open for entries
+  CLOSED      // Entry period closed
+  JUDGING     // Judging in progress
+  COMPLETED   // Results published
+  CANCELLED   // Competition cancelled
+}
+
+enum ParticipantStatus {
+  REGISTERED  // Registered but not paid
+  ACTIVE      // Paid and can enter
+  COMPLETED   // Finished all entries
+  DISQUALIFIED // Disqualified for any reason
+}
+
+enum TicketStatus {
+  AVAILABLE   // Can be purchased
+  ASSIGNED    // Assigned to participant
+  USED        // All markers placed
+  EXPIRED     // Expired without use
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed with bcrypt
+  name      String
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  competitions Competition[]
+  auditLogs    AuditLog[]
+
+  @@map("admins")
+}
+
+model Competition {
+  id          String            @id @default(cuid())
+  title       String
+  description String            @db.Text
+  imageUrl    String?           // AWS S3 URL
+  imageKey    String?           // S3 key for deletion
+  
+  // Competition Configuration
+  totalTickets      Int
+  availableTickets  Int
+  markersPerTicket  Int           @default(3)
+  pricePerTicket    Float
+  
+  // Password Protection
+  password          String        // Hashed with bcrypt
+  
+  // Competition Timing
+  startDate         DateTime?
+  endDate           DateTime?
+  
+  // Status
+  status            CompetitionStatus @default(DRAFT)
+  
+  // Judging - Manually entered by admin after external judging
+  isJudged          Boolean       @default(false)
+  finalJudgeX       Float?        // Average X coordinate from judges
+  finalJudgeY       Float?        // Average Y coordinate from judges
+  judgedAt          DateTime?
+  
+  // Results
+  resultsPublished  Boolean       @default(false)
+  publishedAt       DateTime?
+  
+  // Metadata
+  createdById       String
+  createdBy         Admin         @relation(fields: [createdById], references: [id])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  participants      Participant[]
+  tickets           Ticket[]
+  markers           Marker[]
+  judgeMarks        JudgeMark[]
+  results           Result[]
+  winners           Winner[]
+  auditLogs         AuditLog[]
+
+  @@index([status])
+  @@index([createdById])
+  @@map("competitions")
+}
+
+model Participant {
+  id              String            @id @default(cuid())
+  competitionId   String
+  competition     Competition       @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  // Participant Info
+  name            String
+  email           String
+  phone           String
+  
+  // Tickets
+  ticketsPurchased Int              @default(0)
+  totalMarkers     Int              @default(0) // ticketsPurchased * markersPerTicket
+  markersUsed      Int              @default(0)
+  
+  // Status
+  status          ParticipantStatus @default(REGISTERED)
+  
+  // Payment
+  amountPaid      Float             @default(0)
+  paymentRef      String?
+  paidAt          DateTime?
+  
+  // Metadata
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  tickets         Ticket[]
+  markers         Marker[]
+  results         Result[]
+  winners         Winner[]
+
+  @@unique([competitionId, email])
+  @@index([competitionId])
+  @@index([email])
+  @@map("participants")
+}
+
+model Ticket {
+  id              String        @id @default(cuid())
+  competitionId   String
+  competition     Competition   @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  participantId   String?
+  participant     Participant?  @relation(fields: [participantId], references: [id], onDelete: SetNull)
+  
+  // Ticket Info
+  ticketNumber    Int           // Sequential number
+  markersAllowed  Int           @default(3)
+  markersUsed     Int           @default(0)
+  
+  // Status
+  status          TicketStatus  @default(AVAILABLE)
+  
+  // Assignment
+  assignedAt      DateTime?
+  expiresAt       DateTime?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  markers         Marker[]
+
+  @@unique([competitionId, ticketNumber])
+  @@index([competitionId])
+  @@index([participantId])
+  @@index([status])
+  @@map("tickets")
+}
+
+model Marker {
+  id              String       @id @default(cuid())
+  competitionId   String
+  competition     Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  participantId   String
+  participant     Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  
+  ticketId        String
+  ticket          Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  // Marker Position (relative to image dimensions)
+  x               Float        // X coordinate
+  y               Float        // Y coordinate
+  
+  // Distance to winning position (calculated after judging)
+  distanceToWinner Float?
+  
+  // Metadata
+  placedAt        DateTime     @default(now())
+  
+  @@index([competitionId])
+  @@index([participantId])
+  @@index([ticketId])
+  @@index([distanceToWinner])
+  @@map("markers")
+}
+
+model JudgeMark {
+  id              String       @id @default(cuid())
+  competitionId   String
+  competition     Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  // Judge Information
+  judgeName       String       // Name/identifier of the judge
+  judgeNumber     Int          // Judge 1, 2, 3, 4
+  
+  // Judge's mark coordinates
+  x               Float
+  y               Float
+  
+  // External reference (video timestamp, screenshot, etc.)
+  referenceUrl    String?      // S3 URL to video/image proof
+  referenceKey    String?      // S3 key
+  
+  // Metadata
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([competitionId, judgeNumber])
+  @@index([competitionId])
+  @@map("judge_marks")
+}
+
+model Result {
+  id              String       @id @default(cuid())
+  competitionId   String
+  competition     Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  participantId   String
+  participant     Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  
+  // Best marker for this participant
+  bestMarkerId    String       @unique
+  
+  // Performance
+  closestDistance Float        // Distance of best marker to winning position
+  rank            Int          // Overall rank (1 = closest)
+  
+  // Metadata
+  calculatedAt    DateTime     @default(now())
+
+  @@unique([competitionId, participantId])
+  @@index([competitionId])
+  @@index([rank])
+  @@map("results")
+}
+
+model Winner {
+  id              String       @id @default(cuid())
+  competitionId   String
+  competition     Competition  @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  participantId   String
+  participant     Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  
+  // Prize Information
+  position        Int          // 1st, 2nd, 3rd, etc.
+  prize           String       // Prize description
+  prizeValue      Float?       // Prize value in currency
+  
+  // Winner Details
+  closestDistance Float
+  
+  // Notification
+  notified        Boolean      @default(false)
+  notifiedAt      DateTime?
+  
+  // Metadata
+  createdAt       DateTime     @default(now())
+
+  @@unique([competitionId, position])
+  @@index([competitionId])
+  @@index([participantId])
+  @@map("winners")
+}
+
+model AuditLog {
+  id              String       @id @default(cuid())
+  
+  // Entity Information
+  entity          String       // e.g., "Competition", "Participant", "Marker"
+  entityId        String       // ID of the affected entity
+  action          String       // e.g., "CREATE", "UPDATE", "DELETE", "LOGIN"
+  
+  // Change Details
+  oldValue        Json?        // Previous state (JSON)
+  newValue        Json?        // New state (JSON)
+  
+  // User Information
+  performedById   String?
+  performedBy     Admin?       @relation(fields: [performedById], references: [id], onDelete: SetNull)
+  ipAddress       String?
+  userAgent       String?
+  
+  // Competition Context (optional)
+  competitionId   String?
+  competition     Competition? @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  createdAt       DateTime     @default(now())
+
+  @@index([entity, entityId])
+  @@index([performedById])
+  @@index([competitionId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

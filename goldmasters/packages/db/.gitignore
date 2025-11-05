@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Prisma
+prisma/generated/
+*.db
+*.db-journal
+
+# TypeScript
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
