@@ -1,6 +1,6 @@
 [build]
   base = "."
-  command = "pnpm install --prod=false && pnpm --filter web... build"
+  command = "pnpm install --prod=false && pnpm --filter db generate && pnpm --filter web... build"
   publish = "apps/web/.next"
 
 [build.environment]

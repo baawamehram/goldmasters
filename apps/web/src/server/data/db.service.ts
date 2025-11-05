@@ -353,6 +353,39 @@ export const createManualUserEntry = async ({
   };
 };
 
+export const logoutUserEntry = async (phone: string): Promise<UserEntry | null> => {
+  const sanitized = sanitizePhone(phone);
+  const entry = await prisma.userEntry.findUnique({
+    where: { phone: sanitized }
+  });
+  
+  if (entry) {
+    await prisma.userEntry.update({
+      where: { phone: sanitized },
+      data: {
+        isLoggedIn: false,
+        lastLogoutAt: new Date(),
+      }
+    });
+  }
+  
+  if (!entry) return null;
+  
+  return {
+    id: entry.id,
+    name: entry.name,
+    phone: entry.phone,
+    email: entry.email,
+    createdAt: entry.createdAt,
+    assignedTickets: entry.assignedTickets,
+    isLoggedIn: false,
+    lastLoginAt: entry.lastLoginAt,
+    lastLogoutAt: new Date(),
+    accessCode: entry.accessCode,
+    currentPhase: entry.currentPhase,
+  };
+};
+
 export const deleteUserEntriesByIds = async (ids: string[]): Promise<{ deleted: number; failed: number }> => {
   if (!Array.isArray(ids) || ids.length === 0) {
     return { deleted: 0, failed: 0 };
