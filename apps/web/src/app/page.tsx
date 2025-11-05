@@ -105,7 +105,7 @@ export default function HomePage() {
               ABOUT US
             </button>
             <button 
-              onClick={() => scrollToSection('contact')}
+              onClick={() => router.push('/contact')}
               className="hover:text-yellow-400 transition-colors font-medium"
             >
               CONTACT
@@ -187,7 +187,7 @@ export default function HomePage() {
                 ABOUT US
               </button>
               <button 
-                onClick={() => scrollToSection('contact')}
+                onClick={() => { router.push('/contact'); setMobileMenuOpen(false); }}
                 className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 CONTACT
@@ -321,7 +321,7 @@ export default function HomePage() {
                   {/* Gold Coin Image */}
                   <div className="relative aspect-[4/3] bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center p-8">
                     <img 
-                      src="/images/gold-coin.svg" 
+                      src="/images/iop.jpg" 
                       alt="Gold Coin"
                       className="w-full h-full object-contain"
                       onError={(e) => {
@@ -332,12 +332,7 @@ export default function HomePage() {
 
                   {/* Card Content */}
                   <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6">
-                    <h3 className="text-2xl font-bold mb-2">
-                      GOLD COIN
-                    </h3>
-                    <p className="text-sm uppercase tracking-wide">
-                      WITH A CLICK
-                    </p>
+                    
                   </div>
                 </div>
               </div>
@@ -358,10 +353,11 @@ export default function HomePage() {
                     Create Your Account
                   </h3>
                   <ul className="text-gray-700 text-sm space-y-2">
-                    <li>• Visit goldmasters.in</li>
-                    <li>• Sign up and set up your player profile</li>
-                    <li>• Choose the <strong>contest</strong> you'd like to participate in</li>
-                    <li>• Read the <strong>contest details</strong> carefully — every game is unique!</li>
+                    <li>• Register with your email address and create a secure password</li>
+                    <li>• Complete your participant profile with accurate personal information</li>
+                    <li>• Verify your account through the confirmation access code sent to your registered address</li>
+                    <li>• Login to access available competitions and browse contest details</li>
+                    <li>• Review each <strong>contest's rules</strong> and requirements carefully before participating</li>
                   </ul>
                 </div>
               </div>
@@ -370,143 +366,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Third Section - Qualify With Skill */}
-      <section className="bg-[#055F3C] py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Side - Text Content */}
-            <div className="text-white">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs uppercase mb-2 text-white/80">02 STEP</p>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                    Qualify With Skill
-                  </h2>
-                </div>
-              </div>
-
-              <p className="text-white/90 mb-6">
-                Before you compete for the grand prize, you'll need to prove your skill.
-              </p>
-
-              <ul className="space-y-3 text-white/90 mb-6">
-                <li>• Enter the <strong>Qualification Round</strong></li>
-                <li>• You’ll receive tickets with a fixed number of <strong>markers</strong> to place on a single image</li>
-                <li>• Drag, adjust and <strong>lock</strong> each marker where you think the ball should be</li>
-                <li>• Place all required markers, then <strong>proceed to checkout</strong> to confirm your entry</li>
-                <li>• Winners are decided by how close your markers are to the <strong>judge’s</strong> position</li>
-              </ul>
-
-              <p className="text-white/90">
-                If you qualify, you move one step closer to the ultimate prize!
-              </p>
-            </div>
-
-            {/* Right Side - Cricket Image */}
-            <div className="relative">
-              <img 
-                src="/images/cricket-qualify.jpg" 
-                alt="Cricket player batting"
-                className="w-full h-full object-cover rounded-lg shadow-xl"
-                onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><defs><linearGradient id="cricket" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d4a574"/><stop offset="100%" style="stop-color:#8b6f47"/></linearGradient></defs><rect fill="url(#cricket)" width="800" height="600"/><circle cx="400" cy="300" r="100" fill="#ffffff" opacity="0.3"/><text x="50%" y="50%" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="bold">Cricket Player</text><text x="50%" y="60%" text-anchor="middle" fill="#ffffff" font-size="24">Spot the Ball</text></svg>');
-                }}
-              />
-              {/* Timer Badge */}
-              <div className="absolute top-4 right-4 bg-yellow-400 text-black font-bold px-4 py-2 rounded-lg border-2 border-green-600">
-                02:00
-              </div>
-              {/* Instruction Box */}
-              <div className="absolute bottom-4 right-4 bg-gray-800/90 text-white text-xs px-4 py-3 rounded max-w-xs">
-                <p className="font-semibold mb-1">Spot the ball before the time runs out</p>
-                <p className="text-gray-300">Move the cursor where you think the ball is and click PLACE</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Fourth Section - Enter The Main Contest */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Left Side - Cricket Image with Overlay */}
-            <div className="relative">
-              <div className="relative rounded-lg overflow-hidden shadow-xl">
-                <img 
-                  src="/images/cricket-main-contest.jpg" 
-                  alt="Cricket player bowling"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><defs><linearGradient id="field" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d4a574"/><stop offset="100%" style="stop-color:#8b6f47"/></linearGradient></defs><rect fill="url(#field)" width="800" height="600"/><circle cx="400" cy="300" r="120" fill="#ffffff" opacity="0.2" stroke="#ffffff" stroke-width="2"/><line x1="400" y1="0" x2="400" y2="600" stroke="#ffffff" opacity="0.3" stroke-width="2" stroke-dasharray="10,10"/><text x="50%" y="50%" text-anchor="middle" fill="#ffffff" font-size="32" font-weight="bold">Cricket Field</text></svg>');
-                  }}
-                />
-                {/* Crosshair Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="relative">
-                    {/* Crosshair lines */}
-                    <div className="absolute left-1/2 top-0 w-0.5 h-full bg-white/50 -translate-x-1/2"></div>
-                    <div className="absolute top-1/2 left-0 h-0.5 w-full bg-white/50 -translate-y-1/2"></div>
-                    {/* Center circle */}
-                    <div className="w-24 h-24 border-2 border-white/70 rounded-full"></div>
-                  </div>
-                </div>
-                {/* Coordinate Label */}
-                <div className="absolute top-4 left-4 bg-black/60 text-white text-xs px-3 py-1 rounded">
-                  x: 50, y: 185
-                </div>
-              </div>
-              {/* Green decorative box */}
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[#055F3C] rounded-lg -z-10"></div>
-            </div>
-
-            {/* Right Side - Text Content */}
-            <div>
-              <div className="flex items-start gap-4 mb-6">
-                <div className="flex-shrink-0">
-                  <svg className="w-12 h-12 text-[#055F3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase mb-2">03 STEP</p>
-                  <h2 className="text-3xl md:text-4xl font-bold text-[#055F3C] mb-6">
-                    Enter The Main Contest
-                  </h2>
-                </div>
-              </div>
-
-              <p className="text-gray-700 mb-4">
-                Once you qualify:
-              </p>
-
-              <ul className="space-y-2 text-gray-700 mb-6">
-                <li>• Enter the main game where the <strong>real prizes</strong> await</li>
-                <li>• Each contest has <strong>limited tickets</strong>, so odds stay fair for everyone</li>
-              </ul>
-
-              <p className="text-gray-700 font-semibold mb-3">
-                How It Works
-              </p>
-
-              <ul className="space-y-2 text-gray-700">
-                <li>• Each ticket gives you <strong>5 markers</strong> to plot where you think the ball is missing</li>
-                <li>• Use <strong>X & Y coordinates</strong> for precision</li>
-                <li>• Remember: <strong>Every Pixel Counts</strong></li>
-                <li>• You can buy <strong>multiple tickets</strong> to increase your chances</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Fifth Section - Be Surprised With Your Grand Prize */}
       <section className="bg-gray-50 py-16">
@@ -541,10 +400,9 @@ export default function HomePage() {
               </div>
 
               <ul className="space-y-2 text-gray-700">
-                <li>• Winners are contacted personally and shown their prize in a Goldmasters reveal</li>
-                <li>• Prizes include luxury watches, bikes, cars, and exclusive experiences</li>
-                <li>• No gift tax — we cover it!</li>
-                <li>• Watch our social channels to see winners' reactions and stories</li>
+                <li>• Winners will be contacted by the organiser</li>
+                <li>• Every participant will be sent the judging video</li>
+                <li>• If participants wish to see the judging live, a live link will be shared prior to judging</li>
               </ul>
             </div>
           </div>
