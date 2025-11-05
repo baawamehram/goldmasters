@@ -7,14 +7,17 @@ const nextConfig = {
   // Only enable on CI/CD or when not on Windows to avoid symlink permission issues
   output: process.env.CI || process.platform !== 'win32' ? 'standalone' : undefined,
 
-  // Include Prisma engine files in output (moved to top-level for Next.js 16+)
+  // Include Prisma engine files in output for serverless functions
   outputFileTracingIncludes: {
-    '/*': [
+    '/api/**/*': [
       '../../packages/db/prisma/generated/client/**/*',
       '../../packages/db/node_modules/.prisma/client/**/*',
       '../../packages/db/node_modules/@prisma/client/**/*',
     ],
   },
+
+  // Explicitly include Prisma files in the server bundle
+  serverComponentsExternalPackages: ['prisma', '@prisma/client'],
 
   experimental: {
     // Enable Server Actions in production
