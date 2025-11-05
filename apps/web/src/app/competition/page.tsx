@@ -172,7 +172,7 @@ export default function CompetitionPage() {
               </div>
 
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push('/competitions')}
                 className="inline-flex items-center justify-center rounded-full bg-[#055F3C] px-12 py-4 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-lg shadow-[#055F3C]/30 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#044a2f]"
               >
                 Enter Now
@@ -190,17 +190,6 @@ export default function CompetitionPage() {
               Three simple steps to lock in your spot-the-ball prediction and complete the checkout.
             </p>
           </header>
-
-          <div className="overflow-hidden rounded-3xl border border-gray-200" style={{ aspectRatio: '16/9' }}>
-            <video
-              className="h-full w-full object-cover"
-              controls
-              poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450'%3E%3Crect fill='%23f3f4f6' width='800' height='450'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%239ca3af'%3EVideo will be added here%3C/text%3E%3C/svg%3E"
-            >
-              <source src="/videos/how-to-play.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
 
           <div className="grid gap-10 md:grid-cols-3">
             {[
@@ -278,7 +267,7 @@ export default function CompetitionPage() {
                 alt="Hand pointing"
                 className="h-auto w-72 object-contain"
                 onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320"><rect fill="#f3f4f6" width="320" height="320"/><path d="M 160 70 L 192 118 L 242 108 L 214 160 L 262 198 L 206 210 L 192 262 L 160 224 L 128 262 L 114 210 L 58 198 L 106 160 L 78 108 L 128 118 Z" fill="#d1d5db"/><text x="160" y="180" text-anchor="middle" fill="#9ca3af" font-size="16" font-weight="bold">Hand Image</text></svg>');
+                  e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320"><defs><linearGradient id="trophyGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1"/><stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1"/></linearGradient><linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#059669;stop-opacity:1"/><stop offset="100%" style="stop-color:#047857;stop-opacity:1"/></linearGradient></defs><rect fill="#f0fdf4" width="320" height="320"/><ellipse cx="160" cy="280" rx="100" ry="15" fill="#d1d5db" opacity="0.3"/><path d="M 100 180 L 100 200 Q 100 220 120 220 L 200 220 Q 220 220 220 200 L 220 180 Z" fill="url(#greenGrad)"/><rect x="145" y="220" width="30" height="45" fill="url(#greenGrad)" rx="3"/><rect x="135" y="265" width="50" height="12" fill="url(#greenGrad)" rx="4"/><path d="M 80 180 L 100 180 L 100 120 Q 100 100 120 95 L 200 95 Q 220 100 220 120 L 220 180 L 240 180 Q 250 180 250 160 L 250 120 Q 250 100 230 100 L 220 100 Q 220 80 200 75 L 120 75 Q 100 80 100 100 L 90 100 Q 70 100 70 120 L 70 160 Q 70 180 80 180 Z" fill="url(#trophyGrad)" stroke="#d97706" stroke-width="2"/><circle cx="160" cy="130" r="35" fill="#fff" opacity="0.9"/><text x="160" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#047857">1 in</text><text x="160" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#047857">2000</text><path d="M 130 60 L 160 40 L 190 60 L 185 55 L 160 45 L 135 55 Z" fill="#fbbf24"/><circle cx="160" cy="40" r="8" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/></svg>');
                 }}
               />
             </div>
@@ -338,11 +327,6 @@ export default function CompetitionPage() {
                 question: 'How do I enter a goldmasters contest? Masumi Parmar',
                 answer:
                   'Create an account, select an active contest, and place your markers on the spot-the-ball image before checkout closes to confirm your entry.',
-              },
-              {
-                question: 'Are my payments secure?',
-                answer:
-                  'Absolutely. All payments flow through PCI-DSS compliant gateways and every transaction is encrypted end-to-end for your safety.',
               },
             ].map(({ question, answer }) => (
               <details key={question} className="group py-6">

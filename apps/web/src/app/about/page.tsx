@@ -193,7 +193,7 @@ export default function AboutPage() {
               ABOUT US
             </button>
             <button 
-              onClick={() => scrollToSection('contact')}
+              onClick={() => router.push('/contact')}
               className="hover:text-yellow-400 transition-colors font-medium"
             >
               CONTACT
@@ -247,7 +247,7 @@ export default function AboutPage() {
                 ABOUT US
               </button>
               <button 
-                onClick={() => scrollToSection('contact')}
+                onClick={() => { router.push('/contact'); setMobileMenuOpen(false); }}
                 className="px-6 py-4 text-left hover:bg-[#055F3C] transition-colors"
               >
                 CONTACT
@@ -534,7 +534,7 @@ export default function AboutPage() {
                     alt="Limited Odds"
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect fill="#d8b4fe" width="600" height="400"/><text x="50%" y="50%" text-anchor="middle" fill="#7c3aed" font-size="24" font-weight="bold">Limited Odds Image</text></svg>');
+                      e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><defs><linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#f0fdf4;stop-opacity:1"/><stop offset="100%" style="stop-color:#dcfce7;stop-opacity:1"/></linearGradient><linearGradient id="circleGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#059669;stop-opacity:1"/><stop offset="100%" style="stop-color:#047857;stop-opacity:1"/></linearGradient><linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1"/><stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1"/></linearGradient></defs><rect fill="url(#bgGrad)" width="600" height="400"/><circle cx="300" cy="200" r="140" fill="url(#circleGrad)" opacity="0.15"/><circle cx="300" cy="200" r="110" fill="url(#circleGrad)" opacity="0.2"/><circle cx="300" cy="200" r="80" fill="url(#circleGrad)" opacity="0.25"/><path d="M 200 200 L 400 200 M 300 100 L 300 300" stroke="#059669" stroke-width="2" opacity="0.3" stroke-dasharray="5,5"/><g transform="translate(150, 80)"><circle cx="0" cy="0" r="18" fill="url(#goldGrad)" stroke="#d97706" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#fff">1</text></g><g transform="translate(300, 60)"><circle cx="0" cy="0" r="18" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6b7280">2</text></g><g transform="translate(450, 80)"><circle cx="0" cy="0" r="18" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6b7280">3</text></g><g transform="translate(120, 200)"><circle cx="0" cy="0" r="18" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6b7280">4</text></g><g transform="translate(480, 200)"><circle cx="0" cy="0" r="18" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6b7280">5</text></g><g transform="translate(150, 320)"><circle cx="0" cy="0" r="18" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6b7280">6</text></g><g transform="translate(300, 340)"><circle cx="0" cy="0" r="18" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6b7280">7</text></g><g transform="translate(450, 320)"><circle cx="0" cy="0" r="18" fill="#d1d5db" stroke="#9ca3af" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6b7280">8</text></g><circle cx="300" cy="200" r="65" fill="white" opacity="0.95" stroke="#059669" stroke-width="3"/><text x="300" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#059669">1 in 2000</text><text x="300" y="210" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#047857">Better Odds</text><path d="M 265 230 L 275 240 L 290 225" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M 310 230 L 320 240 L 335 225" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>');
                     }}
                   />
                 </div>

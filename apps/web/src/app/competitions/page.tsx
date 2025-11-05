@@ -248,8 +248,8 @@ export default function CompetitionsPage() {
           {/* Image Section */}
           <div className="relative h-[400px]">
             <img
-              src="/images/bmw-ix-msport.jpg"
-              alt="BMW IX M-SPORT"
+              src="/images/iop.jpg"
+              alt="GOLD PRIZES"
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.currentTarget.src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><defs><linearGradient id="carBg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1e3a8a"/><stop offset="100%" style="stop-color:#3b82f6"/></linearGradient></defs><rect fill="url(#carBg)" width="400" height="400"/><rect x="50" y="180" width="300" height="140" rx="10" fill="#1e40af"/><rect x="80" y="200" width="100" height="80" fill="#60a5fa"/><rect x="220" y="200" width="100" height="80" fill="#60a5fa"/><circle cx="120" cy="320" r="30" fill="#1f2937" stroke="#9ca3af" stroke-width="6"/><circle cx="280" cy="320" r="30" fill="#1f2937" stroke="#9ca3af" stroke-width="6"/><ellipse cx="200" cy="160" rx="80" ry="20" fill="#3b82f6" opacity="0.5"/></svg>');
@@ -264,10 +264,10 @@ export default function CompetitionsPage() {
             {/* Competition Title Overlay */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/70 to-transparent p-6">
               <h1 className="text-white text-3xl font-bold uppercase mb-1">
-                BMW IX M-SPORT
+                GOLD PRIZES
               </h1>
               <p className="text-white/90 text-sm uppercase">
-                ENTER THE CONTEST AND WIN YOUR DREAM CAR
+                ENTER THE CONTEST AND WIN AMAZING REWARDS
               </p>
             </div>
           </div>
