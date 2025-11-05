@@ -16,8 +16,11 @@ import {
   MockCompetitionWinner,
   MockCompetitionResult,
   findParticipantById,
-  getCheckoutSummary,
   getCheckoutSummariesByCompetition,
+  saveCheckoutSummary,
+  deleteCheckoutSummaryByUserId,
+  createOrUpdateUserEntry,
+  updateUserTickets,
 } from '../data/db.service';
 
 const router: Router = Router();
@@ -50,28 +53,86 @@ router.post(
     try {
       const { name, phone, email, initialTickets = 0 } = req.body;
 
-      // TODO: Create participant in database
-      // For now, return mock response
-      const mockParticipant = {
-        id: `participant-${Date.now()}`,
+      // Get the default/active competition
+      const competitions = await getCompetitionsWithStats();
+      const activeCompetition = competitions.find(c => c.status === 'ACTIVE') || competitions[0];
+      
+      if (!activeCompetition) {
+        res.status(400).json({
+          status: 'fail',
+          message: 'No competition available to add participant',
+        });
+        return;
+      }
+
+      // Generate unique participant ID
+      const participantId = `participant-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const userId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const now = new Date().toISOString();
+
+      // Create checkout summary for the participant
+      const checkoutSummary: any = {
+        competitionId: activeCompetition.id,
+        participantId: participantId,
+        userId: userId,
+        competition: {
+          id: activeCompetition.id,
+          title: activeCompetition.title,
+          imageUrl: activeCompetition.imageUrl,
+          pricePerTicket: activeCompetition.pricePerTicket,
+          markersPerTicket: activeCompetition.markersPerTicket,
+          status: activeCompetition.status,
+        },
+        participant: {
+          id: participantId,
+          name: name.trim(),
+          phone: phone.trim(),
+          email: email ? email.trim() : null,
+          ticketsPurchased: initialTickets,
+        },
+        contactEmail: email ? email.trim() : null,
+        completed: true,
+        completedAt: now,
+        tickets: Array.from({ length: initialTickets }, (_, index) => ({
+          ticketNumber: index + 1,
+          markerCount: 0,
+          markers: [],
+        })),
+        totalMarkers: 0,
+        checkoutTime: now,
+      };
+
+      // Save to database using saveCheckoutSummary
+      await saveCheckoutSummary(activeCompetition.id, participantId, checkoutSummary);
+
+      // Also update/create UserEntry with assigned tickets
+      await createOrUpdateUserEntry(name.trim(), phone.trim(), userId);
+      
+      // Update the assignedTickets field in UserEntry
+      await updateUserTickets(userId, initialTickets, activeCompetition.id);
+
+      const responseData = {
+        id: userId,
+        participantId: participantId,
+        competitionId: activeCompetition.id,
         name: name.trim(),
         phone: phone.trim(),
         email: email ? email.trim() : null,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
         assignedTickets: initialTickets,
         isLoggedIn: false,
-        lastLoginAt: null,
+        lastLoginAt: now,
         lastLogoutAt: null,
-        accessCode: Math.floor(100000 + Math.random() * 900000).toString(),
+        accessCode: userId.slice(-4).toUpperCase(),
         currentPhase: null,
         ticketsPurchased: initialTickets,
       };
 
-      console.log(`Created participant manually: ${mockParticipant.id} - ${name}`);
+      console.log(`Created participant manually: ${participantId} - ${name} in competition ${activeCompetition.id}`);
 
       res.status(201).json({
         status: 'success',
-        data: mockParticipant,
+        data: responseData,
       });
     } catch (error) {
       console.error('Error creating participant:', error);
@@ -97,36 +158,33 @@ router.get(
       // Get all competitions
       const competitions = await getCompetitionsWithStats();
 
-      // Aggregate only participants that completed checkout (have a summary)
+      // Fetch all checkout summaries directly (this includes manually created participants)
       const allParticipantsNested = await Promise.all(
         competitions.map(async (comp) => {
-          const participants = await getParticipantsByCompetition(comp.id);
-          return Promise.all(
-            participants.map(async (participant) => {
-              const summary = await getCheckoutSummary(comp.id, participant.id);
-              if (!summary) {
-                return null;
-              }
-
-              const resolvedId = summary.userId ?? participant.id;
-              return {
-                id: resolvedId,
-                participantId: summary.participant?.id ?? participant.id,
-                competitionId: summary.competition?.id ?? comp.id,
-                name: summary.participant?.name ?? participant.name,
-                phone: summary.participant?.phone ?? participant.phone,
-                email: summary.participant?.email ?? summary.contactEmail ?? participant.email ?? null,
-                createdAt: summary.checkoutTime,
-                assignedTickets: summary.participant?.ticketsPurchased ?? participant.tickets.length,
-                ticketsPurchased: summary.participant?.ticketsPurchased ?? participant.tickets.length,
-                isLoggedIn: false, // Mock: assume offline
-                lastLoginAt: summary.checkoutTime,
-                lastLogoutAt: null,
-                accessCode: resolvedId.slice(-4).toUpperCase(),
-                currentPhase: null, // Mock phase
-              };
-            })
-          );
+          const checkoutSummaries = await getCheckoutSummariesByCompetition(comp.id);
+          
+          return checkoutSummaries.map((summary) => {
+            const resolvedId = summary.userId ?? summary.participantId;
+            const ticketCount = summary.participant?.ticketsPurchased ?? 
+                               (Array.isArray(summary.tickets) ? summary.tickets.length : 0);
+            
+            return {
+              id: resolvedId,
+              participantId: summary.participantId,
+              competitionId: summary.competitionId,
+              name: summary.participant?.name ?? '',
+              phone: summary.participant?.phone ?? '',
+              email: summary.participant?.email ?? summary.contactEmail ?? null,
+              createdAt: summary.checkoutTime,
+              assignedTickets: ticketCount,
+              ticketsPurchased: ticketCount,
+              isLoggedIn: false,
+              lastLoginAt: summary.checkoutTime,
+              lastLogoutAt: null,
+              accessCode: resolvedId.slice(-4).toUpperCase(),
+              currentPhase: null,
+            };
+          });
         })
       );
       
@@ -228,14 +286,19 @@ router.delete(
 
       console.log(`Deleting participants: ${userIds.join(', ')}`);
 
-      // TODO: Delete from database
-      // For now, return mock response
+      // Delete from database
+      const deleteResults = await Promise.all(
+        userIds.map(userId => deleteCheckoutSummaryByUserId(userId))
+      );
+      
+      const totalDeleted = deleteResults.reduce((sum, count) => sum + count, 0);
+
       res.status(200).json({
         status: 'success',
         data: {
-          deleted: userIds.length,
+          deleted: totalDeleted,
           attempted: participants.length,
-          message: `Successfully deleted ${userIds.length} participant(s)`,
+          message: `Successfully deleted ${totalDeleted} participant(s)`,
         },
       });
     } catch (error) {
@@ -913,24 +976,71 @@ router.post(
       const { id: userId } = req.params;
       const { ticketCount } = req.body;
 
-      // TODO: Update user tickets in database
-      // For now, return mock response
-      const mockUser = {
+      // Get all competitions to find user's checkout summary
+      const competitions = await getCompetitionsWithStats();
+      let userCheckoutSummary: any = null;
+      let userCompetitionId: string | null = null;
+      let userParticipantId: string | null = null;
+
+      // Search for user's checkout summary across all competitions
+      for (const comp of competitions) {
+        const summaries = await getCheckoutSummariesByCompetition(comp.id);
+        const foundSummary = summaries.find(s => s.userId === userId);
+        
+        if (foundSummary) {
+          userCheckoutSummary = foundSummary;
+          userCompetitionId = comp.id;
+          userParticipantId = foundSummary.participantId;
+          break;
+        }
+      }
+
+      if (!userCheckoutSummary || !userCompetitionId || !userParticipantId) {
+        res.status(404).json({
+          status: 'fail',
+          message: 'User not found',
+        });
+        return;
+      }
+
+      // Update the checkout summary with new ticket count
+      const updatedSummary = {
+        ...userCheckoutSummary,
+        participant: {
+          ...userCheckoutSummary.participant,
+          ticketsPurchased: ticketCount,
+        },
+        tickets: Array.from({ length: ticketCount }, (_, index) => ({
+          ticketNumber: index + 1,
+          markerCount: userCheckoutSummary.tickets?.[index]?.markerCount ?? 0,
+          markers: userCheckoutSummary.tickets?.[index]?.markers ?? [],
+        })),
+        totalMarkers: userCheckoutSummary.tickets?.reduce((sum: number, t: any) => 
+          sum + (t?.markerCount ?? 0), 0) ?? 0,
+      };
+
+      // Save updated summary to database
+      await saveCheckoutSummary(userCompetitionId, userParticipantId, updatedSummary);
+
+      // Also update UserEntry table with assigned tickets
+      await updateUserTickets(userId, ticketCount, userCompetitionId);
+
+      const responseData = {
         id: userId,
-        name: 'Mock User',
-        phone: '1234567890',
-        email: null,
+        name: userCheckoutSummary.participant?.name ?? 'User',
+        phone: userCheckoutSummary.participant?.phone ?? '',
+        email: userCheckoutSummary.participant?.email ?? null,
         assignedTickets: ticketCount,
         isLoggedIn: false,
         currentPhase: null,
-        accessCode: Math.floor(100000 + Math.random() * 900000).toString(),
+        accessCode: userId.slice(-4).toUpperCase(),
       };
 
       console.log(`Assigned ${ticketCount} tickets to user ${userId}`);
 
       res.status(200).json({
         status: 'success',
-        data: mockUser,
+        data: responseData,
       });
     } catch (error) {
       console.error('Error assigning tickets:', error);

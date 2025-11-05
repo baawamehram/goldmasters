@@ -1361,3 +1361,19 @@ export const upsertCompetition = async (competition: MockCompetition): Promise<v
     }
   });
 };
+
+export const deleteCheckoutSummaryByUserId = async (
+  userId: string
+): Promise<number> => {
+  try {
+    const result = await prisma.checkoutSummary.deleteMany({
+      where: {
+        userId: userId,
+      }
+    });
+    return result.count;
+  } catch (error) {
+    console.error(`Error deleting checkout summary for user ${userId}:`, error);
+    return 0;
+  }
+};
