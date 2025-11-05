@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#055F3C;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#044a2f;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <rect fill="url(#bgGrad)" width="512" height="512" rx="100"/>
+  <g transform="translate(256, 256)">
+    <circle cx="0" cy="0" r="160" fill="#ffffff" opacity="0.15"/>
+    <path d="M 0 -100 L 30 -35 L 95 -25 L 50 20 L 65 85 L 0 55 L -65 85 L -50 20 L -95 -25 L -30 -35 Z" 
+          fill="#fbbf24" 
+          stroke="#f59e0b" 
+          stroke-width="4"/>
+    <text x="0" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#ffffff">GM</text>
+  </g>
+</svg>

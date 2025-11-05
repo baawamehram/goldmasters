@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/api/v1/:path*", "destination": "https://api.goldmasters.world/api/v1/:path*" }
+  ]
+}

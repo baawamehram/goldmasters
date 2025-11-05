@@ -1,0 +1,30 @@
+[build]
+  base = "."
+  command = "pnpm install --prod=false && pnpm --filter db generate && pnpm --filter web... build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "20.10.0"
+  PNPM_VERSION = "8"
+  NEXT_PUBLIC_API_URL = "https://api.goldmasters.world/api/v1"
+  NEXT_PUBLIC_DEFAULT_COMPETITION_ID = "test-id"
+  NEXT_PUBLIC_DEFAULT_COMPETITION_TITLE = "Gold Coin"
+
+# Include Prisma binaries in functions
+[functions]
+  included_files = [
+    "apps/web/prisma/generated/client/**/*",
+    "packages/db/prisma/generated/client/**/*"
+  ]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/v1/*"
+  to = "https://api.goldmasters.world/api/v1/:splat"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "https://api.goldmasters.world/api/v1/*"
+  [headers.values]
+    Cache-Control = "no-store"
