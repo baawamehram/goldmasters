@@ -12,7 +12,7 @@
     "start": "next start",
     "lint": "eslint",
     "clean": "rm -rf .next node_modules",
-    "postinstall": "echo 'Dependencies installed successfully'"
+    "postinstall": "node scripts/copy-prisma.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

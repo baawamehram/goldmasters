@@ -10,9 +10,8 @@ const nextConfig = {
   // Include Prisma engine files in output for serverless functions
   outputFileTracingIncludes: {
     '/api/**/*': [
+      './prisma/generated/client/**/*',
       '../../packages/db/prisma/generated/client/**/*',
-      '../../packages/db/node_modules/.prisma/client/**/*',
-      '../../packages/db/node_modules/@prisma/client/**/*',
     ],
   },
 

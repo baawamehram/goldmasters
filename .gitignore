@@ -75,3 +75,6 @@ prisma/migrations/
 
 # Turborepo
 .turbo
+
+# Copied Prisma binaries for deployment
+apps/web/prisma/

@@ -12,7 +12,10 @@
 
 # Include Prisma binaries in functions
 [functions]
-  included_files = ["packages/db/prisma/generated/client/**/*"]
+  included_files = [
+    "apps/web/prisma/generated/client/**/*",
+    "packages/db/prisma/generated/client/**/*"
+  ]
   node_bundler = "esbuild"
 
 [[redirects]]
