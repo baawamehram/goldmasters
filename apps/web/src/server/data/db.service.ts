@@ -243,8 +243,12 @@ export const createOrUpdateUserEntry = async (name: string, phone: string, exist
 };
 
 export const getAllUserEntries = async (): Promise<UserEntry[]> => {
-  const entries = await prisma.userEntry.findMany();
-  
+  const entries = await prisma.userEntry.findMany({
+    orderBy: {
+      name: 'asc'
+    }
+  });
+
   return entries.map(entry => ({
     id: entry.id,
     name: entry.name,

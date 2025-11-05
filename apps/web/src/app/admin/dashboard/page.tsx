@@ -182,37 +182,6 @@ function AdminDashboardContent() {
     }
   };
 
-  const handleCloseCompetition = async (id: string) => {
-    try {
-      const token = localStorage.getItem("admin_token");
-      if (!token) {
-        router.push("/admin");
-        return;
-      }
-
-      const response = await fetch(buildApiUrl(`admin/competitions/${id}/close`), {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to close competition");
-      }
-
-      setCompetitions((prev) =>
-        prev.map((competition) =>
-          competition.id === id ? data.data.competition : competition
-        )
-      );
-
-      console.log("Competition closed successfully.");
-    } catch (error) {
-      console.error("Close competition error:", error);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -300,15 +269,6 @@ function AdminDashboardContent() {
                               Ends {new Date(competition.endsAt).toLocaleString()}
                             </p>
                           </div>
-                          {isActive && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleCloseCompetition(competition.id)}
-                            >
-                              Close competition
-                            </Button>
-                          )}
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
