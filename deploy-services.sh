@@ -36,10 +36,16 @@ pnpm install --no-frozen-lockfile
 echo -e "${GREEN}✅ Dependencies installed${NC}"
 echo ""
 
-# Generate Prisma client
+# Generate Prisma client (required before build)
 echo -e "${BLUE}🔧 Generating Prisma client...${NC}"
 pnpm db:generate
 echo -e "${GREEN}✅ Prisma client generated${NC}"
+echo ""
+
+# Build database package first
+echo -e "${BLUE}🔨 Building database package...${NC}"
+pnpm build:db
+echo -e "${GREEN}✅ Database package built${NC}"
 echo ""
 
 # Run database migrations
@@ -48,7 +54,7 @@ pnpm --filter db migrate:deploy
 echo -e "${GREEN}✅ Migrations completed${NC}"
 echo ""
 
-# Build all packages
+# Build all packages (web and api)
 echo -e "${BLUE}🔨 Building all packages...${NC}"
 pnpm build
 if [ $? -eq 0 ]; then
@@ -114,7 +120,13 @@ echo ""
 echo "📝 Next steps:"
 echo "   1. Monitor Netlify build: https://app.netlify.com/"
 echo "   2. Monitor Render deployment: https://dashboard.render.com/"
-echo "   3. Check database migrations applied correctly"
-echo "   4. Verify services are running"
+echo "   3. Verify database migrations applied correctly"
+echo "   4. Test frontend: https://goldmasters-spotball.netlify.app/"
+echo "   5. Test backend API: https://goldmasters-api.onrender.com/health"
 echo ""
 echo "⏱️  Deployments typically take 3-5 minutes"
+echo ""
+echo "💡 Tips:"
+echo "   - Frontend uses Next.js API routes (directly connects to DB)"
+echo "   - Backend Express API is on Render (alternative/legacy access)"
+echo "   - Database: PostgreSQL on Neon (connection pooling enabled)"

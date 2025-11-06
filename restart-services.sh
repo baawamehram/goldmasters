@@ -40,14 +40,15 @@ fi
 
 # Restart Render Backend API
 echo -e "${BLUE}🔄 Restarting Render backend service...${NC}"
-curl -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/restart" \
+RESTART_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/restart" \
   -H "Authorization: Bearer ${RENDER_API_KEY}" \
-  -H "Content-Type: application/json"
+  -H "Content-Type: application/json")
 
-if [ $? -eq 0 ]; then
+HTTP_CODE=$(echo "$RESTART_RESPONSE" | tail -n1)
+if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
     echo -e "${GREEN}✅ Render service restart triggered${NC}"
 else
-    echo -e "${RED}❌ Failed to restart Render service${NC}"
+    echo -e "${RED}❌ Failed to restart Render service (HTTP $HTTP_CODE)${NC}"
     exit 1
 fi
 
@@ -55,19 +56,24 @@ echo ""
 
 # Trigger Netlify rebuild
 echo -e "${BLUE}🔄 Triggering Netlify frontend rebuild...${NC}"
-curl -X POST "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/builds" \
-  -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}"
+BUILD_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/builds" \
+  -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}")
 
-if [ $? -eq 0 ]; then
+HTTP_CODE=$(echo "$BUILD_RESPONSE" | tail -n1)
+if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
     echo -e "${GREEN}✅ Netlify rebuild triggered${NC}"
 else
-    echo -e "${RED}❌ Failed to trigger Netlify rebuild${NC}"
+    echo -e "${RED}❌ Failed to trigger Netlify rebuild (HTTP $HTTP_CODE)${NC}"
     exit 1
 fi
 
 echo ""
 echo -e "${GREEN}✅ All services restarted successfully!${NC}"
 echo ""
-echo "📝 Note: Builds may take a few minutes to complete"
-echo "   - Check Render: https://dashboard.render.com/"
-echo "   - Check Netlify: https://app.netlify.com/"
+echo "📝 Note: Builds may take 3-5 minutes to complete"
+echo "   - Monitor Render: https://dashboard.render.com/"
+echo "   - Monitor Netlify: https://app.netlify.com/"
+echo ""
+echo "🔍 Health checks:"
+echo "   - Backend API: https://goldmasters-api.onrender.com/health"
+echo "   - Frontend: https://goldmasters-spotball.netlify.app/"

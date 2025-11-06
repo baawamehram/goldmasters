@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Deployment script for Digital Ocean
+# Deployment script for Digital Ocean / Self-hosted (PM2)
+# NOTE: This is for legacy/self-hosted deployments
+# For production, use deploy-services.sh (Netlify + Render)
 # Usage: ./scripts/deploy.sh
 
 set -e  # Exit on error
@@ -30,6 +32,10 @@ pnpm install --frozen-lockfile
 # Generate Prisma client
 echo -e "${YELLOW}🔧 Generating Prisma client...${NC}"
 pnpm db:generate
+
+# Build database package first
+echo -e "${YELLOW}🔨 Building database package...${NC}"
+pnpm build:db
 
 # Run database migrations
 echo -e "${YELLOW}🗄️  Running database migrations...${NC}"
