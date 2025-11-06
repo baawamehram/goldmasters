@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify regular user access code
-    const userEntry = verifyAccessCode(trimmedCode);
+    const userEntry = await verifyAccessCode(trimmedCode);
 
     if (!userEntry) {
       return fail('Invalid access code. Please check and try again.', 401);

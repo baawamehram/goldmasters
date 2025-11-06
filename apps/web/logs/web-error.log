@@ -1,0 +1,298 @@
+2025-11-05 17:52:12 +00:00: Admin token verification failed Error [JsonWebTokenError]: invalid signature
+    at <unknown> (.next/server/chunks/[root-of-the-server]__91d09d71._.js:1:42032)
+    at b (.next/server/chunks/[root-of-the-server]__91d09d71._.js:1:40850)
+    at r.exports [as verify] (.next/server/chunks/[root-of-the-server]__91d09d71._.js:1:40868)
+    at <unknown> (.next/server/chunks/[root-of-the-server]__ee0faa5c._.js:1:2125)
+    at <unknown> (.next/server/chunks/[root-of-the-server]__ee0faa5c._.js:1:2375)
+    at T (.next/server/chunks/[root-of-the-server]__2c3095fa._.js:1:3345) {
+  constructor: [Function: i]
+}
+2025-11-05 17:53:07 +00:00: Error fetching competitions Error [PrismaClientInitializationError]: 
+Invalid `prisma.competition.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async y (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:64394)
+    at async E (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:66371)
+    at async T (.next/server/chunks/[root-of-the-server]__2c3095fa._.js:1:3393)
+    at async u (.next/server/chunks/[root-of-the-server]__2c3095fa._.js:1:8103) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:53:23 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:53:26 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:53:31 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:53:53 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:54:23 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:54:53 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:55:23 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:55:53 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:56:23 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:56:53 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+2025-11-05 17:57:23 +00:00: Error fetching participants: Error [PrismaClientInitializationError]: 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at <unknown> (-->  schema.prisma:12)
+    at lD.handleRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:8157)
+    at lD.handleAndLogRequestError (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6918)
+    at lD.request (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:114:6625)
+    at async r (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:126:7497)
+    at async u (.next/server/chunks/[root-of-the-server]__24dc0f04._.js:127:60860)
+    at async T (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:2833)
+    at async d (.next/server/chunks/[root-of-the-server]__82f4fb55._.js:1:8940) {
+  clientVersion: '6.18.0',
+  errorCode: undefined,
+  retryable: undefined
+}

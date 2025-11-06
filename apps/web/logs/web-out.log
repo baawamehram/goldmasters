@@ -1,0 +1,180 @@
+2025-11-05 17:47:09 +00:00:    ▲ Next.js 16.0.0
+2025-11-05 17:47:09 +00:00:    - Local:        http://localhost:3000
+2025-11-05 17:47:09 +00:00:    - Network:      http://0.0.0.0:3000
+2025-11-05 17:47:09 +00:00: 
+2025-11-05 17:47:09 +00:00:  ✓ Starting...
+2025-11-05 17:47:09 +00:00:  ✓ Ready in 127ms
+2025-11-05 17:53:07 +00:00: prisma:error 
+Invalid `prisma.competition.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:53:23 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:53:26 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:53:31 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:53:53 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:54:23 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:54:53 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:55:23 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:55:53 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:56:23 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:56:33 +00:00:    ▲ Next.js 16.0.0
+2025-11-05 17:56:33 +00:00:    - Local:        http://localhost:3000
+2025-11-05 17:56:33 +00:00:    - Network:      http://0.0.0.0:3000
+2025-11-05 17:56:33 +00:00: 
+2025-11-05 17:56:33 +00:00:  ✓ Starting...
+2025-11-05 17:56:33 +00:00:  ✓ Ready in 158ms
+2025-11-05 17:56:53 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:57:11 +00:00:    ▲ Next.js 16.0.0
+2025-11-05 17:57:11 +00:00:    - Local:        http://localhost:3000
+2025-11-05 17:57:11 +00:00:    - Network:      http://0.0.0.0:3000
+2025-11-05 17:57:11 +00:00: 
+2025-11-05 17:57:11 +00:00:  ✓ Starting...
+2025-11-05 17:57:11 +00:00:  ✓ Ready in 147ms
+2025-11-05 17:57:23 +00:00: prisma:error 
+Invalid `prisma.userEntry.findMany()` invocation:
+
+
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:12
+   | 
+11 |   provider = "postgresql"
+12 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+2025-11-05 17:57:45 +00:00:    ▲ Next.js 16.0.0
+2025-11-05 17:57:45 +00:00:    - Local:        http://localhost:3000
+2025-11-05 17:57:45 +00:00:    - Network:      http://0.0.0.0:3000
+2025-11-05 17:57:45 +00:00: 
+2025-11-05 17:57:45 +00:00:  ✓ Starting...
+2025-11-05 17:57:46 +00:00:  ✓ Ready in 145ms
+2025-11-05 17:58:23 +00:00:    ▲ Next.js 16.0.0
+2025-11-05 17:58:23 +00:00:    - Local:        http://localhost:3000
+2025-11-05 17:58:23 +00:00:    - Network:      http://0.0.0.0:3000
+2025-11-05 17:58:23 +00:00: 
+2025-11-05 17:58:23 +00:00:  ✓ Starting...
+2025-11-05 17:58:23 +00:00:  ✓ Ready in 200ms
+2025-11-05 17:59:02 +00:00:    ▲ Next.js 16.0.0
+2025-11-05 17:59:02 +00:00:    - Local:        http://localhost:3000
+2025-11-05 17:59:02 +00:00:    - Network:      http://0.0.0.0:3000
+2025-11-05 17:59:02 +00:00: 
+2025-11-05 17:59:02 +00:00:  ✓ Starting...
+2025-11-05 17:59:03 +00:00:  ✓ Ready in 151ms
