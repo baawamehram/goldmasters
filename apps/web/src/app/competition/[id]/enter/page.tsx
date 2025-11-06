@@ -1,10 +1,9 @@
 "use client";
 /* eslint-disable react/no-unescaped-entities */
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-
-import MarkerCanvas, { MarkerCanvasHandle } from "@/components/MarkerCanvas";
+import MarkerCanvas, { type MarkerCanvasHandle } from "@/components/MarkerCanvas";
 import { buildApiUrl } from "@/lib/api";
 
 interface Competition {
