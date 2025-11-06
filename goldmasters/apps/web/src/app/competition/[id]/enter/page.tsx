@@ -203,7 +203,7 @@ export default function EnterCompetitionPage() {
       if (competitionUser) {
         try {
           const user = JSON.parse(competitionUser);
-          console.log('[Enter Page] Auto-authenticating user:', user.name);
+          console.log('[Enter Page] Auto-authenticating user1:', user.name);
 
           const authenticate = async () => {
             try {
