@@ -1,0 +1,12 @@
+[build]
+  command = "pnpm install --no-frozen-lockfile && pnpm -w run db:generate && pnpm run build"
+  publish = ".next"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["prisma/generated/**/*", "../../packages/db/prisma/generated/**/*"]

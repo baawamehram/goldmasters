@@ -3,9 +3,9 @@ const nextConfig = {
   // Strict mode helps surface potential issues in production-like builds
   reactStrictMode: true,
 
-  // Produce a standalone server output (good for Netlify/Vercel and Docker)
-  // Only enable on CI/CD or when not on Windows to avoid symlink permission issues
-  output: process.env.CI || process.platform !== 'win32' ? 'standalone' : undefined,
+  // Disable standalone mode for Netlify - it expects standard Next.js output
+  // Standalone mode is good for Docker/self-hosted, but Netlify handles Next.js natively
+  // output: process.env.CI || process.platform !== 'win32' ? 'standalone' : undefined,
 
   // Include Prisma engine files in output for serverless functions
   outputFileTracingIncludes: {
