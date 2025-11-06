@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && bash scripts/post-build.sh",
     "start": "next start",
     "lint": "eslint",
     "clean": "rm -rf .next node_modules",
