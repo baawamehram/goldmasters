@@ -353,11 +353,10 @@ export default function HomePage() {
                     Create Your Account
                   </h3>
                   <ul className="text-gray-700 text-sm space-y-2">
-                    <li>• Register with your email address and create a secure password</li>
-                    <li>• Complete your participant profile with accurate personal information</li>
-                    <li>• Verify your account through the confirmation access code sent to your registered address</li>
-                    <li>• Login to access available competitions and browse contest details</li>
-                    <li>• Review each <strong>contest's rules</strong> and requirements carefully before participating</li>
+                    <li>• Log in via your name and phone number provided to the organiser</li>
+                    <li>• Click on the contest to enter and input the password provided by the organiser</li>
+                    <li>• On the cricket image mark where the ball is</li>
+                    <li>• You can also ask the organiser for the professional help needed to enter the contest</li>
                   </ul>
                 </div>
               </div>

@@ -175,7 +175,7 @@ export default function JudgingProcessPage() {
               </h3>
               <ol className="space-y-2 text-gray-700 text-sm list-decimal list-inside">
                 <li>Admins and judges log in through secure portals using two-factor credentials.</li>
-                <li>Judges are selected randomly by the system after each round to ensure fair access</li>
+                <li>Judges are accredited licensed cricket umpires.</li>
                 <li>Contest data remains in their null-access zone until results are verified.</li>
               </ol>
             </div>
@@ -189,8 +189,7 @@ export default function JudgingProcessPage() {
                 MAIN CONTEST<br />Admin Dashboard Control
               </h3>
               <ol className="space-y-2 text-gray-700 text-sm list-decimal list-inside">
-                <li>Admins view active contests requiring review.</li>
-                <li>Judges are assigned to each contest and uniquely identified by rider-coded markers.</li>
+                <li>Judges are assigned to the completion and a host will begin the judging process.</li>
               </ol>
             </div>
 
@@ -203,8 +202,9 @@ export default function JudgingProcessPage() {
                 ADMIN CONFIRMATION<br />Independent Assessment
               </h3>
               <ol className="space-y-2 text-gray-700 text-sm list-decimal list-inside">
-                <li>Judges access their assigned contests and their dashboards.</li>
-                <li>They view the contest image and independently assess which participant's markers should be closest to the bullseye/actual location for showing exact coordinates, preserving individual bias-free input.</li>
+                <li>Judges are guided by the host on the process. They independently give their opinion on where the ball should be and mark their entry.</li>
+                <li>Each judge follows the same process. The system takes an average mean of all judges to maintain transparency and no possibility of unfair play.</li>
+                <li>The person closest to the mean is computed and declared as a winner.</li>
               </ol>
             </div>
           </div>
